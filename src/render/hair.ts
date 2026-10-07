@@ -11,6 +11,10 @@ function ribbon(
   const path = new T.CatmullRomCurve3(
     pts.map((p) => new T.Vector3(...(p as [number, number, number]))),
   );
+  const outward =
+    Math.abs(pts[0][0]) < 0.1 && pts[0][2] > 0.14
+      ? new T.Vector3(0, 0, 1)
+      : new T.Vector3(pts[0][0], 0, pts[0][2]).normalize();
   const pos: number[] = [],
     uv: number[] = [],
     idx: number[] = [];
@@ -20,12 +24,15 @@ function ribbon(
     const t = i / n,
       c = path.getPoint(t),
       tan = path.getTangent(t);
-    const across = new T.Vector3(tan.y, -tan.x, 0).normalize();
+    const across = new T.Vector3().crossVectors(tan, outward).normalize();
     const taper = Math.sin(Math.PI * (0.1 + t * 0.89)) ** 0.45;
     for (let j = 0; j <= m; j++) {
       const q = (j / m) * 2 - 1;
       const v = c.clone().addScaledVector(across, q * width * taper);
-      v.z += Math.sqrt(Math.max(0, 1 - q * q)) * width * 0.26;
+      v.addScaledVector(
+        outward,
+        Math.sqrt(Math.max(0, 1 - q * q)) * width * 0.26,
+      );
       pos.push(v.x, v.y, v.z);
       uv.push(j / m, t);
       if (i < n && j < m) {
@@ -45,9 +52,9 @@ function ribbon(
       const t = 0.1 + (i / 12) * 0.74,
         c = path.getPoint(t),
         tan = path.getTangent(t),
-        a = new T.Vector3(tan.y, -tan.x, 0).normalize();
+        a = new T.Vector3().crossVectors(tan, outward).normalize();
       c.addScaledVector(a, offset * width);
-      c.z += width * 0.275;
+      c.addScaledVector(outward, width * 0.275);
       return [c.x, c.y, c.z];
     });
     line(parent, marks, 0.0018, highlight, 20);
@@ -85,6 +92,14 @@ export function createHair(item: Item) {
   );
   cap.scale.set(0.373, 0.442, 0.307);
   cap.position.y = 0.002;
+  // Continuous rear scalp prevents gaps between swept decorative locks at any angle.
+  const rearCap = mesh(
+    new T.SphereGeometry(1, 48, 32, Math.PI, Math.PI, 0, 2.62),
+    mat,
+    root,
+  );
+  rearCap.scale.set(0.375, 0.44, 0.311);
+
   // Swept bangs stop above the eyes; each strip has a rounded cross section and a tapered tip.
   for (let i = 0; i < 7; i++) {
     const x = (i - 3) * 0.09;
@@ -105,6 +120,50 @@ export function createHair(item: Item) {
   const strands = new T.Group();
   strands.name = "hair-sway";
   root.add(strands);
+  // A fluted half-ellipsoid gives each haircut real volume beneath its separate locks.
+  const length = [1.44, 0.43, 0.63, 1.45, 0.43, 1.48][item.shape];
+  const positions: number[] = [],
+    uvs: number[] = [],
+    indices: number[] = [];
+  for (let j = 0; j <= 32; j++) {
+    const t = j / 32,
+      y = 0.16 - t * (length + 0.16),
+      rx = 0.363 + 0.023 * Math.sin(t * Math.PI) - 0.095 * t * t,
+      rz = 0.305 - 0.14 * t * t,
+      center = -0.055 * t;
+    for (let i = 0; i <= 48; i++) {
+      const u = i / 48,
+        a = Math.PI / 2 + u * Math.PI,
+        flute = 1 + 0.018 * Math.cos(a * 18 + t * 2);
+      positions.push(
+        Math.sin(a) * rx * flute,
+        y + Math.pow(t, 7) * 0.028 * Math.cos(a * 14),
+        Math.cos(a) * rz * flute + center,
+      );
+      uvs.push(u, t);
+      if (j < 32 && i < 48) {
+        const k = j * 49 + i;
+        indices.push(k, k + 49, k + 1, k + 1, k + 49, k + 50);
+      }
+    }
+  }
+  const curtain = new T.BufferGeometry();
+  curtain.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
+  curtain.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
+  curtain.setIndex(indices);
+  curtain.computeVertexNormals();
+  mesh(
+    curtain,
+    new T.MeshPhysicalMaterial({
+      color: colorShift(color, -0.035),
+      roughness: 0.42,
+      metalness: 0.04,
+      clearcoat: 0.28,
+      side: T.DoubleSide,
+    }),
+    strands,
+  );
+
   for (const side of [-1, 1]) {
     ribbon(
       strands,
