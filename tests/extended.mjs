@@ -66,10 +66,7 @@ try {
     await click("region", String(Math.floor(stage / 4)));
     await click("start", String(stage));
     await p.waitForTimeout(300);
-    const point = await p.evaluate(() =>
-      window.__STARLIGHT__.diagnostics().points.find((p) => p.kind === "rune"),
-    );
-    await p.mouse.click(point.x, point.y);
+    await p.locator('.adventure-goal[data-kind="rune"]').click();
     await p
       .locator('[data-action="interact"][data-kind="rune"]')
       .waitFor({ state: "visible" });
@@ -114,14 +111,19 @@ try {
   });
   await click("nav", "map");
   await click("leave", "map");
+  await click("start", "20");
+  assert.equal(await p.evaluate(() => window.__STARLIGHT__.getRun().stage), 20);
+  await click("nav", "map");
+  await click("leave", "map");
+  console.log(
+    "Unlocked endless exploration starts from the visible map action",
+  );
   await click("settings");
-  await p
-    .locator("#import-input")
-    .setInputFiles({
-      name: "bad.json",
-      mimeType: "application/json",
-      buffer: Buffer.from('{"version":1,"coins":-99}'),
-    });
+  await p.locator("#import-input").setInputFiles({
+    name: "bad.json",
+    mimeType: "application/json",
+    buffer: Buffer.from('{"version":1,"coins":-99}'),
+  });
   await p.waitForTimeout(100);
   assert.equal((await get()).coins, before.coins - 370);
   await p

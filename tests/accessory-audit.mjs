@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as T from "three";
+import { MToonMaterial } from "@pixiv/three-vrm";
 import { ITEMS } from "../src/simulation/data.ts";
 import {
   createCrown,
@@ -46,8 +47,8 @@ for (const item of ITEMS.filter((i) => makers[i.category])) {
       );
     }
     assert(
-      object.material.isMeshPhysicalMaterial,
-      `${item.id}: physical surface material`,
+      object.material instanceof MToonMaterial,
+      `${item.id}: expected surface material`,
     );
     triangles += geometry.index.count / 3;
     hash.update(Buffer.from(geometry.attributes.position.array.buffer));

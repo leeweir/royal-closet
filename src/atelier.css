@@ -1,0 +1,750 @@
+/* ── Atelier theme ─────────────────────────────────────────────
+   The wardrobe reads as a tailor's rail: every garment hangs as a
+   stitched paper tag on a gilded rod. Everything else stays quiet.
+   Taste: DESIGN_VARIANCE 5, MOTION_INTENSITY 3, VISUAL_DENSITY 5.
+   Preserve the familiar one-screen game, keep character motion central,
+   and give each activity its own paper composition. */
+:root {
+  --ink: #2f2851;
+  --muted: #6c6390;
+  --purple: #8c6fc4;
+  --purple-dark: #5f4699;
+  --line: #e4ddef;
+  --gold: #b48a45;
+  --white: #fffefb;
+  --panel: #fffefb;
+  --pearl: #f6f3fa;
+  --stitch: #cfc2e8;
+  --rail-gap: 12px;
+  --hook: 15px;
+  color: var(--ink);
+  background: var(--pearl);
+}
+.brand b,
+.scene-heading h1,
+.scene-caption h2,
+.wardrobe-header h2 {
+  color: var(--ink);
+}
+.brand small {
+  font-family: Georgia, serif;
+  font-style: italic;
+  letter-spacing: 0.3px;
+  color: var(--muted);
+}
+@media (min-width: 601px) {
+  .brand small {
+    font-size: 11px;
+    margin-top: 1px;
+  }
+}
+.brand-mark {
+  color: var(--gold);
+  border-color: #d9c39b;
+}
+.nav-button {
+  color: var(--muted);
+}
+.nav-button:hover {
+  background: #efe9f7;
+}
+.nav-button.active {
+  color: var(--ink);
+  background: #e9e1f5;
+}
+.nav-button.active .nav-dot {
+  background: var(--gold);
+}
+.scene-heading h1 {
+  margin-top: 0;
+}
+.scene-heading p,
+.drag-hint,
+.wardrobe-filter,
+.dye-row > span,
+.adventure-teaser small {
+  color: var(--muted);
+}
+.stars {
+  color: var(--gold);
+}
+.stars span {
+  color: var(--muted);
+}
+.stars span + span {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--stitch);
+}
+
+.screen-closet #content {
+  background: var(--panel);
+  border-color: var(--line);
+}
+.wardrobe-header h2 > span {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--muted);
+}
+.wardrobe-header em {
+  color: #9d94b8;
+}
+.category {
+  color: var(--muted);
+  border-radius: 8px 8px 0 0;
+}
+.category:hover {
+  background: #f3eef9;
+}
+/* The active category is "sewn" in place with a running stitch. */
+.category.active {
+  color: var(--ink);
+  border-bottom: 2px dashed var(--purple);
+}
+.wardrobe-filter button {
+  color: var(--purple-dark);
+}
+
+/* Rail + tags */
+.items-grid {
+  column-gap: var(--rail-gap);
+  row-gap: 8px;
+}
+.hanger {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  padding-top: var(--hook);
+}
+.hanger::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(var(--rail-gap) / -2 - 1px);
+  right: calc(var(--rail-gap) / -2 - 1px);
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(#ecd6a8, var(--gold) 55%, #8a6630);
+  pointer-events: none;
+}
+.hanger:nth-child(3n + 1)::before {
+  left: 0;
+}
+.hanger:nth-child(3n)::before,
+.hanger:last-child::before {
+  right: 0;
+}
+.hanger::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 3px;
+  left: calc(50% - 0.75px);
+  width: 1.5px;
+  height: calc(var(--hook) + 6px);
+  background: #a99bc8;
+  pointer-events: none;
+}
+.item-card {
+  flex: 1;
+  width: 100%;
+  overflow: visible;
+  border: 0;
+  border-radius: 9px 9px 12px 12px;
+  padding-top: 13px;
+  background:
+    radial-gradient(
+      circle at 50% 6px,
+      var(--pearl) 0 2.6px,
+      #c9b07f 3px 4.3px,
+      transparent 4.8px
+    ),
+    var(--white);
+  box-shadow:
+    0 0 0 1px #e8e1f1,
+    0 7px 14px -9px #2f285140;
+  outline: 1.5px dashed var(--stitch);
+  outline-offset: -5px;
+  transform-origin: 50% calc(var(--hook) * -1);
+}
+.hanger:nth-child(odd) .item-card {
+  transform: rotate(-0.7deg);
+}
+.hanger:nth-child(3n) .item-card {
+  transform: rotate(0.9deg);
+}
+.item-card:hover {
+  background:
+    radial-gradient(
+      circle at 50% 6px,
+      var(--pearl) 0 2.6px,
+      #c9b07f 3px 4.3px,
+      transparent 4.8px
+    ),
+    #fbf8fe;
+  outline-color: #b9a6dc;
+}
+.hanger .item-card.selected {
+  border: 0;
+  background:
+    radial-gradient(
+      circle at 50% 6px,
+      var(--pearl) 0 2.6px,
+      #c9b07f 3px 4.3px,
+      transparent 4.8px
+    ),
+    #f1ebfb;
+  box-shadow:
+    0 0 0 1.5px var(--purple),
+    0 10px 18px -10px #5f469966;
+  outline: 1.5px dashed #a68ad6;
+  transform: rotate(0deg) translateY(2px);
+}
+.selected .item-status {
+  background: var(--purple);
+}
+.item-name {
+  font-family: "Noto Serif SC", "Songti SC", serif;
+  font-weight: 600;
+  color: var(--ink);
+}
+.item-stars {
+  color: var(--gold);
+}
+.item-stars small {
+  color: var(--muted);
+}
+.item-status {
+  color: #9d94b8;
+}
+.locked .item-visual {
+  opacity: 0.7;
+  filter: saturate(0.7);
+}
+.locked .item-name {
+  color: var(--muted);
+}
+.hanger .item-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .item-card {
+    transition:
+      transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1),
+      background 0.18s,
+      box-shadow 0.18s,
+      outline-color 0.18s;
+  }
+  .hanger .item-card:hover:not(.selected) {
+    transform: rotate(-2deg);
+  }
+  .hanger:nth-child(3n) .item-card:hover:not(.selected) {
+    transform: rotate(2deg);
+  }
+}
+
+.swatch {
+  box-shadow: 0 0 0 1px #ddd4ea;
+}
+.swatch.active {
+  box-shadow:
+    0 0 0 2px var(--white),
+    0 0 0 3.5px var(--ink);
+}
+.teaser-icon {
+  background: #ece5f7;
+  color: var(--purple-dark);
+}
+.adventure-teaser b {
+  color: var(--ink);
+}
+
+@media (max-width: 600px), (min-width: 601px) and (max-height: 760px) {
+  :root {
+    --rail-gap: 8px;
+    --hook: 11px;
+  }
+  .item-card {
+    padding-top: 11px;
+  }
+  .items-grid {
+    row-gap: 5px;
+  }
+}
+
+/* A shared paper-and-ribbon language for the whole story, not just the rail. */
+:root {
+  --ink: #3d3159;
+  --muted: #716780;
+  --purple-dark: #694c96;
+  --paper: #fffdf8;
+  --line: #e2dce8;
+  --gold-ink: #896932;
+  --shadow: 0 8px 24px #57446408;
+}
+.eyebrow,
+.tiny-label {
+  color: var(--muted);
+}
+.primary-button {
+  background: var(--purple-dark);
+  border-color: var(--purple-dark);
+}
+.primary-button:hover:not(:disabled) {
+  background: #573e80;
+  box-shadow: 0 4px 12px #694c9620;
+}
+.soft-button,
+.text-button,
+.page-controls button {
+  color: var(--purple-dark);
+}
+button:disabled {
+  opacity: 1;
+}
+.primary-button:disabled,
+.soft-button:disabled,
+.page-controls button:disabled {
+  background: #f1edf3;
+  color: #817787;
+  border-color: #e6e0e9;
+  box-shadow: none;
+}
+.section-heading .eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--gold-ink);
+}
+.section-heading h2 {
+  letter-spacing: 2px;
+}
+.progress-chip {
+  color: var(--muted);
+  border-radius: 6px;
+  background: var(--paper);
+}
+.nav-button.active {
+  background: #eae2f2;
+  color: var(--purple-dark);
+}
+.footer,
+.sidebar-bottom,
+.footer button {
+  color: var(--muted);
+}
+.item-visual {
+  background: none;
+}
+.locked .item-visual {
+  opacity: 0.85;
+  filter: saturate(0.85);
+}
+.item-name {
+  font-family: inherit;
+}
+.hanger .item-card {
+  box-shadow:
+    0 0 0 1px #e4dcec,
+    0 5px 10px -8px #4b365640;
+}
+.hanger .item-card.selected {
+  box-shadow:
+    0 0 0 1.5px var(--purple),
+    0 5px 10px -8px #4b365640;
+}
+/* The map is the illustration; chapters are quiet, inked pages beside it. */
+.region-detail {
+  background: var(--paper);
+  border-radius: 4px 14px 14px 4px;
+  border-left: 4px solid var(--region);
+}
+.region-detail > p,
+.region-style,
+.region-style b,
+.stage-button small,
+.journey-notes {
+  color: var(--muted);
+}
+.affinity-note,
+.region-reward {
+  color: var(--gold-ink) !important;
+}
+.stage-button {
+  background: #f8f5f9;
+  border-color: #e8e2ec;
+}
+.stage-button.current {
+  background: color-mix(in srgb, var(--region) 17%, var(--paper));
+  border-color: color-mix(in srgb, var(--region) 60%, white);
+}
+.stage-button.current .stage-number {
+  color: #446451;
+}
+.stage-button:disabled {
+  background: #fbf9fc;
+  color: #7b7286;
+  border-color: #eee9f1;
+}
+.stage-number {
+  color: #8c7c9a;
+}
+.map-node.selected > span {
+  background: var(--purple-dark);
+}
+.map-note {
+  background: #48395999;
+  width: max-content;
+  max-width: 90%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 12px;
+  border-radius: 4px;
+}
+/* Pattern sheets: a large silhouette on a tinted swatch, practical details beside it. */
+.craft-card {
+  padding: 0;
+  gap: 0;
+  background: var(--paper);
+  border-radius: 4px 14px 14px 4px;
+}
+.craft-art {
+  position: relative;
+  align-self: stretch;
+  width: 43%;
+  padding: 32px 12px 16px;
+  border-right: 1px dashed color-mix(in srgb, var(--item-color) 55%, #d3c8d7);
+  background: color-mix(in srgb, var(--item-color) 15%, var(--paper));
+}
+.pattern-label {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #716780;
+}
+.craft-art .item-art {
+  width: 100%;
+  max-width: 170px;
+  max-height: 230px;
+}
+.craft-info {
+  flex: 1;
+  padding: 16px 24px;
+}
+.craft-info h3 {
+  font-family: "Noto Serif SC", "Songti SC", serif;
+  font-weight: 600;
+  color: var(--ink);
+}
+.craft-info p,
+.craft-filters {
+  color: var(--muted);
+}
+.cost,
+.craft-art .item-stars {
+  color: var(--gold-ink);
+}
+.craft-card[data-state="owned"] .craft-art::after {
+  content: "已收藏";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  font-size: 10px;
+  padding: 3px 6px;
+  border: 1px solid #7a9b88;
+  color: #50735e;
+  background: var(--paper);
+  transform: rotate(-8deg);
+}
+/* An invitation, with one strong action and a legible matching score. */
+.theme-tabs {
+  background: #eae3f0;
+}
+.theme-tabs button {
+  color: var(--muted);
+}
+.theme-tabs button.active {
+  color: var(--purple-dark);
+  background: var(--paper);
+}
+.contest-card {
+  position: relative;
+  background: var(--paper);
+  border-color: #d7c49d;
+  border-radius: 4px;
+  outline: 1px solid #e6d8b9;
+  outline-offset: -7px;
+}
+.contest-emblem {
+  border-radius: 8px 8px 50% 50%;
+  background: #f9f1df;
+  color: var(--gold-ink);
+}
+.contest-card > .eyebrow {
+  color: var(--gold-ink);
+  letter-spacing: 3px;
+}
+.contest-card > p,
+.contest-card .contest-tip,
+.style-meter,
+.style-meter small {
+  color: var(--muted);
+}
+.contest-tag {
+  background: #f1ebf7;
+  color: var(--purple-dark);
+  border-radius: 4px;
+}
+.style-meter b {
+  color: var(--purple-dark);
+  font-variant-numeric: tabular-nums;
+}
+.style-meter i,
+.quest-progress i {
+  background: #9878bc;
+}
+.contest-reward {
+  color: var(--gold-ink);
+}
+/* A journal spread: horizontal entries give the task, progress and reward a reading order. */
+.journal-summary {
+  border: 0;
+  border-block: 1px solid #ddcfb1;
+  background: var(--paper);
+  border-radius: 0;
+}
+.journal-summary b {
+  color: var(--ink);
+}
+.journal-summary span,
+.journal-summary small,
+.list-heading > span {
+  color: var(--muted);
+}
+.journal-tabs button {
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px 6px 0 0;
+}
+.journal-tabs button.active {
+  color: var(--purple-dark);
+  background: #ece4f5;
+  border-color: transparent;
+  border-bottom: 2px solid var(--purple-dark);
+}
+.quest-card p,
+.quest-card small {
+  color: var(--muted);
+}
+.quest-card small span {
+  color: var(--gold-ink);
+}
+.screen-journal .quest-card[data-state="ready"] {
+  background: #f4f8f0;
+  border-color: #a2b89a;
+}
+.quest-card[data-state="ready"] .soft-button {
+  background: var(--purple-dark);
+  color: white;
+}
+.quest-card[data-state="claimed"] .quest-icon {
+  color: #527660;
+  background: #eaf1e7;
+}
+/* In-play controls and dialogs belong to the same world. */
+.adventure-objective,
+.adventure-hint {
+  background: #fffdf8f2;
+  border-color: #ded5e5;
+}
+.adventure-objective p,
+.movement-help {
+  color: var(--muted);
+}
+.adventure-objective .done {
+  color: #4f7455;
+}
+.dpad button {
+  background: #fffdf8ee;
+  color: var(--purple-dark);
+  border-color: #c9b8dc;
+}
+dialog {
+  background: var(--paper);
+  border-color: #d8c9e1;
+  border-radius: 12px;
+  box-shadow: 0 20px 80px #42305226;
+}
+dialog p,
+.choice small,
+.setting-row > span,
+.slot-card p {
+  color: var(--muted);
+}
+.modal-close {
+  min-width: 36px;
+  min-height: 36px;
+}
+@media (min-width: 601px) and (min-height: 601px) {
+  .section-heading {
+    margin-bottom: 20px;
+  }
+  .section-heading h2 {
+    font-size: 28px;
+    margin: 7px 0;
+  }
+  .section-heading p,
+  .craft-info p,
+  .region-detail > p,
+  .contest-card > p {
+    font-size: 12px;
+  }
+  .craft-info h3 {
+    font-size: 21px;
+    margin: 10px 0;
+  }
+  .craft-info .tiny-label {
+    font-size: 11px;
+  }
+  .craft-info button {
+    min-height: 44px;
+  }
+  .contest-card {
+    padding-inline: clamp(24px, 3vw, 48px);
+  }
+  .contest-card h2 {
+    font-size: 28px;
+  }
+  .style-meter {
+    margin-top: 16px;
+  }
+  .style-meter b {
+    font-size: 36px;
+  }
+  .screen-journal .quests-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px 12px 12px 4px;
+    border-left: 4px solid #cab7dd;
+  }
+  .screen-journal .quest-card {
+    flex-direction: row;
+    text-align: left;
+    gap: 24px;
+    padding: 20px 28px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+  }
+  .screen-journal .quest-card:last-child {
+    border-bottom: 0;
+  }
+  .screen-journal .quest-card > div {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) minmax(170px, 0.85fr);
+    align-items: center;
+    column-gap: 32px;
+    row-gap: 8px;
+  }
+  .screen-journal .quest-card h3 {
+    margin: 0;
+    font-size: 16px;
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .screen-journal .quest-card p {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 12px;
+  }
+  .screen-journal .quest-card small {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 11px;
+  }
+  .screen-journal .quest-card small span {
+    display: inline;
+    margin-left: 12px;
+  }
+  .screen-journal .quest-progress {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 0;
+  }
+  .screen-journal .quest-card button {
+    min-width: 88px;
+    min-height: 44px;
+    flex-shrink: 0;
+    margin: 0;
+  }
+}
+@media (max-width: 1100px) and (min-width: 601px) and (min-height: 601px) {
+  .screen-journal .quest-card {
+    padding: 16px;
+    gap: 16px;
+  }
+  .screen-journal .quest-card > div {
+    column-gap: 16px;
+    grid-template-columns: minmax(100px, 1fr) minmax(130px, 0.8fr);
+  }
+  .screen-journal .quest-card small span {
+    display: block;
+    margin-left: 0;
+  }
+  .craft-info {
+    padding-inline: 16px;
+  }
+  .craft-info h3 {
+    font-size: 18px;
+  }
+}
+@media (max-width: 600px), (min-width: 601px) and (max-height: 600px) {
+  .craft-art {
+    padding: 28px 8px 10px;
+    width: 38%;
+  }
+  .pattern-label {
+    top: 10px;
+    left: 10px;
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+  .craft-info {
+    padding: 12px;
+  }
+  .craft-info h3 {
+    font-size: 16px;
+  }
+  .craft-art .item-art {
+    max-height: 175px;
+  }
+  .region-detail {
+    border-left-width: 3px;
+  }
+  .contest-card {
+    outline-offset: -4px;
+  }
+  .map-note {
+    padding: 3px 8px;
+  }
+  .quest-card {
+    background: var(--paper);
+    border-radius: 4px 10px 10px 4px;
+    border-left: 3px solid #cab7dd;
+  }
+}
+
+@media (max-width: 600px) {
+  .craft-filters > span:last-child {
+    max-width: none;
+    white-space: nowrap;
+    font-size: 9px;
+  }
+}

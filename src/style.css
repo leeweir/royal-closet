@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   color: #5a4769;
   background: #f7f3f8;
@@ -807,7 +808,7 @@ main.screen-adventure {
 .kingdom-map {
   position: relative;
   min-height: 0;
-  background: url("./assets/kingdom.jpg") center/cover;
+  background: url("./assets/kingdom.webp") center/cover;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #e8dfed;
@@ -1645,6 +1646,25 @@ main.screen-adventure {
 }
 .app-shell:has(.screen-adventure) .footer {
   display: none;
+}
+.model-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 22px;
+  color: #76618d;
+  font-size: 13px;
+  pointer-events: none;
+}
+.loading-silhouette {
+  display: block;
+  width: 125px;
+  height: 240px;
+  opacity: 0.5;
+  background: linear-gradient(#d5c9e8, #e5dff0);
+  clip-path: polygon(44% 0, 56% 0, 62% 8%, 59% 15%, 56% 19%, 72% 24%, 64% 42%, 100% 95%, 85% 100%, 15% 100%, 0 95%, 36% 42%, 28% 24%, 44% 19%, 41% 15%, 38% 8%);
 }
 .webgl-fallback {
   position: absolute;

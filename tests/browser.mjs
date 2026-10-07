@@ -47,6 +47,7 @@ try {
   await click("nav", "contest");
   await click("theme", "1");
   await click("contest");
+  await page.locator("#modal[open] .contest-grade").waitFor({ timeout: 16000 });
   assert.ok((await state()).coins > 360);
   await click("close");
   await click("login");
@@ -69,19 +70,12 @@ try {
   await page.waitForTimeout(750);
   await screenshot("adventure-desktop");
   async function walk(kind, index = 0) {
-    const p = await page.evaluate(
-      ({ kind, index }) =>
-        window.__STARLIGHT__
-          .diagnostics()
-          .points.find((p) => p.kind === kind && p.index === index),
-      { kind, index },
-    );
-    assert.ok(p);
-    await page.mouse.click(p.x, p.y);
+    const before = (await run()).gems.length;
+    await page.locator(`.adventure-goal[data-kind="${kind}"]`).click();
     if (kind === "gem")
       await page.waitForFunction(
-        (i) => window.__STARLIGHT__.getRun().gems.includes(i),
-        index,
+        (n) => window.__STARLIGHT__.getRun().gems.length > n,
+        before,
         { timeout: 12000 },
       );
     else
@@ -90,7 +84,7 @@ try {
         .waitFor({ state: "visible", timeout: 15000 });
   }
   for (let i = 0; i < 5; i++) await walk("gem", i);
-  console.log("Collected all five crystals through ground-click movement");
+  console.log("Collected all five crystals using visible adventure targets");
   await walk("rune");
   await click("interact");
   await page.waitForTimeout(2600);

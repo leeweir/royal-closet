@@ -1,15 +1,24 @@
 import * as T from "three";
 import {
   createCharacter,
+  updateCharacter,
   animateCharacter,
+  resetCharacterMotion,
+  characterDiagnostics,
+  EXPRESSIONS,
   disposeGroup,
   mesh,
-  orb,
-  material,
 } from "./character";
 import { batchGroup, line } from "./modeling";
-import { GEM_POSITIONS, REGIONS } from "../simulation/data";
-import type { Save, Run } from "../simulation/game";
+import { REGIONS, regionOf, INTERACT_RADIUS } from "../simulation/data";
+import { advanceGround, clampGround } from "../simulation/locomotion";
+import type { Save, Run, Outfit } from "../simulation/game";
+import {
+  adventureAbilities,
+  stageLayout,
+  REGION_STORIES,
+} from "../simulation/adventure";
+import { createCompanion, addRegionScenery } from "./region-scenes";
 export type PointKind = "gem" | "rune" | "fairy" | "portal";
 export interface WorldPoint {
   kind: PointKind;
@@ -18,6 +27,7 @@ export interface WorldPoint {
   z: number;
   object: T.Group;
 }
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 export class World {
   renderer: T.WebGLRenderer;
   scene = new T.Scene();
@@ -25,15 +35,18 @@ export class World {
   environment = new T.Group();
   avatar: T.Group;
   particles: T.Points;
-  mode: "closet" | "adventure" = "closet";
+  mode: "closet" | "adventure" | "runway" = "closet";
   points: WorldPoint[] = [];
   target = new T.Vector3();
   keys = new Set<string>();
   paused = false;
+  /** False while the 3D panel is hidden by the current screen. */
+  visible = true;
   drag = false;
   rotate = 0;
   zoom = 1;
   pose = 0;
+  expression = 0;
   look = { x: 0, y: 0 };
   happyUntil = 0;
   last = 0;
@@ -42,19 +55,44 @@ export class World {
   onNear: (p: WorldPoint | null) => void = () => {};
   onGem: (i: number) => void = () => {};
   onError: () => void = () => {};
+  onFrame: () => void = () => {};
+  destination: WorldPoint | null = null;
+  private destinationRing: T.Group | null = null;
+  private cameraAnchor = new T.Vector3();
+  private walkDistance = 0;
+  private ground = new T.Plane(new T.Vector3(0, 1, 0), 0);
+  private outfit: Outfit;
+  private magicReadyAt = 0;
+  private magicStartedAt = -100;
+  private magicRing: T.Mesh | null = null;
+  runwayTime = 0;
+  private runwayDone: (() => void) | null = null;
   private nearKey = "";
-  private pointer = { x: 0, y: 0, moved: false };
+  private pointer = { x: 0, y: 0, startX: 0, startY: 0, moved: false };
   private ray = new T.Raycaster();
   private touchAxis = { x: 0, z: 0 };
   private ro: ResizeObserver;
-  constructor(
+  private sun: T.DirectionalLight;
+  private mats = new Map<string, T.MeshStandardMaterial>();
+  private portalReady: boolean | null = null;
+  static async create(host: HTMLElement, s: Save) {
+    const avatar = await createCharacter(s);
+    try {
+      return new World(host, avatar, s);
+    } catch (error) {
+      disposeGroup(avatar);
+      throw error;
+    }
+  }
+  private constructor(
     public host: HTMLElement,
-    s: Save,
+    avatar: T.Group,
+    save: Save,
   ) {
+    this.outfit = { ...save.outfit };
     this.renderer = new T.WebGLRenderer({
       antialias: true,
       alpha: true,
-      preserveDrawingBuffer: true,
       powerPreference: "high-performance",
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
@@ -69,22 +107,22 @@ export class World {
       "可拖动旋转的 3D 公主；冒险时点击地面移动",
     );
     host.append(this.renderer.domElement);
-    this.scene.add(new T.HemisphereLight("#fff6eb", "#a6a2c1", 1.65));
-    const sun = new T.DirectionalLight("#fff5e7", 2.5);
-    sun.position.set(4, 8, 5);
+    this.scene.add(new T.HemisphereLight("#fff9f3", "#b5a0cb", 0.8));
+    const sun = new T.DirectionalLight("#fff4e5", 2.2);
+    sun.position.set(-3, 6, 5);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.camera.left = -12;
-    sun.shadow.camera.right = 12;
-    sun.shadow.camera.top = 12;
-    sun.shadow.camera.bottom = -12;
     sun.shadow.normalBias = 0.04;
     this.scene.add(sun);
-    const fill = new T.DirectionalLight("#ded7ff", 1.0);
-    fill.position.set(-4, 3, 5);
+    this.sun = sun;
+    const fill = new T.DirectionalLight("#e9dfff", 0.55);
+    fill.position.set(3, 3, 3);
     this.scene.add(fill);
+    const rim = new T.DirectionalLight("#fff1da", 0.6);
+    rim.position.set(0, 4, -4);
+    this.scene.add(rim);
     this.scene.add(this.environment);
-    this.avatar = createCharacter(s);
+    this.avatar = avatar;
     this.scene.add(this.avatar);
     const pts = [];
     for (let i = 0; i < 65; i++)
@@ -116,7 +154,13 @@ export class World {
     const el = this.renderer.domElement;
     el.addEventListener("pointerdown", (e) => {
       if (this.paused) return;
-      this.pointer = { x: e.clientX, y: e.clientY, moved: false };
+      this.pointer = {
+        x: e.clientX,
+        y: e.clientY,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false,
+      };
       this.drag = true;
       el.setPointerCapture(e.pointerId);
     });
@@ -134,7 +178,12 @@ export class World {
       );
       if (!this.drag || this.paused) return;
       const dx = e.clientX - this.pointer.x;
-      if (Math.abs(dx) > 2 || Math.abs(e.clientY - this.pointer.y) > 2)
+      if (
+        Math.hypot(
+          e.clientX - this.pointer.startX,
+          e.clientY - this.pointer.startY,
+        ) > 9
+      )
         this.pointer.moved = true;
       if (this.mode === "closet") this.rotate += dx * 0.012;
       this.pointer.x = e.clientX;
@@ -155,23 +204,46 @@ export class World {
           ),
           this.camera,
         );
-        const hit = new T.Vector3();
-        this.ray.ray.intersectPlane(
-          new T.Plane(new T.Vector3(0, 1, 0), 0),
-          hit,
+        // Pick the visible object first. A ray to the floor behind a floating
+        // crystal can miss its pickup radius, especially on a touch screen.
+        const nearby = this.projectPoints().filter(
+          (p) =>
+            p.visible &&
+            !(p.kind === "gem" && this.run?.gems.includes(p.index)),
         );
-        if (hit)
-          this.target.set(
-            T.MathUtils.clamp(hit.x, -7.8, 7.8),
-            0,
-            T.MathUtils.clamp(hit.z, -7.8, 7.8),
-          );
+        const picked = nearby
+          .map((p) => ({
+            p,
+            distance: Math.hypot(p.visualX - e.clientX, p.visualY - e.clientY),
+          }))
+          .filter((p) => p.distance < (e.pointerType === "touch" ? 34 : 26))
+          .sort((a, b) => a.distance - b.distance)[0];
+        if (picked) this.seek(picked.p.kind, picked.p.index);
+        else {
+          const hit = this.ray.ray.intersectPlane(this.ground, new T.Vector3());
+          if (hit) this.moveTo(hit.x, hit.z);
+        }
       }
       if (this.drag && !this.pointer.moved && this.mode === "closet")
         this.happyUntil = this.time + 2.5;
       this.drag = false;
     });
     el.addEventListener("pointercancel", () => (this.drag = false));
+    el.addEventListener("pointerleave", () => {
+      if (!this.drag) this.look = { x: 0, y: 0 };
+    });
+    // Keyboard users can turn the princess and make her smile.
+    el.tabIndex = 0;
+    el.addEventListener("keydown", (e) => {
+      if (this.mode !== "closet" || this.paused) return;
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        this.rotate += e.key === "ArrowLeft" ? -0.3 : 0.3;
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this.happyUntil = this.time + 2.5;
+      }
+    });
     el.addEventListener(
       "wheel",
       (e) => {
@@ -214,11 +286,10 @@ export class World {
       this.keys.delete(e.key.toLowerCase()),
     );
     window.addEventListener("blur", () => {
-      this.keys.clear();
-      this.touchAxis = { x: 0, z: 0 };
+      this.stop();
     });
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) this.keys.clear();
+      if (document.hidden) this.stop();
     });
     el.addEventListener("webglcontextlost", (e) => {
       e.preventDefault();
@@ -237,33 +308,75 @@ export class World {
     this.camera.updateProjectionMatrix();
   }
   updateOutfit(s: Save) {
-    const old = this.avatar;
-    this.avatar = createCharacter(s);
-    this.avatar.position.copy(old.position);
-    this.avatar.rotation.copy(old.rotation);
-    this.avatar.scale.copy(old.scale);
-    this.scene.remove(old);
-    disposeGroup(old);
-    this.scene.add(this.avatar);
+    this.outfit = { ...s.outfit };
+    updateCharacter(this.avatar, s);
   }
   clear() {
     this.environment.clear();
     this.points = [];
+    this.mats.clear();
+    this.portalReady = null;
+    this.destinationRing = null;
+    this.destination = null;
+    this.magicRing = null;
+    this.runwayDone = null;
+  }
+  /** One material per look, so static scenery can be merged by material. */
+  private mat(color: string, metalness = 0, roughness = 0.65) {
+    const key = `${color}|${metalness}|${roughness}`;
+    let m = this.mats.get(key);
+    if (!m) {
+      m = new T.MeshStandardMaterial({ color, metalness, roughness });
+      this.mats.set(key, m);
+    }
+    return m;
+  }
+  private orb(
+    parent: T.Object3D,
+    color: string,
+    x: number,
+    y: number,
+    z: number,
+    sx: number,
+    sy = sx,
+    sz = sx,
+  ) {
+    const m = mesh(
+      new T.SphereGeometry(1, 18, 12),
+      this.mat(color),
+      parent,
+      x,
+      y,
+      z,
+    );
+    m.scale.set(sx, sy, sz);
+    return m;
+  }
+  private shadowArea(size: number) {
+    const cam = this.sun.shadow.camera;
+    cam.left = cam.bottom = -size;
+    cam.right = cam.top = size;
+    cam.updateProjectionMatrix();
   }
   closet() {
     disposeGroup(this.environment);
     this.clear();
     this.mode = "closet";
+    this.stop();
+    this.camera.fov = 36;
+    this.camera.updateProjectionMatrix();
     this.run = null;
     this.rotate = -0.13;
     this.zoom = 1;
     this.avatar.position.set(0, 0.14, 0);
     this.avatar.scale.setScalar(1);
     this.avatar.rotation.set(0, 0, 0);
+    resetCharacterMotion(this.avatar);
     this.scene.fog = null;
+    this.shadowArea(3.2);
     mesh(
       new T.CylinderGeometry(1.25, 1.3, 0.13, 96),
-      material("#eee5f5", 0.2),
+      this.mat("#eee5f5", 0.2),
       this.environment,
       0,
       0.055,
@@ -271,7 +384,7 @@ export class World {
     );
     const gold = mesh(
       new T.TorusGeometry(1.25, 0.012, 8, 96),
-      material("#ceb887", 0.6),
+      this.mat("#ceb887", 0.6),
       this.environment,
       0,
       0.125,
@@ -294,13 +407,13 @@ export class World {
     p.push(new T.Vector3(-1.56, 0.05, -0.88));
     mesh(
       new T.TubeGeometry(new T.CatmullRomCurve3(p), 100, 0.023, 8, false),
-      material("#d4c095", 0.3),
+      this.mat("#d4c095", 0.3),
       this.environment,
     );
     for (const side of [-1, 1]) {
       mesh(
         new T.CylinderGeometry(0.09, 0.1, 2.45, 24),
-        material("#f6f1f6"),
+        this.mat("#f6f1f6"),
         this.environment,
         side * 1.85,
         1.22,
@@ -309,7 +422,7 @@ export class World {
       for (const y of [0.1, 2.4])
         mesh(
           new T.CylinderGeometry(0.17, 0.17, 0.1, 24),
-          material("#e2d6ca"),
+          this.mat("#e2d6ca"),
           this.environment,
           side * 1.85,
           y,
@@ -317,9 +430,9 @@ export class World {
         );
       const foliage = new T.Group();
       this.environment.add(foliage);
-      const stem = material("#b5a99c", 0.3),
-        petals = material("#dfbfd5", 0.05),
-        leaf = material("#c6bdcf");
+      const stem = this.mat("#b5a99c", 0.3),
+        petals = this.mat("#dfbfd5", 0.05),
+        leaf = this.mat("#c6bdcf");
       line(
         foliage,
         Array.from({ length: 16 }, (_, i) => [
@@ -372,31 +485,41 @@ export class World {
       const a = i * 0.9;
       mesh(
         new T.OctahedronGeometry(0.045, 0),
-        material("#ddc790", 0.6),
+        this.mat("#ddc790", 0.6),
         this.environment,
         Math.sin(a) * 1.4,
         3.1 + Math.cos(a) * 0.44,
         -0.45,
       );
     }
-    this.resize();
+    // Merge the static set by material; animated props live in sub-groups.
+    batchGroup(this.environment);
   }
   adventure(run: Run) {
     disposeGroup(this.environment);
     this.clear();
     this.mode = "adventure";
+    this.stop();
+    this.camera.fov = 42;
+    this.camera.updateProjectionMatrix();
     this.run = run;
     this.nearKey = "";
-    const regionId = Math.min(4, Math.floor(run.stage / 4));
+    const regionId = regionOf(run.stage);
     const region = REGIONS[regionId];
-    this.avatar.scale.setScalar(0.51);
-    this.avatar.position.set(0, 0, 6);
+    const layout = stageLayout(run.stage);
+    this.magicReadyAt = this.time;
+    this.avatar.scale.setScalar(0.72);
+    this.avatar.position.set(layout.spawn.x, 0, layout.spawn.z);
     this.target.copy(this.avatar.position);
     this.avatar.rotation.set(0, Math.PI, 0);
+    resetCharacterMotion(this.avatar);
+    this.cameraAnchor.copy(this.avatar.position);
+    this.followCamera(0, true);
     this.scene.fog = new T.Fog("#ece8f2", 35, 70);
+    this.shadowArea(12);
     mesh(
       new T.CylinderGeometry(11, 10.4, 0.5, 80),
-      material(region.ground),
+      this.mat(region.ground),
       this.environment,
       0,
       -0.27,
@@ -404,24 +527,13 @@ export class World {
     );
     mesh(
       new T.CylinderGeometry(10.8, 8.6, 1.8, 40),
-      material("#b9b0c8"),
+      this.mat("#b9b0c8"),
       this.environment,
       0,
       -1.32,
       0,
     );
-    for (let i = 0; i < 18; i++) {
-      const z = 6.5 - i * 0.76;
-      const tile = mesh(
-        new T.CylinderGeometry(0.57, 0.6, 0.025, 7),
-        material(i % 2 ? "#f4efe7" : "#e7dfd7"),
-        this.environment,
-        Math.sin(i * 0.73) * 0.45,
-        0.017,
-        z,
-      );
-      tile.rotation.y = i * 0.53;
-    }
+    addRegionScenery(this.environment, regionId, layout.path, layout.angle);
     for (let i = 0; i < 19; i++) {
       const a = (i / 19) * Math.PI * 2;
       const r = 8.8 + Math.sin(i * 2) * 0.6;
@@ -430,7 +542,7 @@ export class World {
       if (z > 5.5) continue;
       const trunk = mesh(
         new T.CylinderGeometry(0.1, 0.17, 1.55, 8),
-        material("#ac9394"),
+        this.mat("#ac9394"),
         this.environment,
         x,
         0.7,
@@ -441,7 +553,7 @@ export class World {
         for (let j = 0; j < 3; j++)
           mesh(
             new T.ConeGeometry(0.83 - j * 0.16, 1.25, 7),
-            material(j === 2 ? "#f4f5ff" : region.leaf),
+            this.mat(j === 2 ? "#f4f5ff" : region.leaf),
             this.environment,
             x,
             1.4 + j * 0.55,
@@ -450,7 +562,7 @@ export class World {
       } else if (regionId === 4) {
         mesh(
           new T.CylinderGeometry(0.32, 0.4, 2.1, 12),
-          material("#f4e8d5", 0.1),
+          this.mat("#f4e8d5", 0.1),
           this.environment,
           x,
           1.1,
@@ -458,7 +570,7 @@ export class World {
         );
         mesh(
           new T.ConeGeometry(0.57, 0.8, 6),
-          material("#ac8cbc", 0.2),
+          this.mat("#ac8cbc", 0.2),
           this.environment,
           x,
           2.5,
@@ -466,16 +578,16 @@ export class World {
         );
         mesh(
           new T.OctahedronGeometry(0.12),
-          material("#d4b878", 0.5),
+          this.mat("#d4b878", 0.5),
           this.environment,
           x,
           3.05,
           z,
         );
       } else {
-        orb(this.environment, region.leaf, x, 2.0, z, 0.83, 1.03, 0.83);
-        orb(this.environment, region.leaf, x + 0.4, 1.68, z + 0.18, 0.58);
-        orb(this.environment, region.leaf, x - 0.38, 1.75, z - 0.12, 0.54);
+        this.orb(this.environment, region.leaf, x, 2.0, z, 0.83, 1.03, 0.83);
+        this.orb(this.environment, region.leaf, x + 0.4, 1.68, z + 0.18, 0.58);
+        this.orb(this.environment, region.leaf, x - 0.38, 1.75, z - 0.12, 0.54);
       }
     }
     if (regionId === 2) {
@@ -497,7 +609,7 @@ export class World {
       water.rotation.x = -Math.PI / 2;
       for (let i = 0; i < 10; i++) {
         const a = i * 0.67;
-        orb(
+        this.orb(
           this.environment,
           "#c2d9dc",
           Math.sin(a) * 9.9,
@@ -518,13 +630,13 @@ export class World {
       if (regionId === 0 || regionId === 1) {
         mesh(
           new T.CylinderGeometry(0.045, 0.06, 0.25, 8),
-          material("#e5dacb"),
+          this.mat("#e5dacb"),
           this.environment,
           x,
           0.15,
           z,
         );
-        const cap = orb(
+        this.orb(
           this.environment,
           regionId === 0 ? "#d8a6bd" : "#be91bd",
           x,
@@ -535,7 +647,7 @@ export class World {
           0.22,
         );
         for (let j = 0; j < 3; j++)
-          orb(
+          this.orb(
             this.environment,
             "#fff1db",
             x + Math.cos(j * 2.1) * 0.11,
@@ -546,7 +658,7 @@ export class World {
       } else if (regionId === 3) {
         const g = mesh(
           new T.OctahedronGeometry(0.35),
-          material("#a0c5da", 0.4, 0.2),
+          this.mat("#a0c5da", 0.4, 0.2),
           this.environment,
           x,
           0.48,
@@ -556,7 +668,7 @@ export class World {
       } else if (regionId === 4) {
         const g = mesh(
           new T.OctahedronGeometry(0.19),
-          material("#dfbb70", 0.6),
+          this.mat("#dfbb70", 0.6),
           this.environment,
           x,
           1.3,
@@ -572,7 +684,7 @@ export class World {
         z = Math.cos(a) * r;
       const f = mesh(
         new T.ConeGeometry(0.09, 0.29, 5),
-        material(i % 3 ? "#fff1d3" : region.leaf),
+        this.mat(i % 3 ? "#fff1d3" : region.leaf),
         this.environment,
         x,
         0.13,
@@ -580,28 +692,25 @@ export class World {
       );
       f.rotation.z = Math.sin(i) * 0.35;
     }
-    GEM_POSITIONS.forEach(([baseX, baseZ], index) => {
-      const angle = ((run.stage % 4) * Math.PI) / 2;
-      const x = baseX * Math.cos(angle) - baseZ * Math.sin(angle),
-        z = baseX * Math.sin(angle) + baseZ * Math.cos(angle);
+    layout.gems.forEach(({ x, z }, index) => {
       const g = new T.Group();
       g.position.set(x, 0.65, z);
       this.environment.add(g);
-      mesh(new T.OctahedronGeometry(0.3), material("#c39aed", 0.35, 0.2), g);
+      mesh(new T.OctahedronGeometry(0.3), this.mat("#c39aed", 0.35, 0.2), g);
       const ring = mesh(
         new T.TorusGeometry(0.35, 0.016, 6, 30),
-        material("#e4cba2"),
+        this.mat("#e4cba2"),
         g,
       );
       ring.rotation.x = Math.PI / 2;
       this.points.push({ kind: "gem", index, x, z, object: g });
     });
     const rune = new T.Group();
-    rune.position.set(-5, 0, -4);
+    rune.position.set(layout.rune.x, 0, layout.rune.z);
     this.environment.add(rune);
     mesh(
       new T.CylinderGeometry(0.65, 0.75, 0.16, 6),
-      material("#aaa2c4"),
+      this.mat("#aaa2c4"),
       rune,
       0,
       0.08,
@@ -611,39 +720,25 @@ export class World {
       const a = i * 2.09;
       mesh(
         new T.OctahedronGeometry(0.17),
-        material(["#e8abca", "#a4d5c5", "#edcf8a"][i], 0.4),
+        this.mat(["#e8abca", "#a4d5c5", "#edcf8a"][i], 0.4),
         rune,
         Math.sin(a) * 0.42,
         0.5,
         Math.cos(a) * 0.42,
       );
     }
-    this.points.push({ kind: "rune", index: 0, x: -5, z: -4, object: rune });
-    const fairy = new T.Group();
-    fairy.position.set(5, 1.2, 5);
+    this.points.push({ kind: "rune", index: 0, ...layout.rune, object: rune });
+    const fairy = createCompanion(regionId);
+    fairy.position.set(layout.npc.x, 0.18, layout.npc.z);
     fairy.scale.setScalar(1.3);
     this.environment.add(fairy);
-    orb(fairy, "#fff0bf", 0, 0, 0, 0.18);
-    for (const side of [-1, 1]) {
-      const w = orb(
-        fairy,
-        "#f3d4e7",
-        side * 0.23,
-        0.07,
-        -0.04,
-        0.25,
-        0.12,
-        0.055,
-      );
-      w.rotation.z = side * 0.5;
-    }
-    this.points.push({ kind: "fairy", index: 0, x: 5, z: 5, object: fairy });
+    this.points.push({ kind: "fairy", index: 0, ...layout.npc, object: fairy });
     const portal = new T.Group();
-    portal.position.set(0, 1.2, -7.4);
+    portal.position.set(layout.portal.x, 1.2, layout.portal.z);
     this.environment.add(portal);
     const ring = mesh(
       new T.TorusGeometry(1, 0.075, 12, 64),
-      material("#c7afd8", 0.4),
+      this.mat("#c7afd8", 0.4),
       portal,
     );
     ring.scale.y = 1.2;
@@ -660,7 +755,7 @@ export class World {
     for (const side of [-1, 1])
       mesh(
         new T.CylinderGeometry(0.13, 0.2, 1.8, 8),
-        material("#ddd4ed"),
+        this.mat("#ddd4ed"),
         portal,
         side * 1.2,
         -0.3,
@@ -669,11 +764,239 @@ export class World {
     this.points.push({
       kind: "portal",
       index: 0,
-      x: 0,
-      z: -7.4,
+      ...layout.portal,
       object: portal,
     });
-    this.resize();
+    batchGroup(this.environment);
+    const marker = new T.Group();
+    const destinationDisc = new T.Mesh(
+      new T.RingGeometry(0.27, 0.34, 48),
+      new T.MeshBasicMaterial({
+        color: "#fff6cd",
+        side: T.DoubleSide,
+        transparent: true,
+        opacity: 0.95,
+        depthWrite: false,
+      }),
+    );
+    destinationDisc.rotation.x = -Math.PI / 2;
+    marker.add(destinationDisc);
+    marker.visible = false;
+    this.environment.add(marker);
+    this.destinationRing = marker;
+    this.magicRing = new T.Mesh(
+      new T.RingGeometry(0.92, 1, 64),
+      new T.MeshBasicMaterial({
+        color: "#f9df96",
+        transparent: true,
+        opacity: 0,
+        side: T.DoubleSide,
+        depthWrite: false,
+      }),
+    );
+    this.magicRing.rotation.x = -Math.PI / 2;
+    this.magicRing.visible = false;
+    this.environment.add(this.magicRing);
+  }
+  get abilities() {
+    return adventureAbilities(
+      this.outfit,
+      this.run ? regionOf(this.run.stage) : -1,
+    );
+  }
+  get magicCooldown() {
+    return Math.max(0, this.magicReadyAt - this.time);
+  }
+  castMagic() {
+    if (
+      this.mode !== "adventure" ||
+      this.paused ||
+      this.magicCooldown > 0 ||
+      !this.run
+    )
+      return null;
+    const power = this.abilities;
+    this.magicReadyAt = this.time + power.cooldown;
+    this.magicStartedAt = this.time;
+    if (this.magicRing) {
+      this.magicRing.position.set(
+        this.avatar.position.x,
+        0.06,
+        this.avatar.position.z,
+      );
+      this.magicRing.visible = true;
+    }
+    let collected = 0;
+    for (const p of this.points)
+      if (
+        p.kind === "gem" &&
+        !this.run.gems.includes(p.index) &&
+        Math.hypot(
+          p.x - this.avatar.position.x,
+          p.z - this.avatar.position.z,
+        ) <= power.spellRadius
+      ) {
+        this.onGem(p.index);
+        p.object.visible = false;
+        collected++;
+        if (this.destination === p) {
+          this.target.copy(this.avatar.position);
+          this.destination = null;
+        }
+      }
+    this.happyUntil = this.time + 1.2;
+    return collected;
+  }
+  startRunway(done: () => void) {
+    disposeGroup(this.environment);
+    this.clear();
+    this.mode = "runway";
+    this.stop();
+    this.run = null;
+    this.runwayDone = done;
+    this.runwayTime = 0;
+    this.camera.fov = 36;
+    this.camera.updateProjectionMatrix();
+    this.avatar.scale.setScalar(1);
+    this.avatar.position.set(0, 0, -2);
+    this.avatar.rotation.set(0, 0, 0);
+    resetCharacterMotion(this.avatar);
+    this.scene.fog = null;
+    this.shadowArea(6);
+    mesh(
+      new T.BoxGeometry(3.1, 0.14, 7.2),
+      this.mat("#dbbad4"),
+      this.environment,
+      0,
+      -0.09,
+      0,
+    );
+    for (const side of [-1, 1]) {
+      mesh(
+        new T.BoxGeometry(0.045, 0.025, 7.2),
+        this.mat("#e6cd95"),
+        this.environment,
+        side * 1.5,
+        0.002,
+        0,
+      );
+      mesh(
+        new T.CylinderGeometry(0.1, 0.16, 4.5, 16),
+        this.mat("#f3e4da"),
+        this.environment,
+        side * 2,
+        2.15,
+        -3.4,
+      );
+      for (let i = 0; i < 7; i++) {
+        const z = -3 + i;
+        mesh(
+          new T.CylinderGeometry(0.15, 0.19, 0.1, 12),
+          this.mat("#bca8c9"),
+          this.environment,
+          side * 1.83,
+          0.02,
+          z,
+        );
+        mesh(
+          new T.SphereGeometry(0.075, 12, 8),
+          new T.MeshBasicMaterial({ color: "#fff1cb" }),
+          this.environment,
+          side * 1.83,
+          0.14,
+          z,
+        );
+      }
+    }
+    mesh(
+      new T.BoxGeometry(3.8, 4.5, 0.1),
+      this.mat("#bba6d0"),
+      this.environment,
+      0,
+      2.15,
+      -3.65,
+    );
+    const arch = mesh(
+      new T.TorusGeometry(1.45, 0.035, 8, 64, Math.PI),
+      this.mat("#f1dba4"),
+      this.environment,
+      0,
+      2,
+      -3.5,
+    );
+    arch.scale.y = 1.25;
+    const floor = mesh(
+      new T.PlaneGeometry(200, 200),
+      new T.ShadowMaterial({ opacity: 0.09 }),
+      this.environment,
+      0,
+      -0.17,
+      0,
+    );
+    floor.rotation.x = -Math.PI / 2;
+    batchGroup(this.environment);
+  }
+  finishRunway() {
+    if (this.mode !== "runway") return;
+    const done = this.runwayDone;
+    this.runwayDone = null;
+    this.closet();
+    done?.();
+  }
+  private followCamera(dt: number, snap = false) {
+    if (snap || reducedMotion.matches)
+      this.cameraAnchor.copy(this.avatar.position);
+    else this.cameraAnchor.lerp(this.avatar.position, 1 - Math.exp(-dt * 8));
+    const distance = Math.max(1, 0.48 / this.camera.aspect);
+    this.camera.position
+      .copy(this.cameraAnchor)
+      .add(new T.Vector3(0, 7.8 * distance, 10.8 * distance));
+    this.camera.lookAt(this.cameraAnchor.x, 0.65, this.cameraAnchor.z - 1.5);
+    this.camera.updateMatrixWorld();
+  }
+  private moveTo(x: number, z: number) {
+    const point = clampGround({ x, z });
+    this.target.set(point.x, 0, point.z);
+    this.destination = null;
+    if (this.destinationRing) {
+      this.destinationRing.position.set(point.x, 0.045, point.z);
+      this.destinationRing.visible = true;
+    }
+  }
+  seek(kind: PointKind, index?: number) {
+    if (this.mode !== "adventure" || this.paused) return;
+    const point = this.points
+      .filter(
+        (p) =>
+          p.kind === kind &&
+          (index === undefined || p.index === index) &&
+          !(kind === "gem" && this.run?.gems.includes(p.index)),
+      )
+      .sort(
+        (a, b) =>
+          Math.hypot(
+            a.x - this.avatar.position.x,
+            a.z - this.avatar.position.z,
+          ) -
+          Math.hypot(
+            b.x - this.avatar.position.x,
+            b.z - this.avatar.position.z,
+          ),
+      )[0];
+    if (!point) return;
+    const distance = Math.hypot(
+      point.x - this.avatar.position.x,
+      point.z - this.avatar.position.z,
+    );
+    const approach =
+      kind === "gem"
+        ? 1
+        : Math.max(0, distance - 1.05) / Math.max(distance, 0.001);
+    this.moveTo(
+      this.avatar.position.x + (point.x - this.avatar.position.x) * approach,
+      this.avatar.position.z + (point.z - this.avatar.position.z) * approach,
+    );
+    this.destination = point;
   }
   setAxis(x: number, z: number) {
     this.touchAxis = { x, z };
@@ -682,117 +1005,172 @@ export class World {
     this.keys.clear();
     this.touchAxis = { x: 0, z: 0 };
     this.target.copy(this.avatar.position);
+    this.destination = null;
+    if (this.destinationRing) this.destinationRing.visible = false;
+    this.drag = false;
   }
   private tick(ms: number) {
     const elapsed = (ms - this.last) / 1000;
     if (elapsed < 1 / 30) return;
     const dt = Math.min(elapsed, 0.1);
     this.last = ms;
-    if (document.hidden || this.paused || this.host.closest("[hidden]")) return;
+    if (document.hidden || this.paused || !this.visible) return;
     this.time += dt;
     const t = this.time;
     let isMoving = false;
-    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.walkDistance = 0;
+    const reduced = reducedMotion.matches;
     if (this.mode === "closet") {
       this.avatar.rotation.y = this.rotate;
-      this.avatar.position.y =
-        0.14 +
-        (matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? 0
-          : Math.sin(t * 1.8) * 0.014);
+      this.avatar.position.y = 0.14 + (reduced ? 0 : Math.sin(t * 1.8) * 0.014);
       this.avatar.rotation.z =
-        this.pose === 1 ? Math.sin(t * 2) * 0.025 : this.pose === 2 ? 0.04 : 0;
+        this.pose === 1 && !reduced
+          ? Math.sin(t * 2) * 0.025
+          : this.pose === 2
+            ? 0.04
+            : 0;
       const dist = Math.max(7.2, 4.8 / this.camera.aspect) * this.zoom;
       this.camera.position.set(0.0, 2.24, dist);
       this.camera.lookAt(0, 2.07, 0);
       if (this.pose === 2 && !reduced)
         this.avatar.rotation.y += Math.sin(t * 0.6) * 0.4;
+    } else if (this.mode === "runway") {
+      this.runwayTime += dt;
+      const time = this.runwayTime;
+      const before = this.avatar.position.z;
+      const smooth = (v: number) => {
+        v = T.MathUtils.clamp(v, 0, 1);
+        return v * v * (3 - 2 * v);
+      };
+      if (reduced) {
+        this.avatar.position.set(0, 0, 0);
+        this.avatar.rotation.y = time < 3 ? 0 : time < 6 ? 0.65 : 0;
+      } else if (time < 2.8) {
+        this.avatar.position.z = -2 + (3.8 * time) / 2.8;
+        this.avatar.rotation.y = 0;
+        isMoving = true;
+      } else if (time < 4.4) {
+        this.avatar.position.z = 1.8;
+        this.avatar.rotation.y = Math.PI * 2 * smooth((time - 2.8) / 1.6);
+      } else if (time < 5.9) {
+        this.avatar.rotation.y = 0;
+      } else if (time < 6.3) {
+        this.avatar.rotation.y = Math.PI * smooth((time - 5.9) / 0.4);
+      } else {
+        this.avatar.rotation.y = Math.PI;
+        this.avatar.position.z = 1.8 - 3.8 * Math.min(1, (time - 6.3) / 2.7);
+        isMoving = time < 9;
+      }
+      this.walkDistance = Math.abs(this.avatar.position.z - before);
+      const distance = Math.max(9, 5.2 / this.camera.aspect);
+      this.camera.position.set(0.65, 3.2, distance);
+      this.camera.lookAt(0, 1.7, 0);
     } else {
-      this.camera.position.set(10, 15, 18);
-      const distance = this.camera.aspect < 0.85 ? 1.48 : 1;
-      this.camera.position.multiplyScalar(distance);
-      this.camera.lookAt(0, 0, 0);
-      if (!this.paused) {
-        let x =
-          (this.keys.has("d") || this.keys.has("arrowright") ? 1 : 0) -
-          (this.keys.has("a") || this.keys.has("arrowleft") ? 1 : 0) +
-          this.touchAxis.x;
-        let z =
-          (this.keys.has("s") || this.keys.has("arrowdown") ? 1 : 0) -
-          (this.keys.has("w") || this.keys.has("arrowup") ? 1 : 0) +
-          this.touchAxis.z;
-        const direction = new T.Vector3();
-        if (x || z) {
-          direction.set(x, 0, z).normalize();
-          this.target.copy(this.avatar.position);
-        } else direction.copy(this.target).sub(this.avatar.position).setY(0);
-        const moving = direction.length() > 0.08;
-        isMoving = moving;
-        if (moving) {
-          const step = Math.min(direction.length(), dt * 3.8);
-          direction.normalize();
-          this.avatar.position.addScaledVector(direction, step);
-          this.avatar.position.x = T.MathUtils.clamp(
-            this.avatar.position.x,
-            -7.8,
-            7.8,
-          );
-          this.avatar.position.z = T.MathUtils.clamp(
-            this.avatar.position.z,
-            -7.8,
-            7.8,
-          );
-          this.avatar.rotation.y = Math.atan2(direction.x, direction.z);
-          this.avatar.position.y = Math.abs(Math.sin(t * 11)) * 0.08;
-        } else this.avatar.position.y = 0;
-        let near: WorldPoint | null = null;
-        for (const p of this.points) {
-          const dist = Math.hypot(
-            p.x - this.avatar.position.x,
-            p.z - this.avatar.position.z,
-          );
-          if (p.kind === "gem") {
-            p.object.visible = !this.run?.gems.includes(p.index);
-            if (p.object.visible && dist < 0.78) this.onGem(p.index);
-          } else if (dist < 1.5) near = p;
-        }
-        const key = near?.kind ?? "";
-        if (key !== this.nearKey) {
-          this.nearKey = key;
-          this.onNear(near);
-        }
+      const x =
+        (this.keys.has("d") || this.keys.has("arrowright") ? 1 : 0) -
+        (this.keys.has("a") || this.keys.has("arrowleft") ? 1 : 0) +
+        this.touchAxis.x;
+      const z =
+        (this.keys.has("s") || this.keys.has("arrowdown") ? 1 : 0) -
+        (this.keys.has("w") || this.keys.has("arrowup") ? 1 : 0) +
+        this.touchAxis.z;
+      const movement = advanceGround(
+        this.avatar.position,
+        this.target,
+        { x, z },
+        dt,
+        this.abilities.speed,
+      );
+      this.avatar.position.set(movement.position.x, 0, movement.position.z);
+      this.target.set(movement.target.x, 0, movement.target.z);
+      this.walkDistance = movement.distance;
+      isMoving = movement.distance > 0.0001;
+      if (movement.heading !== null) {
+        const desired = new T.Quaternion().setFromAxisAngle(
+          T.Object3D.DEFAULT_UP,
+          movement.heading,
+        );
+        this.avatar.quaternion.rotateTowards(desired, dt * 9);
+      }
+      if (x || z) this.destination = null;
+      if (this.destinationRing)
+        this.destinationRing.visible =
+          !(x || z) && this.avatar.position.distanceTo(this.target) > 0.08;
+      this.followCamera(dt);
+      let near: WorldPoint | null = null;
+      for (const p of this.points) {
+        const dist = Math.hypot(
+          p.x - this.avatar.position.x,
+          p.z - this.avatar.position.z,
+        );
+        if (p.kind === "gem") {
+          p.object.visible = !this.run?.gems.includes(p.index);
+          if (p.object.visible && dist < this.abilities.pickupRadius) {
+            this.onGem(p.index);
+            if (this.destination === p) {
+              this.target.copy(this.avatar.position);
+              this.destination = null;
+              if (this.destinationRing) this.destinationRing.visible = false;
+            }
+          }
+        } else if (dist < INTERACT_RADIUS) near = p;
+      }
+      const key = near?.kind ?? "";
+      if (key !== this.nearKey) {
+        this.nearKey = key;
+        this.onNear(near);
       }
     }
     animateCharacter(
       this.avatar,
       t,
       isMoving,
-      this.mode === "closet" ? this.pose : 0,
-      this.look.x,
-      this.look.y,
+      this.mode === "closet"
+        ? this.pose
+        : this.mode === "runway" &&
+            this.runwayTime >= 4.4 &&
+            this.runwayTime < 5.9
+          ? 1
+          : 0,
+      this.mode === "closet" ? this.look.x : 0,
+      this.mode === "closet" ? this.look.y : 0,
       t < this.happyUntil,
       reduced,
+      this.mode === "closet" ? EXPRESSIONS[this.expression] : "neutral",
+      this.walkDistance,
     );
-    this.points.forEach((p) => {
+    const ready =
+      !!this.run &&
+      this.run.gems.length === 5 &&
+      this.run.puzzle &&
+      this.run.friend;
+    const motion = reduced ? 0 : t;
+    for (const p of this.points) {
       if (p.kind === "gem") {
-        p.object.rotation.y = t * 0.8;
-        p.object.position.y = 0.65 + Math.sin(t * 2 + p.index) * 0.08;
-      }
-      if (p.kind === "fairy") {
-        p.object.position.y = 1.2 + Math.sin(t * 3) * 0.13;
-      }
-      if (p.kind === "portal" && this.run) {
+        p.object.rotation.y = motion * 0.8;
+        p.object.position.y = 0.65 + Math.sin(motion * 2 + p.index) * 0.08;
+      } else if (p.kind === "fairy")
+        p.object.position.y = 0.18 + Math.sin(motion * 3) * 0.045;
+      else if (p.kind === "portal" && ready !== this.portalReady) {
+        this.portalReady = ready;
         const mat = (p.object.children[1] as T.Mesh)
           .material as T.MeshBasicMaterial;
-        mat.color.set(
-          this.run.gems.length === 5 && this.run.puzzle && this.run.friend
-            ? "#a5ddc3"
-            : "#cebbee",
-        );
+        mat.color.set(ready ? "#a5ddc3" : "#cebbee");
       }
-    });
-    this.particles.rotation.y = t * 0.016;
+    }
+    if (this.magicRing) {
+      const progress = (this.time - this.magicStartedAt) / 0.7;
+      this.magicRing.visible = progress >= 0 && progress < 1;
+      this.magicRing.scale.setScalar(
+        this.abilities.spellRadius * Math.min(1, 0.25 + progress),
+      );
+      (this.magicRing.material as T.MeshBasicMaterial).opacity =
+        0.8 * (1 - progress);
+    }
+    this.particles.rotation.y = motion * 0.016;
     this.renderer.render(this.scene, this.camera);
+    if (this.mode !== "closet") this.onFrame();
+    if (this.mode === "runway" && this.runwayTime >= 9) this.finishRunway();
   }
   photo() {
     this.renderer.render(this.scene, this.camera);
@@ -801,24 +1179,66 @@ export class World {
   diagnostics() {
     return {
       mode: this.mode,
+      abilities: this.abilities,
+      magicCooldown: this.magicCooldown,
+      companion: this.run
+        ? REGION_STORIES[regionOf(this.run.stage)].npc.name
+        : null,
+      runwayTime: this.runwayTime,
       drawCalls: this.renderer.info.render.calls,
       geometries: this.renderer.info.memory.geometries,
       textures: this.renderer.info.memory.textures,
       design: this.avatar.userData.design,
       pose: this.pose,
-      headRotation: this.avatar.userData.rig.head.rotation.toArray(),
-      leftArmRotation: this.avatar.userData.rig.left.rotation.toArray(),
+      ...characterDiagnostics(this.avatar),
       position: { x: this.avatar.position.x, z: this.avatar.position.z },
-      points: this.points.map((p) => {
-        const v = new T.Vector3(p.x, 0, p.z).project(this.camera);
-        const r = this.host.getBoundingClientRect();
-        return {
-          kind: p.kind,
-          index: p.index,
-          x: r.left + ((v.x + 1) * r.width) / 2,
-          y: r.top + ((1 - v.y) * r.height) / 2,
-        };
-      }),
+      target: { x: this.target.x, z: this.target.z },
+      heading: this.avatar.rotation.y,
+      travelDistance: this.walkDistance,
+      camera: this.camera.position.toArray(),
+      avatarScreen: this.projectAvatar(),
+      points: this.projectPoints(),
     };
+  }
+  private projectAvatar() {
+    const r = this.host.getBoundingClientRect();
+    const foot = this.avatar.position.clone().project(this.camera);
+    const head = this.avatar.position
+      .clone()
+      .add(new T.Vector3(0, 3.4 * this.avatar.scale.y, 0))
+      .project(this.camera);
+    return {
+      x: r.left + ((foot.x + 1) * r.width) / 2,
+      feetY: r.top + ((1 - foot.y) * r.height) / 2,
+      headY: r.top + ((1 - head.y) * r.height) / 2,
+    };
+  }
+  projectPoints() {
+    const r = this.host.getBoundingClientRect();
+    return this.points.map((p) => {
+      const ground = new T.Vector3(p.x, 0, p.z).project(this.camera);
+      const center = p.object.position.clone().project(this.camera);
+      const labelHeight =
+        p.kind === "portal" ? 2.65 : p.kind === "fairy" ? 1.8 : 0.9;
+      const label = new T.Vector3(p.x, labelHeight, p.z).project(this.camera);
+      return {
+        kind: p.kind,
+        index: p.index,
+        worldX: p.x,
+        worldZ: p.z,
+        x: r.left + ((ground.x + 1) * r.width) / 2,
+        y: r.top + ((1 - ground.y) * r.height) / 2,
+        visualX: r.left + ((center.x + 1) * r.width) / 2,
+        visualY: r.top + ((1 - center.y) * r.height) / 2,
+        labelX: ((label.x + 1) * r.width) / 2,
+        labelY: ((1 - label.y) * r.height) / 2,
+        visible:
+          center.z > -1 &&
+          center.z < 1 &&
+          Math.abs(center.x) < 0.94 &&
+          Math.abs(center.y) < 0.92 &&
+          p.object.visible,
+      };
+    });
   }
 }

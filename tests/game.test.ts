@@ -226,3 +226,26 @@ test("regional outfit affinity adds earned adventure coins and thread", () => {
   assert.equal(r.coins, 338);
   assert.equal(r.thread, 12);
 });
+import { repairSave } from "../src/simulation/game.ts";
+test("stored saves are repaired instead of discarded when items change", () => {
+  const s = freshSave();
+  s.coins = 999;
+  s.completed = [0, 1];
+  const raw = JSON.parse(JSON.stringify(s));
+  raw.owned.push("dress-retired");
+  raw.outfit.hair = "hair-retired";
+  raw.slots[1] = { ...s.outfit, wand: "wand-retired" };
+  raw.slotDyes = ["#ffffff", "#000000", null];
+  raw.completed.push(99);
+  raw.daily = null;
+  const fixed = repairSave(raw);
+  assert.equal(fixed.coins, 999);
+  assert.deepEqual(fixed.completed, [0, 1]);
+  assert.equal(fixed.outfit.hair, "hair-0");
+  assert.ok(!fixed.owned.includes("dress-retired"));
+  assert.equal(fixed.slots[1], null);
+  assert.deepEqual(fixed.slotDyes, [null, null, null]);
+  assert.equal(typeof fixed.daily.date, "string");
+  assert.throws(() => repairSave({ ...raw, version: 99 }));
+  assert.throws(() => repairSave("not a save"));
+});

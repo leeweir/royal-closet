@@ -1,0 +1,152 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  color-scheme: light;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  color: #504265;
+  background: #f3eff7;
+  font-family: "Songti SC", "Noto Serif CJK SC", serif;
+}
+#preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    #fffdfa 0,
+    #f4eff8 58%,
+    #e8e0ef 100%
+  );
+}
+#stage {
+  position: absolute;
+  inset: 0;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+header {
+  position: absolute;
+  top: 32px;
+  left: 40px;
+  z-index: 1;
+  pointer-events: none;
+}
+header p {
+  margin: 0 0 10px;
+  font:
+    10px / 1.4 system-ui,
+    sans-serif;
+  letter-spacing: 3px;
+  color: #716780;
+}
+header h1 {
+  font-size: 30px;
+  letter-spacing: 8px;
+  font-weight: 500;
+  margin: 0 0 9px;
+}
+header span {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #716780;
+}
+nav {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #ffffffb0;
+  border: 1px solid #e1d8ec;
+  border-radius: 30px;
+}
+button {
+  border: 0;
+  border-radius: 22px;
+  min-height: 44px;
+  padding: 0 24px;
+  background: transparent;
+  color: #8b789e;
+  font:
+    13px system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+button[aria-pressed="true"] {
+  background: #694c96;
+  color: #fff;
+}
+button:focus-visible {
+  outline: 2px solid #9e77c2;
+  outline-offset: 3px;
+}
+footer {
+  position: absolute;
+  bottom: 26px;
+  left: 0;
+  width: 100%;
+  display: grid;
+  gap: 8px;
+  text-align: center;
+  pointer-events: none;
+}
+footer span {
+  font-size: 14px;
+  letter-spacing: 4px;
+}
+footer small {
+  font:
+    10px system-ui,
+    sans-serif;
+  color: #716780;
+  letter-spacing: 1px;
+}
+#loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font:
+    14px system-ui,
+    sans-serif;
+}
+#loading[hidden] {
+  display: none;
+}
+@media (max-width: 600px) {
+  header {
+    top: 20px;
+    left: 20px;
+  }
+  header h1 {
+    font-size: 22px;
+  }
+  header span {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+  nav {
+    top: 116px;
+    right: auto;
+    left: 20px;
+  }
+  button {
+    padding: 0 12px;
+    font-size: 11px;
+  }
+  footer span {
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+}

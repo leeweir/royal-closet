@@ -4,6 +4,8 @@ import {
   INITIAL_OWNED,
   categories,
   REGIONS,
+  STAGE_COUNT,
+  regionOf,
   type Category,
   type Style,
 } from "./data";
@@ -70,11 +72,11 @@ export function level(s: Save) {
   return 1 + Math.floor(s.xp / 100);
 }
 export function regionUnlocked(s: Save) {
-  return Math.min(4, Math.floor(nextStage(s) / 4));
+  return regionOf(nextStage(s));
 }
 export function nextStage(s: Save) {
-  for (let i = 0; i < 20; i++) if (!s.completed.includes(i)) return i;
-  return 20;
+  for (let i = 0; i < STAGE_COUNT; i++) if (!s.completed.includes(i)) return i;
+  return STAGE_COUNT;
 }
 export function refreshDay(s: Save, date = dateKey()) {
   if (s.daily.date !== date)
@@ -86,7 +88,7 @@ export function validateSave(raw: unknown): Save {
   if (!raw || typeof raw !== "object") throw new Error("这不是有效的星愿存档");
   const x = raw as Save;
   if (
-    x.version !== 1 ||
+    x.version !== SAVE_VERSION ||
     ![
       "coins",
       "gems",
@@ -106,7 +108,7 @@ export function validateSave(raw: unknown): Save {
         ITEM[x.outfit[c.id]].category === c.id,
     ) ||
     !Array.isArray(x.completed) ||
-    !x.completed.every((n) => Number.isInteger(n) && n >= 0 && n < 20)
+    !x.completed.every((n) => Number.isInteger(n) && n >= 0 && n < STAGE_COUNT)
   )
     throw new Error("存档内容不完整，原有进度已保留");
   if (
@@ -155,6 +157,97 @@ export function validateSave(raw: unknown): Save {
   refreshDay(result);
   return result;
 }
+export const SAVE_VERSION = 1;
+// Each entry upgrades a save from version i + 1 to i + 2.
+const MIGRATIONS: ((
+  raw: Record<string, unknown>,
+) => Record<string, unknown>)[] = [];
+/**
+ * Bring a stored save up to date and drop anything this build no longer
+ * knows (renamed items, out-of-range stages, broken slots) instead of
+ * discarding the whole save. Imports still go through strict validateSave.
+ */
+export function repairSave(raw: unknown): Save {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw))
+    throw new Error("这不是有效的星愿存档");
+  let x = structuredClone(raw) as Record<string, unknown>;
+  const from = typeof x.version === "number" ? x.version : 1;
+  if (from > SAVE_VERSION) throw new Error("存档来自更新版本的游戏");
+  for (let v = from; v < SAVE_VERSION; v++) x = MIGRATIONS[v - 1](x);
+  const base = freshSave(),
+    out = { ...base, ...x, version: SAVE_VERSION } as Save;
+  for (const k of [
+    "coins",
+    "gems",
+    "thread",
+    "xp",
+    "streak",
+    "totalExplores",
+    "totalCrafts",
+    "totalEquips",
+  ] as const)
+    if (!finite(out[k])) out[k] = base[k];
+  const known = (id: unknown): id is string =>
+    typeof id === "string" && !!ITEM[id];
+  out.owned = [
+    ...new Set([
+      ...INITIAL_OWNED,
+      ...(Array.isArray(out.owned) ? out.owned.filter(known) : []),
+    ]),
+  ];
+  const fits = (o: unknown, c: Category) => {
+    const id = (o as Record<string, unknown> | null)?.[c];
+    return known(id) && out.owned.includes(id) && ITEM[id].category === c;
+  };
+  const outfit = out.outfit as unknown;
+  out.outfit = Object.fromEntries(
+    categories.map((c) => [
+      c.id,
+      fits(outfit, c.id) ? (outfit as Outfit)[c.id] : base.outfit[c.id],
+    ]),
+  ) as Outfit;
+  out.completed = Array.isArray(out.completed)
+    ? out.completed.filter(
+        (n) => Number.isInteger(n) && n >= 0 && n < STAGE_COUNT,
+      )
+    : [];
+  const hex = (c: unknown) =>
+    typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c);
+  if (!hex(out.dye)) out.dye = null;
+  const slots = Array.isArray(out.slots) ? out.slots : [];
+  const dyes = Array.isArray(out.slotDyes) ? out.slotDyes : [];
+  out.slots = [0, 1, 2].map((i) =>
+    slots[i] && categories.every((c) => fits(slots[i], c.id))
+      ? { ...(slots[i] as Outfit) }
+      : null,
+  );
+  out.slotDyes = [0, 1, 2].map((i) =>
+    out.slots[i] && hex(dyes[i]) ? (dyes[i] as string) : null,
+  );
+  const strings = (v: unknown) =>
+    Array.isArray(v) ? v.filter((s) => typeof s === "string") : [];
+  out.claims = strings(out.claims);
+  if (typeof out.loginDate !== "string") out.loginDate = "";
+  out.best =
+    out.best && typeof out.best === "object" && !Array.isArray(out.best)
+      ? Object.fromEntries(
+          Object.entries(out.best).filter(([, n]) => finite(n, 100)),
+        )
+      : {};
+  const d = out.daily as Partial<Save["daily"]> | null;
+  out.daily =
+    d && typeof d === "object" && typeof d.date === "string"
+      ? {
+          date: d.date,
+          explores: finite(d.explores) ? d.explores! : 0,
+          crafted: finite(d.crafted) ? d.crafted! : 0,
+          styled: finite(d.styled) ? d.styled! : 0,
+          claimed: strings(d.claimed),
+        }
+      : base.daily;
+  out.sound = !!out.sound;
+  return validateSave(out);
+}
 export function equip(s: Save, id: string) {
   const i = ITEM[id];
   if (!i || !s.owned.includes(id)) return false;
@@ -191,9 +284,14 @@ export function styleScore(s: Save, style: Style) {
     ),
   );
 }
-export function contest(s: Save, theme: number, style: Style) {
+export function contest(
+  s: Save,
+  theme: number,
+  style: Style,
+  outfit = s.outfit,
+) {
   refreshDay(s);
-  const score = styleScore(s, style);
+  const score = styleScore({ ...s, outfit }, style);
   const key = `${s.daily.date}:${theme}`;
   const first = s.best[key] === undefined;
   s.best[key] = Math.max(score, s.best[key] ?? 0);
@@ -354,9 +452,9 @@ export function finishRun(s: Save, run: Run) {
   if (run.finished || run.gems.length < 5 || !run.puzzle || !run.friend)
     return null;
   run.finished = true;
-  const first = run.stage < 20 && !s.completed.includes(run.stage);
+  const first = run.stage < STAGE_COUNT && !s.completed.includes(run.stage);
   if (first) s.completed.push(run.stage);
-  const region = Math.min(4, Math.floor(run.stage / 4));
+  const region = regionOf(run.stage);
   const bonus = adventureBonus(s, region);
   const coins = 100 + region * 30 + (first ? 100 : 0) + bonus.coins;
   const gems = 8 + region * 2 + (first ? 12 : 0);

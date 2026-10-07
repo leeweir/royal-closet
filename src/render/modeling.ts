@@ -1,5 +1,20 @@
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+/** Textures built once per session; disposeGroup leaves them alone. */
+export const sharedTextures = new WeakSet<T.Texture>();
+export function shareTexture<X extends T.Texture>(tex: X) {
+  sharedTextures.add(tex);
+  return tex;
+}
+/** Look a named descendant up once and remember it for per-frame use. */
+export function cachedChild(root: T.Object3D, name: string) {
+  const cache = (root.userData.children ??= {}) as Record<
+    string,
+    T.Object3D | null
+  >;
+  if (!(name in cache)) cache[name] = root.getObjectByName(name) ?? null;
+  return cache[name];
+}
 export function material(color: string, metalness = 0, roughness = 0.65) {
   return new T.MeshStandardMaterial({ color, metalness, roughness });
 }
@@ -108,7 +123,12 @@ export function batchGroup(group: T.Group) {
     group.remove(o);
     o.geometry.dispose();
   }
-  for (const [mat, geos] of buckets) {
+  for (const [mat, list] of buckets) {
+    const mixed = list.some((g) => g.index) && list.some((g) => !g.index);
+    const geos = mixed
+      ? list.map((g) => (g.index ? g.toNonIndexed() : g))
+      : list;
+    if (mixed) list.forEach((g) => g.index && g.dispose());
     const merged = mergeGeometries(geos, false);
     if (merged) mesh(merged, mat, group);
     else for (const g of geos) mesh(g, mat, group);

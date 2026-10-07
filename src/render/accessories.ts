@@ -1,25 +1,12 @@
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { Item } from "../simulation/data";
+import { profile } from "./modeling";
+import { toon } from "./toon";
 
 type P = [number, number, number];
 type Placement = { p?: P; r?: P; s?: P };
 const GOLD = "#d5b575";
-
-function finish(
-  color: string,
-  options: Partial<T.MeshPhysicalMaterialParameters> = {},
-) {
-  return new T.MeshPhysicalMaterial({
-    color,
-    roughness: 0.32,
-    metalness: 0.12,
-    clearcoat: 0.7,
-    clearcoatRoughness: 0.22,
-    side: T.DoubleSide,
-    ...options,
-  });
-}
 
 /** Decorative meshes are merged by material, so their small details stay cheap. */
 class Atelier {
@@ -88,7 +75,7 @@ class Atelier {
       const geometry = mergeGeometries(geometries, false);
       if (!geometry) throw new Error("Accessory mesh attributes do not match");
       const mesh = new T.Mesh(geometry, m);
-      mesh.castShadow = !(m as T.MeshPhysicalMaterial).transparent;
+      mesh.castShadow = !m.transparent;
       mesh.receiveShadow = true;
       this.root.add(mesh);
       for (const part of geometries) part.dispose();
@@ -266,18 +253,11 @@ function silhouette(root: T.Group, item: Item, names: string[]) {
 
 export function createCrown(item: Item): T.Group {
   const a = new Atelier();
-  const metal = finish(GOLD, { metalness: 0.8, roughness: 0.21 });
-  const colored = finish(item.color, { metalness: 0.3, roughness: 0.18 });
-  const pearl = finish(item.accent, { roughness: 0.22 });
-  const green = finish("#749d79", { roughness: 0.43 });
-  const stone = finish(item.color, {
-    transmission: 0.1,
-    transparent: true,
-    opacity: 0.85,
-    roughness: 0.07,
-    metalness: 0.1,
-    ior: 1.6,
-  });
+  const metal = toon(GOLD, "anime-accessory");
+  const colored = toon(item.color, "anime-accessory");
+  const pearl = toon(item.accent, "anime-accessory");
+  const green = toon("#749d79", "anime-accessory");
+  const stone = toon(item.color, "anime-accessory");
   const ring = (r = 0.285) =>
     a.torus([0, 0, 0], r, 0.01, metal, [Math.PI / 2, 0, 0]);
   if (item.shape === 0) {
@@ -305,11 +285,7 @@ export function createCrown(item: Item): T.Group {
     a.add(shapeMesh(star(0.037)), pearl, { p: [0, 0.17, 0.3] });
   } else if (item.shape === 1) {
     a.torus([0, 0, 0], 0.302, 0.014, green, [Math.PI / 2, 0, 0]);
-    const roseMat = finish("#d994ad", {
-      roughness: 0.48,
-      sheen: 0.7,
-      sheenColor: new T.Color(item.accent),
-    });
+    const roseMat = toon("#d994ad", "anime-accessory");
     for (let i = 0; i < 8; i++) {
       const theta = (i / 8) * Math.PI * 2;
       const p: P = [Math.sin(theta) * 0.3, 0.027, Math.cos(theta) * 0.3];
@@ -340,7 +316,7 @@ export function createCrown(item: Item): T.Group {
       a.sphere([i * 0.037, 0.022, 0.315], [0.014, 0.015, 0.014], pearl);
   } else if (item.shape === 3) {
     ring(0.275);
-    const silver = finish("#d6e6f1", { metalness: 0.8, roughness: 0.14 });
+    const silver = toon("#d6e6f1", "anime-accessory");
     for (let i = 0; i < 11; i++) {
       const theta = (i / 11) * Math.PI * 2;
       const h = 0.13 + (i % 3 === 0 ? 0.06 : (i % 3) * 0.012);
@@ -458,23 +434,16 @@ export function createWings(item: Item): T.Group {
     half.name = side === -1 ? "wing-left" : "wing-right";
     root.add(half);
     const a = new Atelier(half);
-    const soft = finish(item.color, {
-      transparent: true,
-      opacity: 0.57,
-      depthWrite: false,
-      roughness: 0.22,
-      iridescence: 0.7,
-      iridescenceIOR: 1.35,
-    });
-    const light = finish(item.accent, {
-      transparent: true,
-      opacity: 0.72,
-      depthWrite: false,
-      roughness: 0.24,
-      sheen: 0.8,
-    });
-    const edge = finish(item.accent, { metalness: 0.36, roughness: 0.23 });
-    const metal = finish(GOLD, { metalness: 0.75, roughness: 0.25 });
+    const soft = toon(item.color, "anime-wing-membrane");
+    soft.transparent = true;
+    soft.opacity = 0.68;
+    soft.depthWrite = false;
+    const light = toon(item.accent, "anime-wing-light");
+    light.transparent = true;
+    light.opacity = 0.82;
+    light.depthWrite = false;
+    const edge = toon(item.accent, "anime-accessory");
+    const metal = toon(GOLD, "anime-accessory");
     const p = (x: number, y: number, z = 0): P => [x * side, y, z];
     const vein = (points: P[], radius = 0.005, mat: T.Material = edge) =>
       a.tube(
@@ -566,10 +535,8 @@ export function createWings(item: Item): T.Group {
       a.sphere(p(0.94, 0.36, 0.021), [0.041, 0.065, 0.008], light);
     } else if (item.shape === 1 || item.shape === 2) {
       const leaves = item.shape === 2;
-      const surface = leaves
-        ? finish("#97c7ad", { roughness: 0.32, sheen: 0.5 })
-        : soft;
-      const tip = leaves ? finish("#e6ebad", { roughness: 0.35 }) : light;
+      const surface = leaves ? toon("#97c7ad", "anime-accessory") : soft;
+      const tip = leaves ? toon("#e6ebad", "anime-accessory") : light;
       const lobes = leaves ? 5 : 4;
       for (let i = 0; i < lobes; i++) {
         const rotation = side * (-0.4 - i * 0.45);
@@ -620,7 +587,7 @@ export function createWings(item: Item): T.Group {
           a,
           p(0.2, -0.1, 0.08),
           0.11,
-          finish("#d797af", { roughness: 0.45 }),
+          toon("#d797af", "anime-accessory"),
           metal,
         );
       else
@@ -631,15 +598,11 @@ export function createWings(item: Item): T.Group {
             metal,
           );
     } else if (item.shape === 3) {
-      const glass = finish("#99d3e9", {
-        transparent: true,
-        opacity: 0.73,
-        transmission: 0.12,
-        depthWrite: false,
-        roughness: 0.08,
-        ior: 1.56,
-      });
-      const silver = finish("#ddecf5", { metalness: 0.75, roughness: 0.18 });
+      const glass = toon("#99d3e9", "anime-ice-wing");
+      glass.transparent = true;
+      glass.opacity = 0.86;
+      glass.depthWrite = false;
+      const silver = toon("#ddecf5", "anime-accessory");
       const ends: P[] = [
         [0.6, 0.67, 0],
         [0.98, 0.57, 0],
@@ -682,12 +645,7 @@ export function createWings(item: Item): T.Group {
           side * (-0.8 + i * 0.6),
         );
     } else if (item.shape === 4) {
-      const silk = finish(item.color, {
-        roughness: 0.28,
-        sheen: 1,
-        sheenColor: new T.Color(item.accent),
-        metalness: 0.15,
-      });
+      const silk = toon(item.color, "anime-accessory");
       const paths: P[][] = [
         [
           [0.1, -0.03, 0],
@@ -727,14 +685,9 @@ export function createWings(item: Item): T.Group {
         );
       }
     } else {
-      const feather = finish("#fff9e8", {
-        roughness: 0.48,
-        sheen: 0.8,
-        sheenColor: new T.Color("#f5dbb0"),
-        metalness: 0.025,
-      });
-      const pale = finish("#eee7d9", { roughness: 0.48, sheen: 0.65 });
-      const spine = finish("#d9c89c", { roughness: 0.4, metalness: 0.3 });
+      const feather = toon("#fff9e8", "anime-accessory");
+      const pale = toon("#eee7d9", "anime-accessory");
+      const spine = toon("#ddd7e7", "anime-feather-spine");
       vein(
         [
           [0.1, -0.09, 0.03],
@@ -779,22 +732,6 @@ export function createWings(item: Item): T.Group {
           0.0038,
           spine,
         );
-        for (let k = 2; k <= 7; k++)
-          for (const sign of [-1, 1]) {
-            const t = k / 9;
-            a.tube(
-              map([
-                [0, length * (t - 0.03), 0.035 * Math.sin(t * Math.PI) + 0.003],
-                [
-                  sign * width * 0.82 * Math.sin(t * Math.PI),
-                  length * (t + 0.05),
-                  0.022,
-                ],
-              ]),
-              0.0018,
-              spine,
-            );
-          }
       }
       for (let i = 0; i < 7; i++) {
         const rotation = side * (-0.7 - i * 0.24);
@@ -817,25 +754,20 @@ export function createWings(item: Item): T.Group {
     "five-blade-leaf-fan",
     "faceted-ice-crystal-fan",
     "floating-star-orbit-ribbons",
-    "layered-barbed-angel-feathers",
+    "layered-anime-angel-feathers",
   ]);
 }
 
 export function createWand(item: Item): T.Group {
   const a = new Atelier();
-  const metal = finish(GOLD, { metalness: 0.8, roughness: 0.22 });
-  const colored = finish(item.color, { roughness: 0.24, metalness: 0.25 });
-  const pearl = finish(item.accent, { roughness: 0.2 });
-  const stone = finish(item.color, {
-    transmission: 0.1,
-    transparent: true,
-    opacity: 0.82,
-    roughness: 0.06,
-    ior: 1.58,
-  });
+  const metal = toon("#ffe3a0", "wand-gold");
+  const colored = toon(item.color, "wand-enamel");
+  const pearl = toon(item.accent, "wand-pearl");
+  const stone = toon(item.color, "wand-crystal");
+  stone.emissive.set(item.color).multiplyScalar(0.12);
   a.add(
     new T.CylinderGeometry(0.01, 0.016, 0.91, 12),
-    item.shape === 2 ? finish("#8f7663", { roughness: 0.6 }) : metal,
+    item.shape === 2 ? toon("#ae8765") : metal,
     { p: [0, 0.47, 0] },
   );
   a.add(new T.CylinderGeometry(0.018, 0.016, 0.16, 12), colored, {
@@ -857,14 +789,8 @@ export function createWand(item: Item): T.Group {
       );
     }
   } else if (item.shape === 1) {
-    rose(
-      a,
-      [0, 0.96, 0],
-      0.136,
-      finish("#d88ba6", { roughness: 0.42, sheen: 0.8 }),
-      pearl,
-    );
-    const green = finish("#779d78", { roughness: 0.44 });
+    rose(a, [0, 0.96, 0], 0.136, toon("#f28eb6"), pearl);
+    const green = toon("#86c696");
     for (const sign of [-1, 1])
       a.add(blade(0.18, 0.047, 0.033), green, {
         p: [0, 0.82, -0.014],
@@ -881,7 +807,7 @@ export function createWand(item: Item): T.Group {
       green,
     );
   } else if (item.shape === 2) {
-    const vine = finish("#809e71", { roughness: 0.48 });
+    const vine = toon("#9ccc87");
     a.tube(
       [
         [0, 0.42, 0],
@@ -911,7 +837,7 @@ export function createWand(item: Item): T.Group {
       });
     a.sphere([-0.149, 1.021, 0.004], [0.018, 0.024, 0.018], pearl);
   } else if (item.shape === 3) {
-    const silver = finish("#dcebf5", { metalness: 0.8, roughness: 0.2 });
+    const silver = toon("#e9f7ff");
     crystal(a, [0, 0.96, 0], 0.07, 0.19, stone);
     for (const sign of [-1, 1]) {
       crystal(a, [sign * 0.083, 0.91, 0], 0.037, 0.12, stone, -sign * 0.4);
@@ -988,7 +914,12 @@ export function createWand(item: Item): T.Group {
     );
   }
   a.sphere([0, 0.734, 0.035], [0.02, 0.018, 0.016], metal);
-  return silhouette(a.complete(), item, [
+  const root = a.complete();
+  // All six props share the same grip origin, independent of the head shape.
+  for (const child of root.children)
+    if (child instanceof T.Mesh) child.geometry.translate(0, -0.3, 0);
+  root.userData.grip = [0, 0, 0];
+  return silhouette(root, item, [
     "beveled-five-point-star-wand",
     "sculpted-rose-and-vine-staff",
     "living-branch-staff",
@@ -998,33 +929,43 @@ export function createWand(item: Item): T.Group {
   ]);
 }
 
+// These contours follow the VRM foot in its neutral bind pose. The upper
+// lofts from the sole into a real ankle opening instead of intersecting the
+// instep with an open half-cylinder.
+function shoeCollar(a: number): P {
+  return [
+    Math.sin(a) * 0.074,
+    0.214 - Math.cos(a) * 0.021,
+    -0.067 + Math.cos(a) * 0.091,
+  ];
+}
 function shoeUpper() {
-  const spine = new T.CatmullRomCurve3([
-    new T.Vector3(0.06, 0.1, -0.145),
-    new T.Vector3(0.083, 0.14, -0.086),
-    new T.Vector3(0.093, 0.11, 0.005),
-    new T.Vector3(0.108, 0.08, 0.12),
-    new T.Vector3(0.084, 0.062, 0.235),
-    new T.Vector3(0.006, 0.016, 0.285),
-  ]);
   const pos: number[] = [],
     indices: number[] = [],
     uv: number[] = [];
-  const rows = 26,
-    cols = 16;
+  const rows = 20,
+    cols = 64;
   for (let j = 0; j <= rows; j++) {
-    const p = spine.getPoint(j / rows);
+    const t = j / rows,
+      rise = Math.pow(Math.sin((t * Math.PI) / 2), 0.65);
     for (let i = 0; i <= cols; i++) {
-      const theta = (i / cols) * Math.PI;
-      pos.push(Math.cos(theta) * p.x, 0.042 + Math.sin(theta) * p.y, p.z);
-      uv.push(i / cols, j / rows);
+      const a = (i / cols) * Math.PI * 2;
+      const collar = shoeCollar(a);
+      const width = 0.105 + 0.009 * Math.cos(a);
+      const x = Math.sin(a) * width,
+        z = 0.054 + Math.cos(a) * 0.232;
+      pos.push(
+        T.MathUtils.lerp(x, collar[0], t),
+        T.MathUtils.lerp(0.041, collar[1], rise),
+        T.MathUtils.lerp(z, collar[2], t),
+      );
+      uv.push(i / cols, t);
+      if (j < rows && i < cols) {
+        const k = j * (cols + 1) + i;
+        indices.push(k, k + cols + 1, k + 1, k + 1, k + cols + 1, k + cols + 2);
+      }
     }
   }
-  for (let j = 0; j < rows; j++)
-    for (let i = 0; i < cols; i++) {
-      const k = j * (cols + 1) + i;
-      indices.push(k, k + cols + 1, k + 1, k + 1, k + cols + 1, k + cols + 2);
-    }
   const g = new T.BufferGeometry();
   g.setAttribute("position", new T.Float32BufferAttribute(pos, 3));
   g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
@@ -1035,12 +976,14 @@ function shoeUpper() {
 
 function shoeSole() {
   const shape = new T.Shape();
-  shape.moveTo(0, -0.155);
-  shape.bezierCurveTo(0.072, -0.155, 0.091, -0.095, 0.096, 0.005);
-  shape.bezierCurveTo(0.123, 0.08, 0.111, 0.24, 0.025, 0.285);
-  shape.quadraticCurveTo(0, 0.305, -0.025, 0.285);
-  shape.bezierCurveTo(-0.111, 0.24, -0.123, 0.08, -0.096, 0.005);
-  shape.bezierCurveTo(-0.091, -0.095, -0.072, -0.155, 0, -0.155);
+  for (let i = 0; i <= 96; i++) {
+    const a = (i / 96) * Math.PI * 2;
+    const x = Math.sin(a) * (0.109 + 0.009 * Math.cos(a));
+    const z = 0.054 + Math.cos(a) * 0.236;
+    if (!i) shape.moveTo(x, z);
+    else shape.lineTo(x, z);
+  }
+  shape.closePath();
   return new T.ExtrudeGeometry(shape, {
     depth: 0.023,
     bevelEnabled: true,
@@ -1052,23 +995,32 @@ function shoeSole() {
   });
 }
 
-export function createShoes(item: Item): T.Group {
+export function createShoes(
+  item: Item,
+  anchors?: { leftFoot: T.Vector3; rightFoot: T.Vector3 },
+): T.Group {
   const root = new T.Group();
   for (const side of [-1, 1]) {
     const foot = new T.Group();
     foot.name = side === -1 ? "shoe-left" : "shoe-right";
-    foot.position.set(side * 0.15, 0, 0.01);
+    const anchor = side < 0 ? anchors?.rightFoot : anchors?.leftFoot;
+    foot.position.set(
+      anchor?.x ?? side * 0.1574,
+      0,
+      (anchor?.z ?? -0.0661) + 0.0661,
+    );
     root.add(foot);
     const a = new Atelier(foot);
-    const leather = finish(item.color, {
-      roughness: item.shape === 4 ? 0.38 : 0.26,
-      metalness: item.shape === 5 ? 0.5 : 0.08,
-      sheen: item.shape === 1 || item.shape === 5 ? 0.7 : 0,
-    });
-    const trim = finish(item.accent, { roughness: 0.25, metalness: 0.2 });
-    const metal = finish(GOLD, { roughness: 0.22, metalness: 0.8 });
-    const sole = finish("#938170", { roughness: 0.56 });
+    const leather = toon(item.color, "anime-accessory");
+    const trim = toon(item.accent, "anime-accessory");
+    const metal = toon(GOLD, "anime-accessory");
+    const sole = toon("#938170", "anime-accessory");
     a.add(shoeUpper(), leather);
+    a.tube(
+      Array.from({ length: 49 }, (_, i) => shoeCollar((i / 48) * Math.PI * 2)),
+      0.004,
+      trim,
+    );
     a.add(shoeSole(), item.shape === 3 ? trim : sole, {
       p: [0, 0.031, 0],
       r: [Math.PI / 2, 0, 0],
@@ -1090,62 +1042,59 @@ export function createShoes(item: Item): T.Group {
       // A raised Mary Jane instep strap, separate heel and small rectangular buckle.
       a.tube(
         [
-          [-0.085, 0.12, 0.018],
-          [-0.056, 0.192, 0.015],
-          [0.052, 0.192, 0.015],
-          [0.085, 0.12, 0.018],
+          [-0.082, 0.17, 0.025],
+          [-0.05, 0.232, 0.025],
+          [0.05, 0.232, 0.025],
+          [0.082, 0.17, 0.025],
         ],
         0.012,
         trim,
       );
       a.add(new T.BoxGeometry(0.035, 0.026, 0.014), metal, {
-        p: [0.069, 0.161, 0.037],
+        p: [0.073, 0.211, 0.039],
         r: [0, 0, -0.3],
       });
       a.add(new T.BoxGeometry(0.06, 0.045, 0.063), leather, {
         p: [0, 0.029, -0.09],
       });
-      a.sphere([0, 0.135, 0.184], [0.018, 0.012, 0.021], metal);
+      a.sphere([0, 0.168, 0.184], [0.018, 0.012, 0.021], metal);
     } else if (item.shape === 1) {
       // The ribbons cross twice around the ankle, with satin tails at the side.
-      a.torus([0, 0.23, -0.035], 0.071, 0.007, trim, [Math.PI / 2, 0, 0]);
       for (const sign of [-1, 1]) {
         a.tube(
-          [
-            [sign * 0.078, 0.1, 0.015],
-            [-sign * 0.068, 0.3, -0.038],
-            [sign * 0.065, 0.44, -0.043],
-          ],
+          Array.from({ length: 40 }, (_, i): P => {
+            const t = i / 39,
+              angle = sign * (t * Math.PI * 2 + Math.PI / 2);
+            return [
+              Math.sin(angle) * (0.074 - 0.005 * t),
+              0.205 + t * 0.27,
+              -0.071 - t * 0.009 + Math.cos(angle) * 0.087,
+            ];
+          }),
           0.0065,
           trim,
         );
         a.add(blade(0.063, 0.019, 0.018), trim, {
-          p: [side * 0.077, 0.37, -0.039],
+          p: [side * 0.073, 0.47, -0.077],
           r: [0, 0, sign * 0.92],
         });
       }
-      a.add(
-        ribbon(
-          [
-            [side * 0.081, 0.37, -0.03],
-            [side * 0.104, 0.3, -0.01],
-            [side * 0.095, 0.26, 0.01],
-          ],
-          0.012,
-        ),
-        trim,
-      );
-      rose(a, [0, 0.132, 0.178], 0.035, leather, metal, [-0.76, 0, 0]);
+      rose(a, [0, 0.168, 0.178], 0.035, leather, metal, [-0.76, 0, 0]);
     } else if (item.shape === 2) {
-      const leaf = finish("#d1e4ad", { roughness: 0.4 });
-      a.add(new T.CylinderGeometry(0.09, 0.072, 0.36, 24, 6, true), leather, {
-        p: [0, 0.27, -0.043],
-        s: [1, 1, 0.86],
-      });
+      const leaf = toon("#d1e4ad", "anime-accessory");
+      a.add(
+        profile([
+          [0.17, 0.086, 0.105, -0.062],
+          [0.26, 0.079, 0.09, -0.067],
+          [0.4, 0.076, 0.091, -0.082],
+          [0.46, 0.081, 0.098, -0.084],
+        ]),
+        leather,
+      );
       for (let i = 0; i < 7; i++) {
         const theta = (i / 7) * Math.PI * 2;
         a.add(blade(0.15, 0.03, 0.025), leaf, {
-          p: [Math.sin(theta) * 0.079, 0.37, -0.043 + Math.cos(theta) * 0.068],
+          p: [Math.sin(theta) * 0.081, 0.41, -0.084 + Math.cos(theta) * 0.098],
           r: [0.18 * Math.cos(theta), theta, 0.24 * Math.sin(theta)],
         });
       }
@@ -1164,19 +1113,13 @@ export function createShoes(item: Item): T.Group {
           r: [0, 0, (i % 2 ? 1 : -1) * 0.7],
         });
     } else if (item.shape === 3) {
-      const glass = finish("#c3e7f0", {
-        transparent: true,
-        opacity: 0.8,
-        transmission: 0.11,
-        roughness: 0.07,
-        ior: 1.52,
-      });
+      const glass = toon("#c3e7f0", "anime-accessory");
       a.add(shoeUpper(), glass, { p: [0, 0.003, 0], s: [1.035, 1.035, 1.025] });
-      crystal(a, [0, 0.151, 0.163], 0.032, 0.041, glass, 0, 0.039);
+      crystal(a, [0, 0.181, 0.163], 0.032, 0.041, glass, 0, 0.039);
       for (const sign of [-1, 1])
         crystal(
           a,
-          [sign * 0.053, 0.129, 0.161],
+          [sign * 0.053, 0.16, 0.161],
           0.018,
           0.03,
           trim,
@@ -1198,18 +1141,37 @@ export function createShoes(item: Item): T.Group {
         r: [0, 0, Math.PI],
       });
     } else if (item.shape === 4) {
-      a.add(new T.CylinderGeometry(0.093, 0.071, 0.62, 28, 10, true), leather, {
-        p: [0, 0.402, -0.044],
-        s: [1, 1, 0.88],
-      });
-      a.torus([0, 0.714, -0.044], 0.092, 0.01, trim, [Math.PI / 2, 0, 0]);
+      a.add(
+        profile([
+          [0.17, 0.086, 0.105, -0.062],
+          [0.26, 0.079, 0.091, -0.067],
+          [0.4, 0.076, 0.093, -0.082],
+          [0.55, 0.087, 0.11, -0.09],
+          [0.73, 0.105, 0.126, -0.091],
+        ]),
+        leather,
+      );
+      a.tube(
+        Array.from({ length: 49 }, (_, i): P => {
+          const a = (i / 48) * Math.PI * 2;
+          return [Math.sin(a) * 0.105, 0.73, -0.091 + Math.cos(a) * 0.126];
+        }),
+        0.007,
+        trim,
+      );
       for (let i = 0; i < 3; i++) {
         const y = 0.25 + i * 0.17;
-        a.torus([0, y, -0.044], 0.077 + i * 0.006, 0.006, trim, [
-          Math.PI / 2,
-          0,
-          0,
-        ]);
+        const rx = [0.081, 0.08, 0.094][i],
+          rz = [0.094, 0.099, 0.12][i],
+          cz = [-0.067, -0.084, -0.09][i];
+        a.tube(
+          Array.from({ length: 49 }, (_, j): P => {
+            const angle = (j / 48) * Math.PI * 2;
+            return [Math.sin(angle) * rx, y, cz + Math.cos(angle) * rz];
+          }),
+          0.006,
+          trim,
+        );
         a.add(new T.BoxGeometry(0.039, 0.031, 0.01), metal, {
           p: [side * 0.056, y, 0.023],
           r: [0, side * 0.5, 0],
@@ -1255,10 +1217,10 @@ export function createShoes(item: Item): T.Group {
         );
       for (let i = -2; i <= 2; i++)
         a.add(blade(0.059, 0.015, 0.019), metal, {
-          p: [0, 0.131, 0.175],
+          p: [0, 0.17, 0.175],
           r: [-1.06, 0, i * 0.33],
         });
-      a.sphere([0, 0.154, 0.174], [0.017, 0.014, 0.017], trim);
+      a.sphere([0, 0.193, 0.174], [0.017, 0.014, 0.017], trim);
       a.add(new T.CylinderGeometry(0.027, 0.019, 0.048, 10), metal, {
         p: [0, 0.03, -0.1],
       });

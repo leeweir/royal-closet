@@ -2,6 +2,8 @@ import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as T from "three";
+import { MToonMaterial } from "@pixiv/three-vrm";
+import { torsoSurface } from "../src/render/body-fit";
 import { createCouture } from "../src/render/couture";
 import { ITEMS } from "../src/simulation/data";
 
@@ -154,32 +156,44 @@ test("royal dress has the broadest court skirt and a long rear train", () => {
   );
 });
 
-test("cloth has actual woven and lace texture maps within the draw budget", () => {
+test("anime cloth uses cel shading and opaque fabric trim within the draw budget", () => {
   garments.forEach((group) => {
     const collection = meshes(group);
     assert.ok(collection.length < 100);
-    const materials = collection.flatMap((mesh) =>
-      Array.isArray(mesh.material) ? mesh.material : [mesh.material],
-    );
-    const satin = materials.find((material) => material.name === "satin") as
-      | T.MeshPhysicalMaterial
-      | undefined;
-    assert.ok(
-      satin?.bumpMap instanceof T.DataTexture,
-      "satin must have a woven surface map",
-    );
-    for (const material of materials) {
-      if (material.name === "lace")
-        assert.ok(
-          (material as T.MeshPhysicalMaterial).alphaMap instanceof
-            T.DataTexture,
-          "lace must include actual cutout patterning",
+    for (const mesh of collection) {
+      for (const material of Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material]) {
+        assert.ok(material instanceof MToonMaterial);
+        assert.equal(
+          material.map,
+          null,
+          "fabric does not reintroduce photographic weave",
         );
+        if (material.name !== "tulle")
+          assert.equal(material.transparent, false);
+      }
     }
   });
-  for (const i of [1, 5]) {
+  for (const i of [0, 1, 3, 5]) {
     assert.ok(garments[i].getObjectByName("sleeve-left"));
     assert.ok(garments[i].getObjectByName("sleeve-right"));
+  }
+});
+
+test("all bodices follow the skin envelope with a small continuous clearance", () => {
+  for (const garment of garments) {
+    const mesh = garment.getObjectByName("fitted-bodice") as T.Mesh;
+    const p = mesh.geometry.getAttribute("position");
+    for (let i = 0; i < p.count; i++) {
+      const a = ((i % 97) / 96) * Math.PI * 2;
+      const body = torsoSurface(p.getY(i), a);
+      const clearance = Math.hypot(p.getX(i) - body.x, p.getZ(i) - body.z);
+      assert.ok(
+        clearance > 0.012 && clearance < 0.014,
+        "bodice either clips skin or floats away",
+      );
+    }
   }
 });
 

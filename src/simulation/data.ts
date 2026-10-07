@@ -185,3 +185,12 @@ export const GEM_POSITIONS = [
   [4, -3],
   [0, -5],
 ];
+export const STAGES_PER_REGION = STAGE_NAMES.length;
+export const STAGE_COUNT = REGIONS.length * STAGES_PER_REGION;
+/** Region a stage belongs to; endless free play (stage 20+) stays in the last. */
+export const regionOf = (stage: number) =>
+  Math.min(REGIONS.length - 1, Math.floor(stage / STAGES_PER_REGION));
+/** Half-width of the walkable square in an adventure stage. */
+export const WORLD_BOUNDS = 7.8;
+export const GEM_PICKUP_RADIUS = 0.78;
+export const INTERACT_RADIUS = 1.5;

@@ -1,6 +1,8 @@
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { Item } from "../simulation/data";
+import { toon } from "./toon";
+import { torsoSurface } from "./body-fit";
 
 // Garment coordinates match the character's waist, bust and shoulder anchors.
 // All ornament geometry is attached to the cloth, never to the character's skin.
@@ -9,73 +11,12 @@ type Cloth = "satin" | "velvet" | "lace" | "tulle";
 const TAU = Math.PI * 2;
 const gold = "#dbb875";
 
-function texture(kind: "weave" | "lace" | "brocade") {
-  const size = 256;
-  const data = new Uint8Array(size * size * 4);
-  // DataTexture also allows a garment to be inspected without a DOM/canvas.
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const k = (y * size + x) * 4;
-      let value = 246;
-      if (kind === "weave") {
-        value = 225 + (x % 3 === 0 ? 17 : 0) + (y % 3 === 0 ? 10 : 0);
-      } else if (kind === "lace") {
-        const px = (x % 64) - 32;
-        const py = (y % 64) - 32;
-        const r = Math.hypot(px, py);
-        const a = Math.atan2(py, px);
-        const petal = 15 + 7 * Math.cos(a * 6);
-        const flower = Math.abs(r - petal) < 2.2 || r < 4;
-        const net =
-          Math.abs(((x + y) % 16) - 8) < 1.2 ||
-          Math.abs(((x - y + 256) % 16) - 8) < 1.2;
-        value = flower ? 255 : net ? 150 : 0;
-      } else {
-        const px = (x % 64) - 32;
-        const py = (y % 64) - 32;
-        const r = Math.hypot(px * 0.8, py);
-        const a = Math.atan2(py, px);
-        value = Math.abs(r - (18 + 5 * Math.cos(a * 4))) < 2.2 ? 204 : 247;
-      }
-      data[k] = data[k + 1] = data[k + 2] = value;
-      data[k + 3] = 255;
-    }
-  }
-  const tex = new T.DataTexture(data, size, size, T.RGBAFormat);
-  tex.wrapS = tex.wrapT = T.RepeatWrapping;
-  tex.repeat.set(kind === "weave" ? 5 : 3, kind === "weave" ? 5 : 3);
-  tex.magFilter = T.LinearFilter;
-  tex.minFilter = T.LinearMipmapLinearFilter;
-  tex.generateMipmaps = true;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-function cloth(color: string, kind: Cloth, maps: Record<string, T.Texture>) {
-  const mat = new T.MeshPhysicalMaterial({
-    color,
-    side: T.DoubleSide,
-    roughness: kind === "velvet" ? 0.77 : kind === "satin" ? 0.31 : 0.62,
-    metalness: kind === "satin" ? 0.035 : 0,
-    sheen: 1,
-    sheenColor: new T.Color(color).lerp(new T.Color("#fff7f0"), 0.42),
-    sheenRoughness: kind === "velvet" ? 0.55 : 0.3,
-    bumpMap: maps.weave,
-    bumpScale: kind === "velvet" ? 0.008 : 0.0025,
-  });
-  mat.name = kind;
-  if (kind === "lace") {
-    mat.alphaMap = maps.lace;
-    mat.alphaTest = 0.36;
-    mat.transparent = true;
-    mat.opacity = 0.9;
-    mat.depthWrite = false;
-  }
+function cloth(color: string, kind: Cloth) {
+  const mat = toon(color, kind);
   if (kind === "tulle") {
     mat.transparent = true;
-    mat.opacity = 0.21;
+    mat.opacity = 0.28;
     mat.depthWrite = false;
-    mat.roughness = 0.72;
   }
   return mat;
 }
@@ -334,47 +275,72 @@ function bodice(
   corset = false,
 ) {
   const surface: Surface = (t, a) => {
-    const r =
-      0.234 +
-      0.076 * Math.sin((t * Math.PI) / 2) -
-      0.006 * Math.sin(t * Math.PI);
     const front = Math.max(0, Math.cos(a));
     const neckline = asymmetric
-      ? 2.45 - Math.sin(a) * 0.12
-      : 2.53 - front * (0.047 + Math.cos(a * 2) * 0.025);
-    return new T.Vector3(
-      Math.sin(a) * r,
-      1.895 + t * (neckline - 1.895),
-      Math.cos(a) * r * (0.7 - 0.035 * t),
+      ? 2.51 - Math.sin(a) * 0.075
+      : 2.505 + front * 0.04 * Math.sin(a * 2) ** 2;
+    return torsoSurface(1.895 + t * (neckline - 1.895), a, 0.013);
+  };
+  add(group, shell(surface, 0, TAU, 96, 36), material).name = "fitted-bodice";
+  // A broad fabric neckline follows the skin; the old metal hoop floated
+  // beyond the shoulders. The front inset gives the torso a readable shape.
+  const collar: Surface = (t, a) => {
+    const p = surface(1, a);
+    return torsoSurface(
+      p.y - t * 0.058,
+      a,
+      0.018 + 0.005 * Math.sin(t * Math.PI),
     );
   };
-  add(group, shell(surface, 0, TAU, 96, 32), material);
-  const seams: T.BufferGeometry[] = [hem(surface, 0.008)];
-  for (const a of [-0.64, 0.64, Math.PI - 0.64, Math.PI + 0.64]) {
+  add(group, shell(collar, 0, TAU, 96, 8), trim);
+  const inset = grid(
+    (u, t) => {
+      const angle = (u - 0.5) * (0.84 - 0.28 * t);
+      return at(surface, 0.96 - t * 0.9, angle, 0.005);
+    },
+    20,
+    24,
+  );
+  add(group, inset, trim);
+  const seams: T.BufferGeometry[] = [];
+  for (const a of [-0.47, 0.47])
     seams.push(
       line(
-        Array.from({ length: 21 }, (_, i) => at(surface, i / 20, a)),
+        Array.from({ length: 25 }, (_, i) => at(surface, i / 24, a, 0.007)),
         0.004,
       ),
     );
-  }
   if (corset) {
-    for (let i = 0; i < 7; i++) {
-      const y = 2.015 + i * 0.056;
+    for (let i = 0; i < 4; i++) {
+      const t = 0.22 + i * 0.15;
       for (const side of [-1, 1])
         seams.push(
           line(
             [
-              new T.Vector3(side * 0.045, y, 0.199),
-              new T.Vector3(-side * 0.045, y + 0.045, 0.211),
+              at(surface, t, side * 0.16, 0.011),
+              at(surface, t + 0.1, -side * 0.16, 0.011),
             ],
-            0.0024,
+            0.004,
             4,
           ),
         );
     }
   }
-  add(group, combine(seams), trim);
+  add(group, combine(seams), material);
+  // Small shoulder straps join the bodice to the arm caps in the bind pose.
+  for (const side of [-1, 1]) {
+    const strap = grid(
+      (u, t) => {
+        const a = side * (0.66 + t * (Math.PI - 1.32));
+        const y = 2.52 + Math.sin(t * Math.PI) * 0.096;
+        return torsoSurface(y, a + (u - 0.5) * 0.3, 0.018);
+      },
+      8,
+      28,
+    );
+    add(group, strap, trim);
+  }
+
   return surface;
 }
 
@@ -396,11 +362,11 @@ function puffSleeves(group: T.Group, material: T.Material, lace: T.Material) {
         const a = u * TAU;
         const radius =
           0.068 +
-          Math.sin(t * Math.PI) * 0.061 +
+          Math.sin(t * Math.PI) * 0.05 +
           Math.cos(a * 9) * 0.006 * Math.sin(t * Math.PI);
         return new T.Vector3(
-          side * (0.34 + t * 0.067) + Math.sin(a) * radius,
-          2.53 - t * 0.3,
+          side * (0.34 + t * 0.059) + Math.sin(a) * radius,
+          2.53 - t * 0.23,
           Math.cos(a) * radius * 0.82,
         );
       },
@@ -413,8 +379,8 @@ function puffSleeves(group: T.Group, material: T.Material, lace: T.Material) {
         const a = u * TAU,
           r = 0.071 + t * 0.029;
         return new T.Vector3(
-          side * 0.411 + Math.sin(a) * r,
-          2.25 - t * 0.058 + Math.cos(a * 9) * 0.008 * t,
+          side * 0.399 + Math.sin(a) * r,
+          2.305 - t * 0.058 + Math.cos(a * 9) * 0.008 * t,
           Math.cos(a) * r * 0.85,
         );
       },
@@ -474,38 +440,17 @@ function embroidery(
 export function createCouture(item: Item, color: string): T.Group {
   const group = new T.Group();
   group.name = "couture";
-  const maps = {
-    weave: texture("weave"),
-    lace: texture("lace"),
-    brocade: texture("brocade"),
-  };
-  const satin = cloth(color, "satin", maps);
-  const ivory = cloth(item.accent, "satin", maps);
-  const lace = cloth(item.accent, "lace", maps);
-  const tulle = cloth(item.accent, "tulle", maps);
+  const satin = cloth(color, "satin");
+  const ivory = cloth(item.accent, "satin");
+  const lace = cloth(item.accent, "lace");
+  const tulle = cloth(item.accent, "tulle");
   const velvet = cloth(
-    new T.Color(color).multiplyScalar(0.58).getStyle(),
+    new T.Color(color).lerp(new T.Color("#655090"), 0.3).getStyle(),
     "velvet",
-    maps,
   );
-  const metallic = new T.MeshStandardMaterial({
-    color: gold,
-    metalness: 0.73,
-    roughness: 0.27,
-  });
-  metallic.name = "gold embroidery";
-  const silver = new T.MeshStandardMaterial({
-    color: "#e9f5ff",
-    metalness: 0.72,
-    roughness: 0.22,
-  });
-  const crystal = new T.MeshPhysicalMaterial({
-    color: "#cae9ff",
-    metalness: 0.12,
-    roughness: 0.12,
-    clearcoat: 1,
-    clearcoatRoughness: 0.08,
-  });
+  const metallic = toon("#ffe3a2", "gold trim");
+  const silver = toon("#eef6ff", "ivory trim");
+  const crystal = toon("#ade4ff", "crystal");
   const shape = Math.max(0, Math.min(5, item.shape));
   const silhouettes = [
     "moonlight-a-line",
@@ -530,69 +475,52 @@ export function createCouture(item: Item, color: string): T.Group {
 
   if (shape === 0) {
     const skirt = radial(
-      (t) => 0.235 + 0.625 * Math.pow(t, 0.8),
-      (t, a) => 1.895 - 1.655 * t + Math.cos(a * 18) * 0.016 * t,
+      (t) => 0.235 + 0.625 * Math.pow(Math.sin((t * Math.PI) / 2), 0.84),
+      (t, a) => 1.895 - 1.655 * t + Math.cos(a * 12) * 0.016 * t,
       0.79,
-      18,
+      12,
       0.025,
     );
     add(group, shell(skirt), satin);
-    const veil = radial(
-      (t) => 0.249 + 0.654 * Math.pow(t, 0.8),
-      (t, a) => 1.9 - 1.58 * t + Math.cos(a * 6) * 0.042 * Math.pow(t, 4),
-      0.8,
-      18,
-      0.029,
-    );
-    add(group, shell(veil), tulle).renderOrder = 1;
-    add(group, hem(veil, 0.006), silver);
-    const hemLace = radial(
-      (t) => 0.824 + 0.027 * t,
-      (t, a) => 0.37 - 0.12 * t + Math.cos(a * 18) * 0.012,
-      0.79,
-      18,
-      0.025,
-    );
-    add(group, shell(hemLace, 0, TAU, 112, 8), lace);
-    bodice(group, satin, silver);
-    waist(group, silver, 0.009);
-    const stars: { position: T.Vector3; angle: number; scale: number }[] = [];
-    for (let row = 0; row < 4; row++) {
-      for (let i = 0; i < 16; i++) {
-        const a = (i / 16) * TAU + row * 0.19;
-        stars.push({
-          position: at(veil, 0.29 + row * 0.19, a, 0.014),
-          angle: a,
-          scale: 0.75 + (i % 3) * 0.2,
-        });
-      }
-    }
-    ornamentInstances(group, starGeometry(0.024, 0.005), silver, stars);
-    add(
-      group,
-      embroidery(
+    const petticoat: Surface = (t, a) => {
+      const p = at(skirt, 0.91 + t * 0.086, a, 0.012 + t * 0.018);
+      p.y += Math.cos(a * 24) * 0.012 * t;
+      return p;
+    };
+    add(group, shell(petticoat, 0, TAU, 112, 12), ivory);
+    // Six broad scallops create an illustrated overskirt with a readable hem.
+    const petals: Surface = (t, a) => {
+      const length = 0.51 + 0.075 * (0.5 + 0.5 * Math.cos(a * 6));
+      return at(
         skirt,
-        [-0.45, 0.45, Math.PI - 0.45, Math.PI + 0.45],
-        0.44,
-        0.94,
-      ),
-      silver,
-    );
-    for (const side of [-1, 1]) {
-      add(
-        group,
-        ribbon(
-          [
-            new T.Vector3(side * 0.18, 2.48, 0.14),
-            new T.Vector3(side * 0.28, 2.56, 0.015),
-            new T.Vector3(side * 0.28, 2.49, -0.17),
-          ],
-          0.073,
-        ),
-        lace,
+        t * length,
+        a,
+        0.018 + 0.025 * Math.sin((t * Math.PI) / 2),
       );
-    }
-    bow(group, ivory, new T.Vector3(0, 1.895, -0.19), 0.21);
+    };
+    add(group, shell(petals, 0, TAU, 112, 28), satin);
+    const petalEdge: Surface = (t, a) => at(petals, 0.89 + t * 0.11, a, 0.006);
+    add(group, shell(petalEdge, 0, TAU, 112, 8), ivory);
+    bodice(group, satin, ivory);
+    puffSleeves(group, satin, ivory);
+    waist(group, ivory, 0.019);
+    const stars = Array.from({ length: 12 }, (_, i) => {
+      const a = (i / 12) * TAU;
+      return {
+        position: at(skirt, 0.79, a, 0.016),
+        angle: a,
+        scale: i % 2 ? 0.75 : 1,
+      };
+    });
+    ornamentInstances(group, starGeometry(0.048, 0.007), metallic, stars);
+    bow(group, ivory, new T.Vector3(0, 1.94, 0.192), 0.195);
+    ornamentInstances(group, starGeometry(0.055, 0.009), metallic, [
+      { position: new T.Vector3(0, 1.94, 0.232) },
+    ]);
+    const brooch = add(group, new T.OctahedronGeometry(0.038, 0), crystal);
+    brooch.position.set(0, 2.435, 0.205);
+    brooch.scale.set(0.75, 1.3, 0.4);
+    bow(group, ivory, new T.Vector3(0, 1.925, -0.2), 0.22);
   } else if (shape === 1) {
     const radiusAtY = (y: number) =>
       0.235 +
@@ -613,16 +541,16 @@ export function createCouture(item: Item, color: string): T.Group {
     for (let i = 0; i < 3; i++) {
       const tier = radial(
         (t) => radiusAtY(1.72 - i * 0.14 - 0.21 * t) + 0.012 + 0.045 * t,
-        (t, a) => 1.72 - i * 0.14 - 0.21 * t + Math.cos(a * 18) * 0.027 * t,
+        (t, a) => 1.72 - i * 0.14 - 0.21 * t + Math.cos(a * 12) * 0.034 * t,
         0.84,
-        18,
-        0.037,
+        12,
+        0.025,
       );
       add(group, shell(tier, 0, TAU, 112, 16), i % 2 ? ivory : satin);
       add(group, hem(tier, 0.009), ivory);
       const frill = radial(
         (t) => radiusAtY(1.52 - i * 0.14 - 0.055 * t) + 0.055 + 0.015 * t,
-        (t, a) => 1.52 - i * 0.14 - t * 0.055 + Math.cos(a * 18) * 0.027,
+        (t, a) => 1.52 - i * 0.14 - t * 0.055 + Math.cos(a * 12) * 0.034,
         0.84,
         18,
         0.036,
@@ -648,12 +576,12 @@ export function createCouture(item: Item, color: string): T.Group {
     };
     add(group, shell(apron, -1, 1, 48, 26), ivory);
     add(group, hem(apron, 0.009, -1, 1), satin);
-    bow(group, velvet, new T.Vector3(0, 2.414, 0.214), 0.1);
+    bow(group, velvet, new T.Vector3(0, 2.43, 0.192), 0.12);
     bow(group, satin, new T.Vector3(0, 1.863, 0.291), 0.16);
     for (const side of [-1, 1])
       rose(group, velvet, new T.Vector3(side * 0.23, 1.72, 0.397), 0.095);
     const buttons = Array.from({ length: 4 }, (_, i) => ({
-      position: new T.Vector3(0, 2.05 + i * 0.075, 0.209),
+      position: torsoSurface(2.05 + i * 0.075, 0, 0.021),
       scale: 1,
     }));
     ornamentInstances(
@@ -705,20 +633,6 @@ export function createCouture(item: Item, color: string): T.Group {
           0.0034,
         ),
       );
-      for (const side of [-1, 1])
-        for (const t of [0.28, 0.45, 0.62]) {
-          veins.push(
-            line(
-              [
-                leaf(0.5, t),
-                leaf(0.5 + side * 0.18, t + 0.065),
-                leaf(0.5 + side * 0.37, t + 0.13),
-              ],
-              0.0025,
-              12,
-            ),
-          );
-        }
     }
     add(group, combine(petals), satin);
     add(group, combine(veins), metallic);
@@ -796,20 +710,7 @@ export function createCouture(item: Item, color: string): T.Group {
       ),
       tulle,
     );
-    for (const side of [-1, 1])
-      add(
-        group,
-        ribbon(
-          [
-            new T.Vector3(side * 0.17, 2.47, 0.157),
-            new T.Vector3(side * 0.32, 2.54, 0.014),
-            new T.Vector3(side * 0.4, 2.35, -0.03),
-            new T.Vector3(side * 0.4, 2.16, 0.01),
-          ],
-          0.09,
-        ),
-        lace,
-      );
+    puffSleeves(group, satin, ivory);
     const crystals: { position: T.Vector3; angle: number; scale: number }[] =
       [];
     for (let i = 0; i < 18; i++) {
@@ -902,7 +803,7 @@ export function createCouture(item: Item, color: string): T.Group {
     );
     buckle.position.set(0, 1.895, 0.19);
     buckle.rotation.z = -0.2;
-    bow(group, satin, new T.Vector3(0, 2.35, 0.266), 0.092);
+    bow(group, satin, new T.Vector3(0, 2.4, 0.201), 0.125);
   } else {
     const base = radial(
       (t) => 0.235 + 0.755 * Math.pow(Math.sin((t * Math.PI) / 2), 0.82),
@@ -924,8 +825,6 @@ export function createCouture(item: Item, color: string): T.Group {
       p.y += 0.05 * t + 0.07 * Math.sin(a * 3) * Math.pow(t, 3);
       return p;
     };
-    satin.bumpMap = maps.brocade;
-    satin.bumpScale = 0.004;
     add(group, shell(robe, 0.49, TAU - 0.49, 112, 48), satin);
     const edges = [hem(robe, 0.014, 0.49, TAU - 0.49)];
     for (const a of [0.49, TAU - 0.49])
@@ -982,7 +881,7 @@ export function createCouture(item: Item, color: string): T.Group {
         return new T.Vector3(
           x,
           2.43 - 0.52 * t,
-          0.215 - t * 0.025 + Math.cos((u - 0.5) * Math.PI) * 0.012,
+          torsoSurface(2.43 - 0.52 * t, 0, 0.022).z - Math.abs(x) * 0.08,
         );
       },
       16,
@@ -990,7 +889,7 @@ export function createCouture(item: Item, color: string): T.Group {
     );
     add(group, stomacher, ivory);
     const jewels = Array.from({ length: 6 }, (_, i) => ({
-      position: new T.Vector3(0, 2.385 - i * 0.077, 0.226 - i * 0.004),
+      position: torsoSurface(2.385 - i * 0.077, 0, 0.029),
       scale: 1 - i * 0.07,
     }));
     const jewel = new T.OctahedronGeometry(0.022, 0);

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>公主外观预览 · 星愿衣橱</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <main id="preview">
+      <header>
+        <p>STARLIGHT ATELIER</p>
+        <h1>月光公主</h1>
+        <span>VRM 公主 · 服饰适配预览</span>
+      </header>
+      <div id="stage" aria-label="公主三维外观预览"></div>
+      <nav aria-label="预览角度">
+        <button data-angle="0" aria-pressed="true">正面</button>
+        <button data-angle="0.65" aria-pressed="false">斜侧面</button>
+      </nav>
+      <div id="loading" role="status">正在准备公主模型…</div>
+      <footer>
+        <span>月光序曲 · 紫水晶冠 · 星蝶羽翼</span
+        ><small>基于 pixiv VRM 示例底模重塑 · 外观预览</small>
+      </footer>
+    </main>
+    <script type="module" src="/src/princess-preview.ts"></script>
+  </body>
+</html>

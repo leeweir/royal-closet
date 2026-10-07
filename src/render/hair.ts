@@ -1,6 +1,7 @@
 import * as T from "three";
 import type { Item } from "../simulation/data";
 import { mesh, line, batchGroup, colorShift } from "./modeling";
+import { headSurface } from "./face";
 function ribbon(
   parent: T.Group,
   pts: number[][],
@@ -60,12 +61,77 @@ function ribbon(
     line(parent, marks, 0.0018, highlight, 20);
   }
 }
+/**
+ * One continuous surface from the crown to the tips: it hugs the scalp,
+ * stops at the hairline over the face, and falls down the back and sides,
+ * so no seam or gap shows from any angle. Clumps, waves and pointed tips are
+ * shaped into the same mesh.
+ */
+function shell(length: number, shape: number) {
+  const cols = 160,
+    rows = 72,
+    ARC = 0.62;
+  const rx = 0.362,
+    ry = 0.418,
+    hairline = Math.acos(0.19 / ry) / (Math.PI / 2);
+  const wave = shape === 3 ? 0.03 : shape === 5 ? 0.022 : 0;
+  const pos: number[] = [],
+    uv: number[] = [],
+    idx: number[] = [];
+  for (let i = 0; i <= cols; i++) {
+    const a = (i / cols) * Math.PI * 2,
+      front = Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
+    // An uneven hem of soft, rounded locks rather than a straight cut.
+    const tips =
+      0.05 * (0.5 + 0.5 * Math.cos(a * 9)) +
+      0.035 * (0.5 + 0.5 * Math.cos(a * 14 + 1.3));
+    const fall = T.MathUtils.smoothstep(front, 0.95, 1.4);
+    const end = (1 - fall) * hairline * ARC + fall * (ARC + length - tips);
+    const rz = Math.cos(a) > 0 ? 0.312 : 0.33;
+    for (let j = 0; j <= rows; j++) {
+      const s = (j / rows) * end;
+      let x: number, y: number, z: number;
+      if (s <= ARC) {
+        const phi = (s / ARC) * (Math.PI / 2);
+        x = rx * Math.sin(phi) * Math.sin(a);
+        y = ry * Math.cos(phi);
+        z = rz * Math.sin(phi) * Math.cos(a);
+      } else {
+        const d = s - ARC,
+          k = Math.min(1, d / 0.35),
+          spread =
+            1 +
+            0.07 * k -
+            0.1 * (d / Math.max(length, 0.5)) ** 2 +
+            0.022 * Math.sin(a * 14) * k;
+        const curl = wave * Math.sin(d * 6 + a * 3) * k;
+        x = Math.sin(a) * (rx * spread + curl);
+        y = -d;
+        z = Math.cos(a) * (rz * spread + curl);
+      }
+      // Fine ridges read as strands under the clearcoat.
+      const ridge = 1 + 0.006 * Math.cos(a * 24);
+      pos.push(x * ridge, y, z * ridge);
+      uv.push(i / cols, j / rows);
+      if (i < cols && j < rows) {
+        const k = i * (rows + 1) + j;
+        idx.push(k, k + rows + 1, k + 1, k + 1, k + rows + 1, k + rows + 2);
+      }
+    }
+  }
+  const g = new T.BufferGeometry();
+  g.setAttribute("position", new T.Float32BufferAttribute(pos, 3));
+  g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
 export function createHair(item: Item) {
   const root = new T.Group();
   root.name = "hair";
   root.userData.silhouette = item.shape;
   const colors = [
-    "#ddd4e8",
+    "#d9cdeb",
     "#c68695",
     "#967a64",
     "#87aabe",
@@ -85,34 +151,25 @@ export function createHair(item: Item) {
     color: colorShift(color, 0.23),
     roughness: 0.5,
   });
-  const cap = mesh(
-    new T.SphereGeometry(1, 48, 32, 0, Math.PI * 2, 0, 1.2),
-    mat,
-    root,
-  );
-  cap.scale.set(0.373, 0.442, 0.307);
-  cap.position.y = 0.002;
-  // Continuous rear scalp prevents gaps between swept decorative locks at any angle.
-  const rearCap = mesh(
-    new T.SphereGeometry(1, 48, 32, Math.PI, Math.PI, 0, 2.62),
-    mat,
-    root,
-  );
-  rearCap.scale.set(0.375, 0.44, 0.311);
-
-  // Swept bangs stop above the eyes; each strip has a rounded cross section and a tapered tip.
-  for (let i = 0; i < 7; i++) {
-    const x = (i - 3) * 0.09;
-    const side = x < 0 ? -1 : 1;
+  // Layered bangs hug the forehead: alternating lengths, tips swept toward a
+  // soft side part, and the eyebrows left visible beneath them.
+  for (let i = -5; i <= 5; i++) {
+    const x = i * 0.056,
+      sweep = (i <= 0 ? -1 : 1) * 0.03 + 0.012,
+      tip =
+        0.12 + (Math.abs(i) % 2) * 0.045 + Math.max(0, Math.abs(i) - 2) * 0.02;
+    const at = (px: number, py: number, lift: number) =>
+      headSurface(px, py, lift).toArray();
     ribbon(
       root,
       [
-        [x * 0.25, 0.39, 0.17],
-        [x * 0.65, 0.32, 0.247],
-        [x, 0.225, 0.285],
-        [x + side * 0.025, 0.135 + (i === 3 ? 0.035 : 0), 0.292],
+        [x * 0.2, 0.395, 0.16],
+        at(x * 0.6, 0.33, 0.036),
+        at(x * 0.92, 0.24, 0.026),
+        at(x + sweep * 0.6, (0.24 + tip) / 2, 0.02),
+        at(x + sweep, tip, 0.014),
       ],
-      0.06,
+      0.04 - Math.abs(i) * 0.0015,
       mat,
       shine,
     );
@@ -120,83 +177,41 @@ export function createHair(item: Item) {
   const strands = new T.Group();
   strands.name = "hair-sway";
   root.add(strands);
-  // A fluted half-ellipsoid gives each haircut real volume beneath its separate locks.
   const length = [1.44, 0.43, 0.63, 1.45, 0.43, 1.48][item.shape];
-  const positions: number[] = [],
-    uvs: number[] = [],
-    indices: number[] = [];
-  for (let j = 0; j <= 32; j++) {
-    const t = j / 32,
-      y = 0.16 - t * (length + 0.16),
-      rx = 0.363 + 0.023 * Math.sin(t * Math.PI) - 0.095 * t * t,
-      rz = 0.305 - 0.14 * t * t,
-      center = -0.055 * t;
-    for (let i = 0; i <= 48; i++) {
-      const u = i / 48,
-        a = Math.PI / 2 + u * Math.PI,
-        flute = 1 + 0.018 * Math.cos(a * 18 + t * 2);
-      positions.push(
-        Math.sin(a) * rx * flute,
-        y + Math.pow(t, 7) * 0.028 * Math.cos(a * 14),
-        Math.cos(a) * rz * flute + center,
-      );
-      uvs.push(u, t);
-      if (j < 32 && i < 48) {
-        const k = j * 49 + i;
-        indices.push(k, k + 49, k + 1, k + 1, k + 49, k + 50);
-      }
-    }
-  }
-  const curtain = new T.BufferGeometry();
-  curtain.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
-  curtain.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
-  curtain.setIndex(indices);
-  curtain.computeVertexNormals();
   mesh(
-    curtain,
+    shell(length, item.shape),
     new T.MeshPhysicalMaterial({
-      color: colorShift(color, -0.035),
+      color: colorShift(color, -0.04),
       roughness: 0.42,
       metalness: 0.04,
       clearcoat: 0.28,
+      clearcoatRoughness: 0.45,
       side: T.DoubleSide,
     }),
     strands,
   );
 
-  for (const side of [-1, 1]) {
-    ribbon(
-      strands,
-      [
-        [side * 0.31, 0.24, 0.075],
-        [side * 0.352, 0.05, 0.09],
-        [side * 0.358, -0.24, 0.11],
-        [side * 0.33, -0.43, 0.15],
-      ],
-      0.068,
-      mat,
-      shine,
-    );
-  }
-  if (item.shape === 4) {
-    for (let i = 0; i < 11; i++) {
-      const a = (i / 10) * Math.PI + Math.PI / 2;
-      const x = Math.sin(a) * 0.31,
-        z = Math.cos(a) * 0.27;
+  // Face-framing locks fall in front of the ears with a gentle S-curve.
+  const sideEnd = -Math.min(0.78, length);
+  for (const side of [-1, 1])
+    for (const [dx, dz, w, end] of [
+      [0, 0, 0.075, sideEnd],
+      [0.03, -0.06, 0.07, sideEnd * 0.85],
+    ])
       ribbon(
         strands,
         [
-          [x * 0.85, 0.3, z],
-          [x, 0.0, z * 1.12],
-          [x * 1.03, -0.3, z],
-          [x * 0.83, -0.43, z * 0.85],
+          [side * (0.29 + dx), 0.26, 0.1 + dz],
+          [side * (0.345 + dx), 0.06, 0.125 + dz],
+          [side * (0.34 + dx), -0.2, 0.12 + dz],
+          [side * (0.31 + dx), end * 0.7, 0.13 + dz],
+          [side * (0.335 + dx), end, 0.1 + dz],
         ],
-        0.1,
+        w,
         mat,
         shine,
       );
-    }
-  } else if (item.shape === 1) {
+  if (item.shape === 1) {
     for (const side of [-1, 1]) {
       const tie = mesh(
         new T.TorusGeometry(0.065, 0.012, 8, 24),
@@ -244,39 +259,6 @@ export function createHair(item: Item) {
         -0.055,
       );
       bow.rotation.y = Math.PI / 2;
-    }
-    for (let i = 0; i < 5; i++)
-      ribbon(
-        strands,
-        [
-          [(i - 2) * 0.09, 0.14, -0.26],
-          [(i - 2) * 0.1, -0.3, -0.29],
-          [(i - 2) * 0.095, -0.65, -0.29],
-        ],
-        0.075,
-        mat,
-        shine,
-      );
-  } else {
-    const length = item.shape === 5 ? 1.48 : 1.45;
-    for (let i = 0; i < 11; i++) {
-      const a = Math.PI / 2 + (i / 10) * Math.PI;
-      const x = Math.sin(a) * 0.29,
-        z = Math.cos(a) * 0.265;
-      const wave = item.shape === 3 ? 0.12 : item.shape === 5 ? 0.07 : 0.035;
-      ribbon(
-        strands,
-        [
-          [x * 0.85, 0.28, z],
-          [x * 1.12, -0.15, z * 1.2],
-          [x * 1.22 + Math.sin(i) * wave, -0.63, z * 1.26],
-          [x * 1.05 - Math.sin(i) * wave, -1.03, z * 1.15],
-          [x * 0.9 + Math.sin(i) * wave, -length, z * 0.95],
-        ],
-        0.08,
-        mat,
-        shine,
-      );
     }
   }
   batchGroup(root);

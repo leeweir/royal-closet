@@ -1,0 +1,60 @@
+.wardrobe-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.wardrobe-actions .compact {
+  min-height: 36px;
+  padding-inline: 10px;
+}
+.fitting-toggle[aria-pressed="true"] {
+  color: #73476c;
+  border-color: #c4a0bb;
+  background: #f5e8f0;
+}
+.is-fitting .scene-heading h1 {
+  color: #73476c;
+}
+.is-fitting .wardrobe-filter > span:first-child {
+  color: #875278;
+}
+.is-fitting .wardrobe-actions [data-action="slots"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.is-fitting .hanger .item-card.selected {
+  outline-color: #c399b4;
+  box-shadow:
+    0 0 0 1.5px #b584a9,
+    0 7px 14px -9px #68466340;
+}
+@media (max-width: 600px), (max-height: 600px) {
+  .wardrobe-actions {
+    gap: 5px;
+  }
+  .wardrobe-actions .compact {
+    min-height: 32px;
+    padding-inline: 7px;
+    font-size: 10px;
+  }
+  .wardrobe-actions .compact svg {
+    display: none;
+  }
+}
+@media (max-width: 360px) {
+  .wardrobe-header h2 {
+    font-size: 15px;
+  }
+  .wardrobe-header h2 > span {
+    margin-left: 3px;
+    font-size: 10px;
+  }
+  .wardrobe-actions .compact {
+    font-size: 9px;
+    padding-inline: 6px;
+  }
+  .is-fitting .collection-progress {
+    font-size: 8px;
+  }
+}

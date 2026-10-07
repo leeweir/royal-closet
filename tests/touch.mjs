@@ -27,10 +27,15 @@ try {
   await p.locator('[data-action="start"][data-id="0"]').tap();
   await p.waitForTimeout(400);
   const point = await p.evaluate(() =>
-    window.__STARLIGHT__.diagnostics().points.find((p) => p.kind === "gem"),
+    window.__STARLIGHT__
+      .diagnostics()
+      .points.find((p) => p.kind === "gem" && p.visible),
   );
-  await p.touchscreen.tap(point.x, point.y);
-  await p.waitForFunction(() => window.__STARLIGHT__.getRun().gems.includes(0));
+  await p.touchscreen.tap(point.visualX, point.visualY);
+  await p.waitForFunction(
+    (index) => window.__STARLIGHT__.getRun().gems.includes(index),
+    point.index,
+  );
   const canvas = await p.locator("#world canvas").boundingBox();
   assert.ok(canvas.width <= 390);
   await p.screenshot({ path: "test-results/touch-mobile.png", fullPage: true });
