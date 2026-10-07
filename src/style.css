@@ -3019,3 +3019,37 @@ dialog p {
 .reward-level {
   line-height: 2;
 }
+@media (min-width: 601px) and (max-height: 600px) {
+  .app-shell:has(.screen-adventure) {
+    padding: 0;
+  }
+  .app-shell:has(.screen-adventure) .topbar,
+  .app-shell:has(.screen-adventure) .sidebar,
+  .app-shell:has(.screen-adventure) .footer {
+    display: none;
+  }
+  .app-shell:has(.screen-adventure) .app-body {
+    display: block;
+  }
+  main.screen-adventure {
+    width: 100%;
+    padding: 0;
+    min-height: 0;
+  }
+  .screen-adventure .world-wrap {
+    height: 100dvh;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .adventure-objective {
+    padding: 10px 13px;
+  }
+  .adventure-top {
+    top: 12px;
+    left: 14px;
+  }
+  .adventure-controls {
+    bottom: 12px;
+  }
+}

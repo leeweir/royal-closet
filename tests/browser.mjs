@@ -52,6 +52,17 @@ await click("login");
 assert.equal((await state()).streak, 1);
 await click("close");
 await click("nav", "map");
+await page.evaluate(async () => {
+  const background = getComputedStyle(
+    document.querySelector(".kingdom-map"),
+  ).backgroundImage;
+  const match = background.match(/url\(["']?(.*?)["']?\)/);
+  if (!match) throw new Error("Kingdom illustration missing");
+  const image = new Image();
+  image.src = match[1];
+  await image.decode();
+});
+await page.waitForTimeout(220);
 await screenshot("map-desktop");
 await click("start", "0");
 await page.waitForTimeout(750);
@@ -146,6 +157,10 @@ for (const size of [
   );
   const b = page.locator('[data-move="1,0"]');
   const rect = await b.boundingBox();
+  assert.ok(
+    rect.y >= 0 && rect.y + rect.height <= size.height,
+    "direction controls remain inside viewport",
+  );
   await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
   await page.mouse.down();
   await page.waitForTimeout(500);
