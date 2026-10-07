@@ -254,6 +254,7 @@ function navigate(id: string) {
   run = null;
   near = null;
   render();
+  window.scrollTo({ top: 0, behavior: "instant" });
 }
 function start(stage: number) {
   if (!world) {
@@ -270,6 +271,7 @@ function start(stage: number) {
   screen = "adventure";
   world.adventure(run);
   render();
+  window.scrollTo({ top: 0, behavior: "instant" });
   renderHUD();
   requestAnimationFrame(() => requestAnimationFrame(renderHUD));
   sound(520);

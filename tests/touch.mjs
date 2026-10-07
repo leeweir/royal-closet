@@ -21,7 +21,9 @@ try {
     await p.evaluate(() => window.__STARLIGHT__.getState().outfit.dress),
     "dress-1",
   );
+  await p.evaluate(() => window.scrollTo(0, 500));
   await p.locator('[data-action="nav"][data-id="map"]').first().tap();
+  assert.equal(await p.evaluate(() => scrollY), 0);
   await p.locator('[data-action="start"][data-id="0"]').tap();
   await p.waitForTimeout(400);
   const point = await p.evaluate(() =>
