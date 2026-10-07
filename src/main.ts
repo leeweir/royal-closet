@@ -65,6 +65,13 @@ let screen = "closet",
   puzzleInput: number[] = [],
   puzzleReady = false,
   toastTimer = 0;
+let craftPage = 0,
+  journalPage = 0,
+  journalTab = "daily";
+const craftPageSize = () => (matchMedia("(max-width:600px)").matches ? 2 : 4);
+function pages(action: string, page: number, total: number) {
+  return `<div class="page-controls"><button class="soft-button" data-action="${action}" data-id="${page - 1}" ${page === 0 ? "disabled" : ""}>${icon("chevron-left")} 上一页</button><span>${page + 1} / ${total}</span><button class="soft-button" data-action="${action}" data-id="${page + 1}" ${page >= total - 1 ? "disabled" : ""}>下一页 ${icon("chevron-right")}</button></div>`;
+}
 let audio: AudioContext | null = null;
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div class="app-shell"><header class="topbar"><a class="brand" href="#" aria-label="星愿衣橱首页"><span class="brand-mark">${icon("crown")}</span><span><b>星愿衣橱</b><small>STARLIGHT ATELIER</small></span></a><div class="top-right"><div class="currencies" id="currencies"></div><button class="icon-button gift-button" data-action="login" aria-label="每日星愿礼物">${icon("gift")}<span class="notification-dot" id="gift-dot"></span></button><button class="icon-button" data-action="settings" aria-label="设置与存档">${icon("settings")}</button></div></header><div class="app-body"><nav class="sidebar" aria-label="游戏导航">${[
@@ -80,7 +87,7 @@ app.innerHTML = `<div class="app-shell"><header class="topbar"><a class="brand" 
   )
   .join(
     "",
-  )}<div class="sidebar-bottom"><span>✧</span><small>把童话<br>穿在身上</small></div></nav><main id="main"><div id="world-wrap" class="world-wrap"><div class="scene-heading"><span class="eyebrow">YOUR LITTLE FAIRYTALE</span><h1>今天，也要闪闪发光。</h1><p>换上心爱的裙装，去遇见新的故事。</p></div><div id="world"></div><div class="scene-tools"><button data-action="rotate" class="icon-button" aria-label="重置视角">${icon("rotate-ccw")}</button><button data-action="pose" class="icon-button" aria-label="切换公主姿势">${icon("heart")}</button><button data-action="photo" class="icon-button" aria-label="拍照下载">${icon("camera")}</button></div><div class="scene-caption" id="scene-caption"></div><div class="drag-hint">${icon("refresh-cw")} 拖动旋转 · 滚轮缩放</div><div id="adventure-hud"></div></div><section id="content"></section></main></div><footer class="footer"><span>✧ 每一份想象，都值得闪耀</span><span id="save-status">进度自动保存在此浏览器</span><button data-action="help">玩法指南 ${icon("info")}</button></footer></div><div id="toast" role="status" aria-live="polite"></div><dialog id="modal" aria-labelledby="modal-title"><button class="modal-close icon-button" data-action="close" aria-label="关闭">${icon("x")}</button><div id="modal-content"></div></dialog><input id="import-input" type="file" accept=".json,application/json" hidden>`;
+  )}<div class="sidebar-bottom"><span>✧</span><small>把童话<br>穿在身上</small></div></nav><main id="main"><div id="world-wrap" class="world-wrap"><div class="scene-heading"><span class="eyebrow">YOUR LITTLE FAIRYTALE</span><h1>今天，也要闪闪发光。</h1><p>换上心爱的裙装，去遇见新的故事。</p></div><div id="world"></div><div class="scene-tools"><button data-action="rotate" class="icon-button" aria-label="重置视角">${icon("rotate-ccw")}</button><button data-action="pose" class="icon-button" aria-label="切换公主姿势">${icon("heart")}</button><button data-action="photo" class="icon-button" aria-label="拍照下载">${icon("camera")}</button></div><div class="scene-caption" id="scene-caption"></div><div class="drag-hint">${icon("refresh-cw")} 拖动旋转 · 点公主微笑</div><div id="adventure-hud"></div></div><section id="content"></section></main></div><footer class="footer"><span>✧ 每一份想象，都值得闪耀</span><span id="save-status">进度自动保存在此浏览器</span><button data-action="help">玩法指南 ${icon("info")}</button></footer></div><div id="toast" role="status" aria-live="polite"></div><dialog id="modal" aria-labelledby="modal-title"><button class="modal-close icon-button" data-action="close" aria-label="关闭">${icon("x")}</button><div id="modal-content"></div></dialog><input id="import-input" type="file" accept=".json,application/json" hidden>`;
 let world: World | null = null;
 try {
   world = new World(document.querySelector("#world")!, save);
@@ -204,15 +211,18 @@ function renderMap() {
   )}</div><div class="region-reward">${icon("gift")} 章节纪念：${reg.reward}</div>${current >= 20 ? '<button class="primary-button" data-action="start" data-id="20">无尽星愿 · 自由探索</button>' : ""}</div></div><div class="journey-notes"><span>${icon("gem")} 首次探索有额外星晶</span><span>${icon("heart")} 没有体力限制，随时出发</span><span>${icon("bookmark")} 每次完成自动记录旅程</span></div>`;
 }
 function renderCraft() {
-  content.innerHTML = `${title("THE DREAM ATELIER", "把灵感，缝进裙摆。", "每件新装都有自己的故事。探索获得织梦丝，亲手制作你的收藏。", `<button class="soft-button" data-action="exchange">${icon("sparkles")} 织梦丝 ${save.thread} <span class="small-plus">＋</span></button>`)}<div class="craft-filters"><span class="progress-chip">${icon("wand-sparkles")} 已制作 ${save.totalCrafts} 件新装</span><span>星晶兑换：15 星晶 → 8 织梦丝</span></div><div class="craft-grid">${ITEMS.filter(
-    (i) => i.shape >= 2,
-  )
+  const list = ITEMS.filter((i) => i.shape >= 2),
+    size = craftPageSize(),
+    total = Math.ceil(list.length / size);
+  craftPage = Math.max(0, Math.min(craftPage, total - 1));
+  content.innerHTML = `${title("THE DREAM ATELIER", "把灵感，缝进裙摆。", "每件新装都有自己的故事。探索获得织梦丝，亲手制作你的收藏。", `<button class="soft-button" data-action="exchange">${icon("sparkles")} 织梦丝 ${save.thread} <span class="small-plus">＋</span></button>`)}<div class="craft-filters"><span class="progress-chip">${icon("wand-sparkles")} 已制作 ${save.totalCrafts} 件新装</span><span>星晶兑换：15 星晶 → 8 织梦丝</span></div><div class="craft-grid">${list
+    .slice(craftPage * size, (craftPage + 1) * size)
     .map((i) => {
       const owned = save.owned.includes(i.id),
         locked = i.region > regionUnlocked(save);
       return `<article class="craft-card"><div class="craft-art" style="--item-color:${i.color}">${itemArt(i)}<span class="item-stars">${"✦".repeat(i.rarity)}</span></div><div class="craft-info"><span class="tiny-label">${categories.find((c) => c.id === i.category)!.name} · ${i.style}</span><h3>${i.name}</h3><p>${locked ? `探索至${REGIONS[i.region].name}解锁图纸` : "一针一线，编织属于你的魔法"}</p><span class="cost">${icon("coins")} ${i.cost} <span>·</span> ${icon("sparkles")} ${i.material}</span><button class="${owned ? "soft-button" : "primary-button"}" data-action="craft" data-id="${i.id}" ${owned || locked ? "disabled" : ""}>${owned ? "已收藏" : locked ? "图纸未解锁" : "制作新装"} ${icon(owned ? "check" : "wand-sparkles")}</button></div></article>`;
     })
-    .join("")}</div>`;
+    .join("")}</div>${pages("craft-page", craftPage, total)}`;
 }
 function renderContest() {
   const t = THEMES[selectedTheme];
@@ -220,7 +230,14 @@ function renderContest() {
 }
 function renderJournal() {
   refreshDay(save);
-  content.innerHTML = `${title("LITTLE MOMENTS, BIG MAGIC", "收藏每一次，小小的闪耀。", "今日委托每天更新；旅途成就会一直陪伴你。", `<span class="progress-chip">${icon("crown")} 星愿旅人 Lv. ${level(save)}</span>`)}<div class="journal-summary"><div><b>${save.totalExplores}</b><span>次秘境探索</span></div><div><b>${save.owned.length}<small> / 36</small></b><span>件心动收藏</span></div><div><b>${save.completed.length}<small> / 20</small></b><span>段童话故事</span></div><div><b>${save.xp % 100}<small> / 100</small></b><span>距离下一等级</span></div></div><h3 class="list-heading">今日的小小心愿 <span>每天 00:00 更新 · 本地时间</span></h3><div class="quests-grid">${QUESTS.map((q) => questCard(q, true)).join("")}</div><h3 class="list-heading">旅途中的纪念章 <span>每一枚，都是成长的证明</span></h3><div class="quests-grid achievements">${ACHIEVEMENTS.map((q) => questCard(q, false)).join("")}</div>`;
+  const daily = journalTab === "daily",
+    list = daily ? QUESTS : ACHIEVEMENTS,
+    total = Math.ceil(list.length / 3);
+  journalPage = Math.max(0, Math.min(journalPage, total - 1));
+  content.innerHTML = `${title("LITTLE MOMENTS, BIG MAGIC", "收藏每一次，小小的闪耀。", "今日委托每天更新；旅途成就会一直陪伴你。", `<span class="progress-chip">${icon("crown")} 星愿旅人 Lv. ${level(save)}</span>`)}<div class="journal-summary"><div><b>${save.totalExplores}</b><span>次秘境探索</span></div><div><b>${save.owned.length}<small> / 36</small></b><span>件心动收藏</span></div><div><b>${save.completed.length}<small> / 20</small></b><span>段童话故事</span></div><div><b>${save.xp % 100}<small> / 100</small></b><span>距离下一等级</span></div></div><div class="journal-tabs"><button class="${daily ? "active" : ""}" data-action="journal-tab" data-id="daily">今日心愿</button><button class="${!daily ? "active" : ""}" data-action="journal-tab" data-id="achievements">旅途纪念章</button></div><h3 class="list-heading">${daily ? "今日的小小心愿" : "旅途中的纪念章"} <span>${daily ? "每天 00:00 更新" : "每一枚，都是成长的证明"}</span></h3><div class="quests-grid ${daily ? "" : "achievements"}">${list
+    .slice(journalPage * 3, journalPage * 3 + 3)
+    .map((q) => questCard(q, daily))
+    .join("")}</div>${pages("journal-page", journalPage, total)}`;
 }
 function questCard(q: (typeof QUESTS)[number], daily: boolean) {
   const done = (daily ? save.daily.claimed : save.claims).includes(q.id),
@@ -483,6 +500,22 @@ app.addEventListener("click", (e) => {
       renderCloset();
       icons();
       break;
+    case "craft-page":
+      craftPage = Number(id);
+      renderCraft();
+      icons();
+      break;
+    case "journal-tab":
+      journalTab = id;
+      journalPage = 0;
+      renderJournal();
+      icons();
+      break;
+    case "journal-page":
+      journalPage = Number(id);
+      renderJournal();
+      icons();
+      break;
     case "equip":
       if (equip(save, id)) {
         world?.updateOutfit(save);
@@ -491,6 +524,10 @@ app.addEventListener("click", (e) => {
         sound();
       } else {
         screen = "craft";
+        craftPage = Math.floor(
+          ITEMS.filter((i) => i.shape >= 2).findIndex((i) => i.id === id) /
+            craftPageSize(),
+        );
         render();
         toast("在织梦工坊制作这件新装，就能加入衣橱。");
       }
@@ -509,7 +546,13 @@ app.addEventListener("click", (e) => {
       break;
     case "pose":
       if (world) world.pose = (world.pose + 1) % 3;
-      toast("换一个心情，定格今天的闪耀。");
+      toast(
+        [
+          "轻轻呼吸，听见星光。",
+          "公主向你挥手：今天也要开心！",
+          "让裙摆随着星光轻轻摇曳。 ",
+        ][world?.pose ?? 0],
+      );
       break;
     case "photo":
       if (world) {
@@ -717,6 +760,7 @@ window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => {
     if (run) renderHUD();
+    else if (screen === "craft" || screen === "journal") render();
   }, 150);
 });
 (document.querySelector("#import-input") as HTMLInputElement).addEventListener(

@@ -1,14 +1,14 @@
 :root {
   font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
-  color: #554960;
-  background: #f7f4f8;
+  color: #5a4769;
+  background: #f7f3f8;
   font-synthesis: none;
-  --ink: #554960;
-  --muted: #96899e;
-  --purple: #8e77aa;
-  --purple-dark: #70588d;
-  --line: #e9e1ec;
-  --gold: #bf9b60;
+  --ink: #5a4769;
+  --muted: #9b88a7;
+  --purple: #9276ae;
+  --purple-dark: #70518d;
+  --line: #e7dfea;
+  --gold: #be9b61;
   --white: #fffdfa;
   --panel: #fffcff;
   --shadow: 0 12px 35px #7761870c;
@@ -16,8 +16,16 @@
 * {
   box-sizing: border-box;
 }
-body {
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
   margin: 0;
+  overflow: hidden;
+}
+body {
+  overscroll-behavior: none;
 }
 button,
 a,
@@ -31,11 +39,9 @@ button {
   background: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-}
-button {
   transition:
     background 0.18s,
-    transform 0.18s,
+    border-color 0.18s,
     box-shadow 0.18s;
 }
 button:disabled {
@@ -47,8 +53,8 @@ button:not(:disabled):active {
 }
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid #b9a1cd;
-  outline-offset: 3px;
+  outline: 3px solid #b99bcf;
+  outline-offset: 2px;
 }
 button svg {
   pointer-events: none;
@@ -80,76 +86,73 @@ small {
   font-size: 11px;
 }
 .app-shell {
+  height: 100dvh;
   max-width: 1680px;
   margin: auto;
-  padding: 0 38px;
-  min-height: 100dvh;
+  padding: 0 clamp(14px, 2.6vw, 38px);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .topbar {
-  height: 105px;
+  height: 72px;
+  flex: 0 0 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-shrink: 0;
   border-bottom: 1px solid var(--line);
+  gap: 12px;
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 .brand-mark {
-  width: 49px;
-  height: 49px;
+  width: 41px;
+  height: 43px;
   display: grid;
   place-items: center;
   border: 1px solid #ceb992;
-  border-radius: 16px 16px 21px 21px;
+  border-radius: 13px 13px 19px 19px;
   color: #b38d52;
   transform: rotate(-3deg);
 }
 .brand-mark svg {
-  width: 30px;
-  height: 30px;
+  width: 27px;
+  height: 27px;
 }
 .brand b {
   font-family: "Noto Serif SC", "Songti SC", serif;
-  font-size: 25px;
-  letter-spacing: 5px;
+  font-size: 23px;
+  letter-spacing: 4px;
   font-weight: 600;
 }
 .brand small {
   display: block;
-  font-size: 8px;
-  letter-spacing: 3.6px;
-  color: #a597ad;
-  margin-top: 5px;
+  font-size: 7px;
+  letter-spacing: 3px;
+  color: #a08fa9;
+  margin-top: 3px;
 }
 .top-right,
 .currencies {
   display: flex;
   align-items: center;
-  gap: 15px;
-}
-.top-right {
-  gap: 19px;
-}
-.currencies {
-  gap: 22px;
+  gap: 16px;
 }
 .currency {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 .currency svg {
-  width: 18px;
-  height: 18px;
-  color: #c6a15f;
+  width: 17px;
+  height: 17px;
+  color: #bf9b5c;
 }
 .currency b {
   font-weight: 600;
@@ -159,29 +162,31 @@ small {
   font-size: 10px;
 }
 .currency.gem svg {
-  color: #a28aba;
+  color: #9c7db8;
 }
 .level-pill {
   font-size: 11px;
   border: 1px solid #decee9;
-  background: #f0e9f7;
-  padding: 5px 10px;
+  background: #efe7f6;
+  padding: 5px 9px;
   border-radius: 20px;
-  color: #8b72a5;
+  color: #8a6b9f;
+  white-space: nowrap;
 }
 .icon-button {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--line);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #fffaffaa;
-  color: #8c7d99;
+  background: #fffaffbd;
+  color: #8f789f;
+  flex-shrink: 0;
 }
 .icon-button:hover {
-  background: #ece4f2;
+  background: #ece2f2;
 }
 .gift-button {
   position: relative;
@@ -189,10 +194,10 @@ small {
 }
 .notification-dot {
   position: absolute;
-  background: #cc9da9;
+  background: #cb929e;
   width: 6px;
   height: 6px;
-  border: 2px solid #f7f4f8;
+  border: 2px solid #f7f3f8;
   box-sizing: content-box;
   border-radius: 50%;
   right: 3px;
@@ -200,54 +205,55 @@ small {
 }
 .app-body {
   display: flex;
-  gap: 30px;
   flex: 1;
   min-height: 0;
+  gap: 24px;
 }
 .sidebar {
-  flex: 0 0 86px;
+  flex: 0 0 80px;
   display: flex;
   align-items: center;
   flex-direction: column;
-  padding: 29px 0 20px;
+  padding: 18px 0 14px;
   border-right: 1px solid var(--line);
-  gap: 10px;
+  gap: 8px;
+  min-height: 0;
 }
 .nav-button {
-  width: 72px;
-  min-height: 77px;
-  border-radius: 13px;
+  width: 66px;
+  min-height: 69px;
+  border-radius: 12px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 9px;
-  font-size: 10px;
-  letter-spacing: 0.4px;
-  color: #a292ad;
+  gap: 7px;
+  font-size: 11px;
+  color: #9c83ac;
+  flex-shrink: 0;
 }
 .nav-button svg {
-  width: 24px;
-  height: 24px;
+  width: 23px;
+  height: 23px;
 }
 .nav-button.active {
-  color: #89709e;
-  background: #eae1f1;
+  color: #7d5b98;
+  background: #eae0f2;
 }
 .nav-button:hover {
-  background: #eee8f3;
+  background: #eee5f4;
 }
 .nav-dot {
   display: none;
 }
 .nav-button.active .nav-dot {
   position: absolute;
-  right: -12px;
+  right: -9px;
   top: 50%;
   width: 3px;
-  height: 19px;
-  background: #aa92bb;
+  height: 18px;
+  background: #ab87c1;
   border-radius: 4px;
   transform: translateY(-50%);
   display: block;
@@ -255,30 +261,33 @@ small {
 .sidebar-bottom {
   margin-top: auto;
   text-align: center;
-  color: #b9a8bd;
-  padding-top: 20px;
+  color: #b29eb9;
+  padding-top: 12px;
 }
 .sidebar-bottom > span {
   display: block;
-  font-size: 28px;
-  margin-bottom: 9px;
+  font-size: 26px;
+  margin-bottom: 5px;
 }
 .sidebar-bottom small {
   font-size: 9px;
-  line-height: 2;
+  line-height: 1.8;
   letter-spacing: 2px;
 }
 main {
-  width: calc(100% - 116px);
-  min-height: 660px;
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(390px, 1fr);
-  gap: 24px;
-  padding: 28px 0 20px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1.16fr) minmax(340px, 1fr);
+  gap: 22px;
+  padding: 18px 0 8px;
 }
 #content {
   min-width: 0;
+  min-height: 0;
 }
 main.screen-map,
 main.screen-craft,
@@ -289,177 +298,192 @@ main.screen-adventure {
   display: block;
   position: relative;
 }
+.screen-map #content,
+.screen-craft #content,
+.screen-journal #content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 .world-wrap {
   position: relative;
-  border-radius: 5px;
+  border-radius: 14px;
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
   background: radial-gradient(
     ellipse at 50% 44%,
     #fffcf4 1%,
-    #f5eef8 53%,
-    #eee7f4 100%
+    #f5edf8 53%,
+    #ede4f3 100%
   );
 }
 #world {
   position: absolute;
-  inset: 78px -12px 48px;
+  inset: 24px 0 48px;
   touch-action: none;
 }
 #world canvas {
   display: block;
+  width: 100%;
+  height: 100%;
 }
 .scene-heading {
   position: absolute;
   z-index: 1;
-  top: 21px;
-  left: 27px;
+  top: 18px;
+  left: 22px;
   right: 15px;
   pointer-events: none;
 }
 .eyebrow {
-  font-size: 8px;
-  letter-spacing: 2.5px;
-  color: #a796b1;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #a38cad;
   font-weight: 500;
   display: block;
 }
+.scene-heading .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1.7px;
+}
 .scene-heading h1 {
-  font-size: 24px;
-  letter-spacing: 2px;
-  margin: 12px 0 9px;
+  font-size: 20px;
+  letter-spacing: 1px;
+  margin: 7px 0 5px;
 }
 .scene-heading p {
   font-size: 10px;
   color: var(--muted);
-  letter-spacing: 1px;
 }
 .scene-tools {
   position: absolute;
-  left: 19px;
-  bottom: 142px;
+  left: 18px;
+  bottom: 112px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  z-index: 2;
 }
 .scene-tools .icon-button {
-  width: 33px;
-  height: 33px;
+  width: 39px;
+  height: 39px;
   background: #fff9;
-  box-shadow: 0 3px 8px #9f81b008;
-  border-color: #e5dbeabb;
+  border-color: #e4d9e9;
 }
 .scene-tools svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 .scene-caption {
   position: absolute;
-  bottom: 48px;
-  left: 0;
-  right: 0;
+  bottom: 31px;
+  left: 62px;
+  right: 62px;
   text-align: center;
   pointer-events: none;
+  z-index: 1;
 }
 .tiny-label {
+  font-size: 10px;
+  color: #a08aab;
+  letter-spacing: 0.4px;
+}
+.scene-caption .tiny-label {
   font-size: 9px;
-  color: #a596aa;
-  letter-spacing: 1px;
 }
 .scene-caption h2 {
   font-size: 21px;
-  letter-spacing: 4px;
-  margin: 7px 0 9px;
+  letter-spacing: 3px;
+  margin: 5px 0 5px;
 }
 .stars {
-  font-size: 12px;
-  color: #c3a56f;
-  letter-spacing: 3px;
+  font-size: 11px;
+  color: #bb955a;
+  letter-spacing: 2px;
 }
 .stars span {
-  font-size: 9px;
-  letter-spacing: 1px;
-  color: #aa98b1;
-  margin-left: 13px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: #a68aae;
+  margin-left: 10px;
 }
 .drag-hint {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 17px;
+  bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 6px;
   font-size: 9px;
-  color: #ac9fb4;
-  letter-spacing: 1px;
+  color: #a48bad;
 }
 .drag-hint svg {
   width: 12px;
   height: 12px;
 }
-#content {
-  min-width: 0;
-}
 .screen-closet #content {
-  background: #fffdfeb5;
-  border: 1px solid #eee6f0;
-  border-radius: 5px;
-  padding: 26px 24px 16px;
+  background: #fffdfed4;
+  border: 1px solid #eadff0;
+  border-radius: 14px;
+  padding: 19px 20px 14px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .wardrobe-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 23px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 .wardrobe-header h2 {
-  font-size: 22px;
-  margin-top: 8px;
+  font-size: 23px;
+  margin-top: 5px;
   letter-spacing: 1px;
 }
 .wardrobe-header h2 > span {
-  font-family: "Noto Sans SC", sans-serif;
-  font-size: 11px;
-  color: #9e8bac;
+  font-family: "PingFang SC", sans-serif;
+  font-size: 12px;
+  color: #9e85ac;
   letter-spacing: 0;
   margin-left: 8px;
   font-weight: 400;
 }
 .wardrobe-header em {
   font-style: normal;
-  color: #c0b3c8;
+  color: #b4a0be;
 }
 .soft-button,
 .primary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  font-size: 11px;
-  padding: 11px 17px;
-  border-radius: 6px;
+  gap: 7px;
+  font-size: 12px;
+  padding: 10px 15px;
+  border-radius: 7px;
   min-height: 42px;
 }
 .soft-button {
-  background: #f4eff7;
-  border: 1px solid #e6dceb;
-  color: #9580a5;
+  background: #f2eaf7;
+  border: 1px solid #e4d6ed;
+  color: #9271a8;
 }
 .soft-button:hover {
-  background: #e9e0f0;
+  background: #e9dcf1;
 }
 .primary-button {
-  background: #927bac;
+  background: #9274ad;
   color: #fffafc;
-  border: 1px solid #927bac;
+  border: 1px solid #9274ad;
 }
 .primary-button:hover {
-  background: #7c6597;
+  background: #7e5d99;
   box-shadow: 0 5px 18px #9580a52b;
 }
 .primary-button svg,
@@ -468,152 +492,166 @@ main.screen-adventure {
   height: 16px;
 }
 .compact {
-  font-size: 9px;
+  font-size: 11px;
   padding: 8px 11px;
-  min-height: 33px;
+  min-height: 38px;
 }
 .compact svg {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
 }
 .wide {
   width: 100%;
-  min-height: 46px;
+  min-height: 44px;
 }
 .category-tabs {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   border-bottom: 1px solid var(--line);
-  gap: 6px;
+  gap: 3px;
+  flex-shrink: 0;
 }
 .category {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 9px 0 13px;
-  font-size: 10px;
-  color: #ac9db6;
+  gap: 6px;
+  padding: 7px 0 9px;
+  font-size: 11px;
+  color: #a087af;
   border-bottom: 2px solid transparent;
+  min-height: 55px;
 }
 .category svg {
   width: 21px;
   height: 21px;
 }
 .category.active {
-  color: #9074aa;
-  border-bottom-color: #a78bbd;
+  color: #7f5c9b;
+  border-bottom-color: #a586bc;
 }
 .category:hover {
-  background: #f6f0f9;
+  background: #f6eef9;
 }
 .wardrobe-filter {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0 13px;
-  font-size: 9px;
-  color: #afa1b6;
+  padding: 10px 0 8px;
+  font-size: 10px;
+  color: #aa94b5;
+  flex-shrink: 0;
 }
 .wardrobe-filter button {
   display: flex;
   align-items: center;
-  font-size: 9px;
-  color: #95849f;
-  gap: 3px;
+  font-size: 11px;
+  color: #93769f;
+  gap: 4px;
+  min-height: 28px;
 }
 .wardrobe-filter svg {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
 }
 .items-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   flex: 1;
+  min-height: 0;
 }
 .item-card {
   min-width: 0;
+  min-height: 0;
   position: relative;
   text-align: left;
-  padding: 9px 10px 11px;
-  border: 1px solid #ece3f1;
-  background: #fcf9fd;
-  border-radius: 9px;
+  padding: 7px 9px 9px;
+  border: 1px solid #e9deef;
+  background: #fcf8fd;
+  border-radius: 10px;
   overflow: hidden;
-  min-height: 161px;
+  display: flex;
+  flex-direction: column;
 }
 .item-card:hover {
-  border-color: #c3afd3;
-  background: #f5edf9;
+  border-color: #bda0d1;
+  background: #f5eaf9;
 }
 .item-card.selected {
-  border: 1.5px solid #aa8ac5;
-  background: #f3eaf8;
+  border: 1.5px solid #aa84c6;
+  background: #f2e7f8;
   box-shadow: 0 3px 12px #9271aa10;
 }
 .item-visual {
-  height: 120px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: radial-gradient(
     ellipse,
-    color-mix(in srgb, var(--item-color) 15%, transparent),
+    color-mix(in srgb, var(--item-color) 16%, transparent),
     transparent 69%
   );
 }
 .item-art {
   height: 100%;
   width: 100%;
-  max-width: 95px;
+  max-width: 124px;
   overflow: visible;
 }
 .item-status {
   position: absolute;
   z-index: 1;
-  right: 8px;
-  top: 8px;
-  color: #b6a9c0;
+  right: 7px;
+  top: 7px;
+  color: #aa95b6;
 }
 .item-status svg {
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
 }
 .selected .item-status {
-  background: #a386bd;
+  background: #a483bd;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 19px;
+  height: 19px;
   display: grid;
   place-items: center;
   color: white;
 }
 .item-name {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   display: block;
-  margin: 5px 0 6px;
+  margin: 4px 0 4px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 .item-stars {
-  font-size: 8px;
-  color: #c4a366;
+  font-size: 9px;
+  color: #bb955a;
   letter-spacing: 1px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 .item-stars small {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0;
-  color: #af9dba;
+  color: #a087ac;
   font-weight: 400;
 }
 .locked .item-visual {
-  opacity: 0.72;
+  opacity: 0.76;
 }
 .unlock-label {
   display: none;
@@ -622,93 +660,104 @@ main.screen-adventure {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 7px;
-  padding: 17px 0 15px;
-  margin-top: 5px;
+  gap: 6px;
+  padding: 9px 0 8px;
+  margin-top: 7px;
   border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .dye-row > span {
-  font-size: 9px;
+  font-size: 10px;
   display: flex;
   gap: 5px;
   align-items: center;
   margin-right: auto;
-  color: #a08cae;
+  color: #9677a6;
   white-space: nowrap;
 }
 .dye-row svg {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
 }
 .swatch {
-  width: 19px;
-  height: 19px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--swatch);
-  border: 3px solid #fff;
-  box-shadow: 0 0 0 1px #e8dfea;
+  border: 6px solid #fff;
+  box-shadow: 0 0 0 1px #e7dce9;
+  flex-shrink: 0;
 }
 .swatch.active {
-  box-shadow: 0 0 0 1.5px #8b6da8;
+  box-shadow: 0 0 0 2px #9470b0;
 }
 .reset-dye {
   display: flex;
   align-items: center;
-  padding: 4px;
-  color: #ac9bb6;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #9f80af;
+  flex-shrink: 0;
 }
 .adventure-teaser {
   display: flex;
   align-items: center;
   text-align: left;
-  gap: 11px;
+  gap: 10px;
   width: 100%;
-  padding: 15px 0 0;
-}
-.adventure-teaser .teaser-icon {
-  display: grid;
-  place-items: center;
-  width: 37px;
-  height: 37px;
-  border-radius: 10px;
-  background: #eee6f4;
-  color: #a189b7;
+  padding: 9px 0 0;
+  min-height: 43px;
   flex-shrink: 0;
 }
+.teaser-icon {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border-radius: 9px;
+  background: #ece1f4;
+  color: #9b7cb3;
+  flex-shrink: 0;
+}
+.teaser-icon svg {
+  width: 19px;
+  height: 19px;
+}
 .adventure-teaser b {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   display: block;
 }
 .adventure-teaser small {
-  font-size: 8px;
-  color: #af9cb9;
+  font-size: 9px;
+  color: #a389b1;
   display: block;
-  margin-top: 5px;
+  margin-top: 3px;
 }
 .adventure-teaser > svg {
   width: 15px;
   margin-left: auto;
-  color: #ab94bd;
+  color: #a587b8;
 }
 .footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  height: 45px;
-  flex-shrink: 0;
-  color: #b1a3b8;
-  letter-spacing: 0.5px;
-  font-size: 8px;
-  padding-left: 116px;
+  height: 28px;
+  flex: 0 0 28px;
+  color: #a48dad;
+  font-size: 9px;
+  padding-left: 104px;
 }
 .footer button {
   display: flex;
   align-items: center;
-  gap: 7px;
-  color: #9f8eac;
-  font-size: 9px;
+  gap: 6px;
+  color: #9b7bab;
+  font-size: 10px;
+  min-height: 25px;
 }
 .footer svg {
   width: 12px;
@@ -718,43 +767,46 @@ main.screen-adventure {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 25px;
-  margin: 11px 0 26px;
+  gap: 18px;
+  margin: 0 0 14px;
+  flex-shrink: 0;
 }
 .section-heading h2 {
-  font-size: 27px;
-  letter-spacing: 2px;
-  margin: 9px 0 11px;
+  font-size: 25px;
+  letter-spacing: 1px;
+  margin: 5px 0 5px;
 }
 .section-heading p {
   font-size: 11px;
   color: var(--muted);
-  line-height: 1.9;
+  line-height: 1.7;
 }
 .progress-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   white-space: nowrap;
   border: 1px solid var(--line);
   border-radius: 25px;
-  padding: 9px 15px;
-  font-size: 10px;
-  color: #9a83ac;
-  background: #fcf9fd;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #9271a7;
+  background: #fcf8fd;
 }
 .progress-chip svg {
   width: 15px;
   height: 15px;
 }
 .map-layout {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+  gap: 20px;
 }
 .kingdom-map {
   position: relative;
-  min-height: 450px;
+  min-height: 0;
   background: url("./assets/kingdom.jpg") center/cover;
   border-radius: 12px;
   overflow: hidden;
@@ -769,9 +821,9 @@ main.screen-adventure {
 }
 .map-topline {
   position: absolute;
-  top: 20px;
-  left: 22px;
-  right: 22px;
+  top: 16px;
+  left: 19px;
+  right: 19px;
   display: flex;
   justify-content: space-between;
   color: #fefbf9;
@@ -780,7 +832,7 @@ main.screen-adventure {
   text-shadow: 0 1px 5px #605778;
 }
 .map-topline span:last-child {
-  font-size: 24px;
+  font-size: 23px;
 }
 .map-node {
   position: absolute;
@@ -798,8 +850,8 @@ main.screen-adventure {
 .map-node > span {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 47px;
+  height: 47px;
   border: 3px solid #fff8ee;
   background: #e4d5ec;
   border-radius: 50%;
@@ -807,23 +859,24 @@ main.screen-adventure {
   box-shadow: 0 0 0 1px #d7b78a;
 }
 .map-node.selected > span {
-  background: #9f84b7;
+  background: #9c7eb5;
   color: white;
-  box-shadow: 0 0 0 5px #fff5;
+  box-shadow: 0 0 0 4px #fff5;
 }
 .map-node b {
   background: #fff9eeeb;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 15px;
-  font-size: 10px;
-  margin-top: 5px;
+  font-size: 11px;
+  margin-top: 4px;
   font-weight: 500;
+  white-space: nowrap;
 }
 .map-node small {
   background: #80658ca8;
   color: #fff;
-  font-size: 8px;
-  padding: 2px 9px;
+  font-size: 9px;
+  padding: 2px 8px;
   border-radius: 0 0 7px 7px;
 }
 .node-0 {
@@ -848,80 +901,95 @@ main.screen-adventure {
 }
 .map-note {
   position: absolute;
-  bottom: 14px;
+  bottom: 13px;
   color: #fff6ef;
-  font-size: 9px;
-  letter-spacing: 2px;
+  font-size: 10px;
+  letter-spacing: 1px;
   width: 100%;
   text-align: center;
   text-shadow: 0 1px 5px #66587c;
 }
 .region-detail {
-  padding: 22px 25px;
+  padding: 20px;
   background: #fffcff;
   border: 1px solid var(--line);
   border-radius: 12px;
   position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .region-badge {
-  float: right;
+  position: absolute;
+  right: 20px;
+  top: 20px;
   display: grid;
   place-items: center;
-  width: 47px;
-  height: 47px;
+  width: 43px;
+  height: 43px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--region) 15%, white);
   color: var(--region);
-  margin-left: 9px;
 }
 .region-detail h2 {
-  font-size: 25px;
+  font-size: 24px;
   letter-spacing: 2px;
-  margin: 10px 0 14px;
+  margin: 9px 0 11px;
 }
 .region-detail > p {
   font-size: 11px;
-  line-height: 1.9;
-  color: #a08da8;
+  line-height: 1.7;
+  color: #9d83a9;
+  padding-right: 6px;
 }
 .region-style {
-  font-size: 10px;
+  font-size: 11px;
   display: flex;
-  gap: 8px;
+  gap: 7px;
   align-items: center;
-  color: #ad9bb6;
-  margin: 18px 0;
+  color: #a185ae;
+  margin: 12px 0 7px;
 }
 .region-style svg {
   width: 14px;
   height: 14px;
 }
 .region-style b {
-  color: #9a83aa;
+  color: #90709f;
   font-weight: 500;
 }
+.affinity-note {
+  font-size: 9px !important;
+  line-height: 1.5 !important;
+  margin: 0 0 10px !important;
+  color: #b09265 !important;
+}
 .stage-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: repeat(4, minmax(44px, 1fr));
   gap: 8px;
+  flex: 1;
+  min-height: 0;
 }
 .stage-button {
   display: flex;
   align-items: center;
-  gap: 13px;
-  background: #f7f2fa;
-  border: 1px solid #ede5f1;
-  padding: 12px;
-  border-radius: 7px;
+  gap: 10px;
+  background: #f6effa;
+  border: 1px solid #e9def0;
+  padding: 9px 11px;
+  border-radius: 8px;
   text-align: left;
+  min-height: 0;
 }
 .stage-number {
   font-family: Georgia, serif;
-  font-size: 18px;
-  color: #b6a1c5;
+  font-size: 19px;
+  color: #af90c3;
   display: grid;
   place-items: center;
-  width: 25px;
+  width: 26px;
+  flex-shrink: 0;
 }
 .stage-number svg {
   width: 18px;
@@ -929,82 +997,105 @@ main.screen-adventure {
 }
 .stage-button b {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 .stage-button small {
   display: block;
-  font-size: 8px;
-  color: #b09abd;
-  margin-top: 5px;
+  font-size: 10px;
+  color: #a687b6;
+  margin-top: 4px;
 }
 .stage-button > svg {
   margin-left: auto;
-  width: 13px;
-  height: 13px;
-  color: #b8a6c4;
+  width: 14px;
+  height: 14px;
+  color: #a991b8;
+  flex-shrink: 0;
 }
 .stage-button:hover:not(:disabled) {
-  background: #ede3f3;
+  background: #ebddf3;
 }
 .stage-button.done {
-  background: #f0f4ef;
+  background: #eef4ec;
 }
 .stage-button.done .stage-number {
-  color: #89a084;
+  color: #82a27e;
 }
 .region-reward {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 9px;
-  color: #b59b78;
-  margin-top: 17px;
+  gap: 7px;
+  font-size: 10px;
+  color: #ac8c5f;
+  margin-top: 12px;
+  flex-shrink: 0;
 }
 .region-reward svg {
   width: 15px;
   height: 15px;
 }
+.region-detail > .primary-button {
+  margin-top: 8px;
+  min-height: 36px;
+}
 .journey-notes {
   display: flex;
   justify-content: space-around;
-  gap: 20px;
-  margin: 23px 0 0;
-  color: #ad9ab8;
+  gap: 12px;
+  margin: 11px 0 0;
+  color: #a68ab3;
+  flex-shrink: 0;
 }
 .journey-notes span {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 9px;
+  gap: 6px;
+  font-size: 10px;
 }
 .journey-notes svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
 }
 .craft-filters {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
-  color: #b09fba;
-  margin-bottom: 22px;
+  font-size: 11px;
+  color: #a58bb2;
+  margin-bottom: 14px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.collection-pages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .craft-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
 }
 .craft-card {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 20px;
   background: #fffcff;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 0;
+  overflow: hidden;
 }
 .craft-art {
-  width: 87px;
+  width: 32%;
+  height: 100%;
+  min-height: 0;
   flex-shrink: 0;
   background: radial-gradient(
     ellipse,
@@ -1017,111 +1108,161 @@ main.screen-adventure {
   align-items: center;
 }
 .craft-art .item-art {
-  height: 115px;
+  flex: 1;
+  min-height: 0;
+  max-height: 190px;
+  max-width: 150px;
+}
+.craft-art .item-stars {
+  margin-top: 6px;
 }
 .craft-info {
   min-width: 0;
 }
 .craft-info h3 {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 500;
-  margin: 7px 0;
+  margin: 8px 0;
 }
 .craft-info p {
-  font-size: 8px;
-  color: #ae9bb9;
-  line-height: 1.8;
-  min-height: 28px;
+  font-size: 11px;
+  color: #a084ad;
+  line-height: 1.7;
 }
 .cost {
   display: flex;
   gap: 5px;
   align-items: center;
-  color: #ad946d;
-  font-size: 9px;
-  margin: 10px 0;
+  color: #ad8b59;
+  font-size: 12px;
+  margin: 11px 0;
 }
 .cost svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 .cost span {
   margin: 0 3px;
 }
 .craft-info button {
-  font-size: 9px;
-  padding: 7px 12px;
-  min-height: 32px;
+  font-size: 12px;
+  padding: 9px 13px;
+  min-height: 40px;
 }
 .craft-info button svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
+}
+.page-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-shrink: 0;
+  min-height: 48px;
+  padding-top: 8px;
+}
+.page-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 38px;
+  min-width: 90px;
+  padding: 8px 13px;
+  border: 1px solid #e4d6ec;
+  border-radius: 8px;
+  background: #f4ebf8;
+  color: #9470ad;
+  font-size: 11px;
+}
+.page-controls button svg {
+  width: 15px;
+  height: 15px;
+}
+.page-controls > span {
+  color: #a58cb1;
+  font-size: 11px;
+  min-width: 62px;
+  text-align: center;
 }
 .screen-contest #content {
-  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 9px;
+  overflow: hidden;
 }
 .screen-contest .section-heading h2 {
-  font-size: 23px;
+  font-size: 22px;
 }
 .theme-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  background: #eee8f3;
-  border-radius: 7px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: #eee5f4;
+  border-radius: 8px;
   padding: 4px;
   gap: 4px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 .theme-tabs button {
-  font-size: 11px;
+  font-size: 12px;
   padding: 8px;
   border-radius: 5px;
-  color: #ad96bb;
+  color: #a582b8;
+  min-height: 38px;
 }
 .theme-tabs button.active {
   background: #fffaff;
-  color: #8c6ba6;
+  color: #89639f;
   box-shadow: 0 2px 7px #89719c10;
 }
 .contest-card {
   background: #fffcff;
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 22px 29px;
+  padding: 19px 24px;
   text-align: center;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 .contest-emblem {
-  width: 56px;
-  height: 56px;
+  width: 45px;
+  height: 45px;
   display: grid;
   place-items: center;
   border: 1px solid #dacda9;
-  color: #baa073;
+  color: #b89760;
   border-radius: 50%;
-  margin: 0 auto 20px;
+  margin: 0 auto 11px;
+  flex-shrink: 0;
 }
 .contest-emblem svg {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 .contest-card h2 {
-  font-size: 23px;
-  margin: 13px 0;
-  letter-spacing: 2px;
+  font-size: 22px;
+  margin: 10px 0;
+  letter-spacing: 1px;
 }
 .contest-card > p {
-  font-size: 10px;
-  color: #ab98b5;
-  line-height: 1.9;
+  font-size: 11px;
+  color: #a58ab1;
+  line-height: 1.7;
 }
 .contest-tag {
   display: inline-block;
-  padding: 5px 14px;
-  background: #f1eaf6;
-  color: #9e83b1;
+  padding: 5px 13px;
+  background: #efe4f6;
+  color: #9d78b2;
   border-radius: 18px;
-  font-size: 10px;
-  margin: 18px 0;
+  font-size: 11px;
+  margin: 11px 0;
 }
 .style-meter {
   display: flex;
@@ -1129,74 +1270,77 @@ main.screen-adventure {
   justify-content: space-between;
   text-align: left;
   align-items: center;
-  margin: 10px 0 15px;
-  font-size: 10px;
-  color: #a58cad;
+  margin: 6px 0 11px;
+  font-size: 11px;
+  color: #9e7bae;
+  width: 100%;
 }
 .style-meter b {
-  font-size: 22px;
+  font-size: 23px;
   font-family: Georgia, serif;
-  color: #8e72a4;
+  color: #8b67a2;
 }
 .style-meter small {
   font-size: 11px;
-  color: #baa7c5;
+  color: #b197c0;
   font-weight: 400;
 }
 .style-meter > div {
   flex-basis: 100%;
   height: 5px;
   border-radius: 5px;
-  background: #eee5f2;
-  margin-top: 9px;
+  background: #ece1f2;
+  margin-top: 6px;
   overflow: hidden;
 }
 .style-meter i {
   display: block;
   height: 100%;
-  background: #b69cc9;
+  background: #b28dc7;
   border-radius: 5px;
 }
 .contest-card .contest-tip {
-  font-size: 9px;
-  line-height: 1.8;
-  margin-bottom: 20px;
+  font-size: 10px;
+  line-height: 1.6;
+  margin-bottom: 12px;
 }
 .text-button {
-  font-size: 11px;
-  color: #a286b3;
+  font-size: 12px;
+  color: #9d78af;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-height: 42px;
-  margin-top: 8px;
+  gap: 6px;
+  min-height: 37px;
+  margin-top: 4px;
 }
 .text-button svg {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
 }
 .contest-reward {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   justify-content: center;
-  margin-top: 18px;
-  font-size: 9px;
-  color: #b39b7d;
+  margin-top: 11px;
+  font-size: 10px;
+  color: #ae8f62;
+  flex-shrink: 0;
 }
 .contest-reward svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
 }
 .journal-summary {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border: 1px solid var(--line);
-  background: #fcf9fe;
-  border-radius: 9px;
-  padding: 25px 0;
-  margin-bottom: 30px;
+  background: #fcf8fe;
+  border-radius: 11px;
+  padding: 19px 0;
+  margin-bottom: 15px;
+  flex-shrink: 0;
 }
 .journal-summary > div {
   text-align: center;
@@ -1207,19 +1351,41 @@ main.screen-adventure {
 }
 .journal-summary b {
   font-family: Georgia, serif;
-  font-size: 30px;
+  font-size: 29px;
   font-weight: 400;
-  color: #9c82ad;
+  color: #9776ad;
 }
 .journal-summary small {
-  font-size: 13px;
-  color: #b6a3c3;
+  font-size: 12px;
+  color: #b096c0;
 }
 .journal-summary span {
   display: block;
-  font-size: 10px;
-  color: #ac99b8;
-  margin-top: 10px;
+  font-size: 11px;
+  color: #a187b0;
+  margin-top: 6px;
+}
+.journal-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.journal-tabs button {
+  font-size: 12px;
+  min-height: 38px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  color: #9d7eae;
+  background: #f1e8f6;
+  border: 1px solid transparent;
+}
+.journal-tabs button.active {
+  background: #e8d9f1;
+  border-color: #d5bee3;
+  color: #826098;
 }
 .list-heading {
   display: flex;
@@ -1227,93 +1393,99 @@ main.screen-adventure {
   justify-content: space-between;
   font-size: 15px;
   font-weight: 500;
-  margin: 23px 0 17px;
-  letter-spacing: 1px;
+  margin: 2px 0 12px;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
 }
 .list-heading > span {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0;
-  color: #b2a0bc;
+  color: #ad92b9;
   font-weight: 400;
 }
 .quests-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 15px;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
 }
 .quest-card {
   display: flex;
   position: relative;
   gap: 13px;
-  padding: 20px 18px 54px;
-  border-radius: 9px;
+  padding: 21px 18px 63px;
+  border-radius: 11px;
   background: #fffcff;
   border: 1px solid var(--line);
+  min-height: 0;
+  align-items: flex-start;
 }
 .quest-icon {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 33px;
-  height: 33px;
+  width: 34px;
+  height: 34px;
   border-radius: 9px;
-  background: #f2eaf6;
-  color: #ac8dbe;
+  background: #f0e4f6;
+  color: #a27cba;
 }
 .quest-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
 }
 .quest-card > div {
   min-width: 0;
   width: 100%;
 }
 .quest-card h3 {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
-  margin: 2px 0 9px;
+  margin: 3px 0 10px;
 }
 .quest-card p {
-  font-size: 9px;
-  color: #ad99b9;
+  font-size: 11px;
+  color: #a080b1;
+  line-height: 1.6;
 }
 .quest-progress {
-  height: 4px;
-  background: #eee6f2;
+  height: 5px;
+  background: #ece1f2;
   border-radius: 3px;
-  margin: 15px 0 7px;
+  margin: 16px 0 8px;
   overflow: hidden;
 }
 .quest-progress i {
   display: block;
-  background: #b69bcc;
+  background: #b08bc8;
   height: 100%;
 }
 .quest-card small {
-  font-size: 8px;
-  color: #b29bc1;
+  font-size: 10px;
+  color: #a17db5;
 }
 .quest-card small span {
   display: block;
   margin-top: 7px;
-  font-size: 8px;
-  color: #b69c78;
+  font-size: 10px;
+  color: #af8c5e;
 }
 .quest-card button {
   position: absolute;
-  bottom: 12px;
+  bottom: 17px;
   right: 18px;
-  padding: 5px 11px;
-  min-height: 29px;
-  font-size: 9px;
+  padding: 8px 14px;
+  min-height: 37px;
+  font-size: 11px;
 }
 .achievements .quest-icon {
-  background: #f8f1e5;
-  color: #bca172;
+  background: #f8efdf;
+  color: #b89760;
 }
 .screen-adventure .world-wrap {
-  height: calc(100dvh - 196px);
-  min-height: 560px;
+  height: 100%;
+  min-height: 0;
   background: radial-gradient(ellipse at 50% 30%, #fff8f0, #e5dfef);
   border: 1px solid #e8deed;
   border-radius: 12px;
@@ -1337,24 +1509,24 @@ main.screen-adventure {
 }
 .adventure-top {
   position: absolute;
-  left: 20px;
-  right: 20px;
-  top: 20px;
+  left: 18px;
+  right: 18px;
+  top: 18px;
   display: flex;
   align-items: flex-start;
-  gap: 15px;
+  gap: 12px;
 }
 .adventure-top > .soft-button {
   background: #fff9;
   backdrop-filter: blur(10px);
-  min-height: 36px;
-  padding: 8px 12px;
+  min-height: 40px;
+  padding: 9px 12px;
 }
 .adventure-objective {
   background: #fffdf5df;
   border: 1px solid #fdf5ff;
   border-radius: 10px;
-  padding: 14px 18px;
+  padding: 12px 15px;
   box-shadow: 0 5px 20px #6654750c;
   backdrop-filter: blur(10px);
 }
@@ -1363,20 +1535,25 @@ main.screen-adventure {
   letter-spacing: 1px;
 }
 .adventure-objective h2 {
-  font-size: 18px;
-  margin: 7px 0 11px;
-  letter-spacing: 1px;
+  font-size: 17px;
+  margin: 6px 0 6px;
+  letter-spacing: 0.5px;
+}
+.adventure-affinity {
+  font-size: 9px;
+  color: #b09265;
+  margin: 0 0 8px;
 }
 .adventure-objective > div {
   display: flex;
-  gap: 15px;
-  font-size: 10px;
-  color: #ac98b7;
+  gap: 12px;
+  font-size: 11px;
+  color: #a080b0;
 }
 .adventure-objective > div > span {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 .adventure-objective svg {
   width: 13px;
@@ -1391,16 +1568,16 @@ main.screen-adventure {
 }
 .adventure-controls {
   position: absolute;
-  bottom: 24px;
-  left: 24px;
-  right: 24px;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
   display: flex;
   align-items: flex-end;
-  gap: 15px;
+  gap: 13px;
 }
 .dpad {
   display: grid;
-  grid-template: repeat(2, 42px) / repeat(3, 42px);
+  grid-template: repeat(2, 44px) / repeat(3, 44px);
   gap: 5px;
   pointer-events: auto;
   touch-action: none;
@@ -1411,7 +1588,7 @@ main.screen-adventure {
   background: #fffafad9;
   border: 1px solid #e7dced;
   border-radius: 9px;
-  color: #9c83ad;
+  color: #9470aa;
   touch-action: none;
   user-select: none;
 }
@@ -1431,10 +1608,9 @@ main.screen-adventure {
   grid-row: 2;
 }
 .movement-help {
-  font-size: 9px;
-  color: #9f8bae;
+  font-size: 10px;
+  color: #987aa9;
   line-height: 1.8;
-  align-self: flex-end;
   padding-bottom: 6px;
 }
 .interact-button {
@@ -1446,9 +1622,9 @@ main.screen-adventure {
   margin-left: auto;
   align-self: flex-end;
   font-size: 11px;
-  color: #9b84ac;
+  color: #9673a8;
   background: #fff9;
-  padding: 12px 18px;
+  padding: 12px 15px;
   border-radius: 8px;
 }
 .world-labels {
@@ -1457,23 +1633,23 @@ main.screen-adventure {
 }
 .world-label {
   position: absolute;
-  font-size: 9px;
+  font-size: 10px;
   white-space: nowrap;
   border: 1px solid #f8f0fb;
   background: #fffaf7df;
   border-radius: 10px;
-  padding: 4px 9px;
+  padding: 4px 8px;
   transform: translateX(-50%);
-  color: #a087b1;
+  color: #9a75ad;
   box-shadow: 0 2px 8px #755e8914;
 }
-.screen-adventure ~ .footer {
+.app-shell:has(.screen-adventure) .footer {
   display: none;
 }
 .webgl-fallback {
   position: absolute;
   inset: 25%;
-  min-width: 220px;
+  min-width: 0;
   text-align: center;
 }
 .webgl-fallback h2 {
@@ -1488,9 +1664,9 @@ main.screen-adventure {
   position: fixed;
   z-index: 100;
   left: 50%;
-  bottom: 30px;
+  bottom: 35px;
   transform: translate(-50%, 15px);
-  padding: 13px 22px;
+  padding: 11px 19px;
   border-radius: 10px;
   background: #635273ee;
   color: #fff;
@@ -1813,1148 +1989,11 @@ dialog p {
   border-bottom: 1px solid var(--line);
   margin-bottom: 14px;
 }
-@media (min-width: 1500px) {
-  main {
-    min-height: 760px;
-  }
-  .items-grid {
-    gap: 17px;
-  }
-  .item-card {
-    min-height: 180px;
-  }
-  .item-visual {
-    height: 120px;
-  }
-  .scene-heading {
-    top: 30px;
-    left: 38px;
-  }
-  .scene-heading h1 {
-    font-size: 29px;
-  }
-  .scene-caption {
-    bottom: 62px;
-  }
-  .screen-closet #content {
-    padding: 30px;
-  }
-  .wardrobe-header {
-    margin-bottom: 30px;
-  }
-}
-@media (max-width: 1150px) {
-  .app-shell {
-    padding: 0 24px;
-  }
-  .app-body {
-    gap: 20px;
-  }
-  .sidebar {
-    flex-basis: 73px;
-  }
-  .nav-button {
-    width: 61px;
-  }
-  .nav-button.active .nav-dot {
-    right: -8px;
-  }
-  main {
-    width: calc(100% - 93px);
-    grid-template-columns: minmax(0, 1fr) minmax(330px, 1fr);
-    gap: 16px;
-    min-height: 635px;
-  }
-  .screen-closet #content {
-    padding: 21px 16px 13px;
-  }
-  .scene-heading {
-    left: 19px;
-  }
-  .scene-heading h1 {
-    font-size: 20px;
-  }
-  .scene-heading p {
-    font-size: 9px;
-  }
-  .items-grid {
-    gap: 9px;
-  }
-  .item-card {
-    padding: 8px;
-    min-height: 149px;
-  }
-  .item-visual {
-    height: 86px;
-  }
-  .item-name {
-    font-size: 9px;
-  }
-  .wardrobe-header h2 {
-    font-size: 20px;
-  }
-  .category-tabs {
-    gap: 2px;
-  }
-  .category svg {
-    width: 19px;
-    height: 19px;
-  }
-  .dye-row {
-    gap: 5px;
-  }
-  .swatch {
-    width: 17px;
-    height: 17px;
-  }
-  .dye-row > span {
-    font-size: 8px;
-  }
-  .adventure-teaser b {
-    font-size: 9px;
-  }
-  .adventure-teaser small {
-    font-size: 7px;
-  }
-  .footer {
-    padding-left: 93px;
-  }
-  .craft-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .quests-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .map-layout {
-    grid-template-columns: 1.15fr 1fr;
-    gap: 16px;
-  }
-  .region-detail {
-    padding: 19px;
-  }
-  .section-heading h2 {
-    font-size: 24px;
-  }
-  .scene-caption h2 {
-    font-size: 19px;
-  }
-  .contest-card {
-    padding: 20px;
-  }
-  .screen-contest #content {
-    padding: 8px;
-  }
-  .screen-contest .section-heading h2 {
-    font-size: 20px;
-  }
-}
-@media (max-width: 800px) {
-  .app-shell {
-    padding: 0 18px;
-  }
-  .topbar {
-    height: 83px;
-  }
-  .brand b {
-    font-size: 21px;
-    letter-spacing: 3px;
-  }
-  .brand small {
-    font-size: 7px;
-    letter-spacing: 2.3px;
-  }
-  .brand-mark {
-    width: 40px;
-    height: 42px;
-  }
-  .brand-mark svg {
-    width: 25px;
-    height: 25px;
-  }
-  .top-right {
-    gap: 10px;
-  }
-  .currencies {
-    gap: 14px;
-  }
-  .currency small {
-    display: none;
-  }
-  .app-body {
-    gap: 13px;
-  }
-  .sidebar {
-    flex-basis: 60px;
-  }
-  .nav-button {
-    width: 49px;
-    min-height: 70px;
-    font-size: 8px;
-  }
-  .nav-button svg {
-    width: 22px;
-    height: 22px;
-  }
-  .sidebar-bottom {
-    font-size: 8px;
-  }
-  .sidebar-bottom small {
-    font-size: 7px;
-  }
-  main {
-    width: calc(100% - 73px);
-    grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1fr);
-    gap: 11px;
-    padding-top: 20px;
-    min-height: 624px;
-  }
-  .scene-heading {
-    left: 13px;
-    right: 10px;
-    top: 18px;
-  }
-  .scene-heading .eyebrow {
-    font-size: 6px;
-    letter-spacing: 1px;
-  }
-  .scene-heading h1 {
-    font-size: 16px;
-    letter-spacing: 0.5px;
-    margin: 10px 0;
-  }
-  .scene-heading p {
-    font-size: 8px;
-    line-height: 1.8;
-  }
-  .screen-closet #content {
-    padding: 16px 12px 12px;
-  }
-  .wardrobe-header {
-    margin-bottom: 17px;
-  }
-  .wardrobe-header .compact {
-    font-size: 8px;
-    padding: 7px;
-  }
-  .wardrobe-header .compact svg {
-    display: none;
-  }
-  .wardrobe-header h2 {
-    font-size: 18px;
-  }
-  .wardrobe-header h2 > span {
-    font-size: 9px;
-    margin-left: 4px;
-  }
-  .wardrobe-header .eyebrow {
-    font-size: 7px;
-    letter-spacing: 1.5px;
-  }
-  .category {
-    font-size: 9px;
-  }
-  .category svg {
-    width: 18px;
-    height: 18px;
-  }
-  .items-grid {
-    gap: 8px;
-  }
-  .item-card {
-    padding: 6px;
-    min-height: 144px;
-  }
-  .item-visual {
-    height: 88px;
-  }
-  .item-name {
-    font-size: 8px;
-  }
-  .item-stars {
-    font-size: 6px;
-    letter-spacing: 0;
-  }
-  .item-stars small {
-    font-size: 7px;
-  }
-  .dye-row {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 15px 0 13px;
-  }
-  .dye-row > span {
-    flex-basis: 100%;
-    margin: 0;
-  }
-  .dye-row .swatch {
-    width: 17px;
-    height: 17px;
-  }
-  .adventure-teaser {
-    gap: 8px;
-    padding-top: 12px;
-  }
-  .adventure-teaser .teaser-icon {
-    width: 27px;
-    height: 32px;
-  }
-  .adventure-teaser .teaser-icon svg {
-    width: 16px;
-    height: 16px;
-  }
-  .adventure-teaser b {
-    font-size: 8px;
-    line-height: 1.8;
-  }
-  .adventure-teaser small {
-    display: none;
-  }
-  .adventure-teaser > svg {
-    width: 13px;
-  }
-  .scene-tools {
-    left: 10px;
-    bottom: 140px;
-  }
-  .scene-tools .icon-button {
-    width: 28px;
-    height: 28px;
-  }
-  .scene-caption h2 {
-    font-size: 17px;
-    letter-spacing: 2px;
-  }
-  .stars {
-    font-size: 10px;
-    letter-spacing: 2px;
-  }
-  .stars span {
-    display: block;
-    margin: 8px 0 0;
-    font-size: 8px;
-  }
-  .drag-hint {
-    font-size: 7px;
-    gap: 4px;
-  }
-  .footer {
-    padding-left: 73px;
-    font-size: 7px;
-    gap: 7px;
-  }
-  .footer button {
-    font-size: 8px;
-  }
-  .section-heading {
-    align-items: flex-start;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .section-heading h2 {
-    font-size: 23px;
-  }
-  .section-heading p {
-    font-size: 10px;
-  }
-  .map-layout {
-    grid-template-columns: 1fr;
-  }
-  .kingdom-map {
-    min-height: 370px;
-  }
-  .region-detail {
-    padding: 24px;
-  }
-  .stage-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .journey-notes {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 13px;
-  }
-  .quest-card {
-    padding: 17px 12px 52px;
-    gap: 9px;
-  }
-  .quest-card h3 {
-    font-size: 11px;
-  }
-  .quest-icon {
-    width: 27px;
-    height: 27px;
-  }
-  .quest-card small span {
-    font-size: 7px;
-  }
-  .screen-contest {
-    grid-template-columns: minmax(0, 0.8fr) minmax(280px, 1fr);
-  }
-  .screen-contest .section-heading h2 {
-    font-size: 19px;
-  }
-  .contest-card {
-    padding: 20px 15px;
-  }
-  .contest-card h2 {
-    font-size: 19px;
-  }
-  .contest-card > p {
-    font-size: 9px;
-  }
-  .screen-adventure .world-wrap {
-    height: calc(100dvh - 160px);
-    min-height: 510px;
-  }
-  .adventure-top {
-    left: 14px;
-    right: 14px;
-    top: 14px;
-    gap: 10px;
-  }
-  .adventure-objective {
-    padding: 12px;
-  }
-  .adventure-objective > div {
-    gap: 8px;
-    font-size: 9px;
-  }
-  .adventure-controls {
-    left: 17px;
-    right: 17px;
-    bottom: 20px;
-  }
-  .movement-help {
-    display: none;
-  }
-  .adventure-hint {
-    font-size: 9px;
-    padding: 10px;
-  }
-  .craft-grid {
-    gap: 10px;
-  }
-  .craft-card {
-    padding: 12px;
-    gap: 9px;
-  }
-  .craft-art {
-    width: 65px;
-  }
-  .craft-info h3 {
-    font-size: 12px;
-  }
-  .craft-info p {
-    font-size: 7px;
-  }
-  .craft-info .tiny-label {
-    font-size: 8px;
-  }
-}
-@media (max-width: 600px) {
-  .app-shell {
-    padding: 0 14px;
-    padding-bottom: 77px;
-  }
-  .topbar {
-    height: 73px;
-  }
-  .brand {
-    gap: 9px;
-  }
-  .brand b {
-    font-size: 18px;
-    letter-spacing: 3px;
-  }
-  .brand small {
-    font-size: 5.5px;
-    letter-spacing: 2px;
-    margin-top: 5px;
-  }
-  .brand-mark {
-    width: 33px;
-    height: 36px;
-    border-radius: 11px 11px 14px 14px;
-  }
-  .brand-mark svg {
-    width: 23px;
-    height: 23px;
-  }
-  .currencies {
-    gap: 9px;
-  }
-  .currency {
-    gap: 4px;
-    font-size: 10px;
-  }
-  .currency svg {
-    width: 13px;
-    height: 13px;
-  }
-  .level-pill {
-    display: none;
-  }
-  .top-right {
-    gap: 5px;
-  }
-  .top-right > .icon-button {
-    width: 28px;
-    height: 28px;
-  }
-  .top-right > .icon-button svg {
-    width: 16px;
-    height: 16px;
-  }
-  .top-right > .gift-button {
-    margin-left: 2px;
-  }
-  .sidebar {
-    position: fixed;
-    z-index: 10;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    flex-direction: row;
-    justify-content: space-around;
-    border-right: 0;
-    border-top: 1px solid #e8dced;
-    background: #fffafeed;
-    backdrop-filter: blur(15px);
-    padding: 7px 8px max(9px, env(safe-area-inset-bottom));
-    gap: 4px;
-    height: 73px;
-  }
-  .nav-button {
-    width: 62px;
-    min-height: 54px;
-    padding: 5px;
-    gap: 5px;
-    border-radius: 10px;
-    font-size: 9px;
-    letter-spacing: 0;
-  }
-  .nav-button svg {
-    width: 21px;
-    height: 21px;
-  }
-  .nav-button.active .nav-dot,
-  .sidebar-bottom {
-    display: none;
-  }
-  .app-body {
-    display: block;
-  }
-  main {
-    width: 100%;
-    padding: 15px 0 0;
-    grid-template-columns: 1fr;
-    gap: 15px;
-    min-height: 0;
-  }
-  .screen-closet .world-wrap {
-    height: 390px;
-  }
-  .screen-contest .world-wrap {
-    height: 360px;
-  }
-  #world {
-    inset: 32px -8px 16px;
-  }
-  .scene-heading {
-    left: 20px;
-    top: 17px;
-  }
-  .scene-heading .eyebrow {
-    font-size: 7px;
-    letter-spacing: 1.5px;
-  }
-  .scene-heading h1 {
-    font-size: 18px;
-    letter-spacing: 1px;
-    margin: 9px 0;
-  }
-  .scene-heading p {
-    font-size: 8px;
-  }
-  .scene-tools {
-    bottom: 92px;
-    left: 16px;
-    gap: 9px;
-  }
-  .scene-tools .icon-button {
-    width: 31px;
-    height: 31px;
-  }
-  .scene-caption {
-    bottom: 28px;
-    left: 0;
-    right: 0;
-  }
-  .scene-caption .tiny-label {
-    font-size: 7px;
-  }
-  .scene-caption h2 {
-    font-size: 17px;
-    margin: 5px 0 7px;
-    letter-spacing: 3px;
-  }
-  .stars {
-    font-size: 8px;
-    letter-spacing: 2px;
-  }
-  .stars span {
-    display: inline-block;
-    font-size: 7px;
-    margin: 0 0 0 10px;
-  }
-  .drag-hint {
-    bottom: 8px;
-    font-size: 7px;
-    letter-spacing: 0.5px;
-  }
-  .screen-closet #content {
-    padding: 20px 16px 15px;
-  }
-  .wardrobe-header h2 {
-    font-size: 21px;
-  }
-  .wardrobe-header h2 > span {
-    font-size: 11px;
-  }
-  .wardrobe-header .eyebrow {
-    font-size: 8px;
-  }
-  .wardrobe-header .compact {
-    font-size: 9px;
-    padding: 8px 10px;
-  }
-  .wardrobe-header .compact svg {
-    display: block;
-  }
-  .category {
-    font-size: 10px;
-    padding: 10px 0 13px;
-  }
-  .category svg {
-    width: 21px;
-    height: 21px;
-  }
-  .wardrobe-filter {
-    font-size: 9px;
-    padding: 16px 0 12px;
-  }
-  .items-grid {
-    gap: 10px;
-  }
-  .item-card {
-    padding: 8px;
-    min-height: 156px;
-  }
-  .item-visual {
-    height: 101px;
-  }
-  .item-name {
-    font-size: 10px;
-  }
-  .item-stars {
-    font-size: 8px;
-    letter-spacing: 0.5px;
-  }
-  .item-stars small {
-    font-size: 8px;
-  }
-  .dye-row {
-    flex-wrap: nowrap;
-    gap: 9px;
-  }
-  .dye-row > span {
-    flex-basis: auto;
-    font-size: 8px;
-    margin-right: auto;
-  }
-  .dye-row .swatch {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-  }
-  .adventure-teaser b {
-    font-size: 10px;
-  }
-  .adventure-teaser small {
-    display: block;
-    font-size: 8px;
-  }
-  .adventure-teaser .teaser-icon {
-    width: 33px;
-    height: 35px;
-  }
-  .footer {
-    height: 44px;
-    font-size: 7px;
-    padding-left: 0;
-  }
-  .footer > span:first-child {
-    display: none;
-  }
-  .footer button {
-    font-size: 8px;
-  }
-  .section-heading {
-    margin: 9px 3px 22px;
-    gap: 15px;
-  }
-  .section-heading h2 {
-    font-size: 23px;
-    letter-spacing: 1px;
-  }
-  .section-heading p {
-    font-size: 10px;
-  }
-  .section-heading .eyebrow {
-    font-size: 7px;
-    letter-spacing: 2px;
-  }
-  .progress-chip {
-    font-size: 9px;
-    padding: 8px 12px;
-  }
-  .kingdom-map {
-    min-height: 335px;
-  }
-  .map-layout {
-    gap: 17px;
-  }
-  .map-node > span {
-    width: 39px;
-    height: 39px;
-  }
-  .map-node > span svg {
-    width: 18px;
-    height: 18px;
-  }
-  .map-node b {
-    font-size: 9px;
-    padding: 4px 8px;
-  }
-  .map-node small {
-    font-size: 7px;
-  }
-  .map-topline {
-    font-size: 6px;
-    left: 16px;
-  }
-  .map-note {
-    font-size: 8px;
-    letter-spacing: 1px;
-  }
-  .region-detail {
-    padding: 23px;
-  }
-  .region-detail > p {
-    font-size: 11px;
-  }
-  .stage-list {
-    display: flex;
-  }
-  .stage-button {
-    padding: 13px;
-  }
-  .stage-button b {
-    font-size: 12px;
-  }
-  .stage-button small {
-    font-size: 9px;
-  }
-  .journey-notes {
-    margin: 21px 0;
-    gap: 13px;
-  }
-  .journey-notes span {
-    font-size: 9px;
-  }
-  .craft-filters {
-    font-size: 8px;
-    gap: 9px;
-    align-items: flex-start;
-  }
-  .craft-filters > span:last-child {
-    max-width: 130px;
-    line-height: 1.8;
-  }
-  .craft-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .craft-card {
-    padding: 19px;
-    gap: 22px;
-  }
-  .craft-art {
-    width: 92px;
-  }
-  .craft-art .item-art {
-    height: 121px;
-  }
-  .craft-info .tiny-label {
-    font-size: 9px;
-  }
-  .craft-info h3 {
-    font-size: 15px;
-  }
-  .craft-info p {
-    font-size: 9px;
-    min-height: 0;
-    margin: 10px 0;
-  }
-  .cost {
-    font-size: 10px;
-  }
-  .craft-info button {
-    min-height: 36px;
-    padding: 8px 19px;
-    font-size: 10px;
-  }
-  .screen-contest {
-    grid-template-columns: 1fr;
-  }
-  .screen-contest #content {
-    padding: 0 0 10px;
-  }
-  .screen-contest .section-heading h2 {
-    font-size: 23px;
-  }
-  .contest-card {
-    padding: 28px;
-  }
-  .contest-card h2 {
-    font-size: 23px;
-  }
-  .contest-card > p {
-    font-size: 10px;
-  }
-  .contest-card .contest-tip {
-    font-size: 10px;
-  }
-  .contest-reward {
-    font-size: 9px;
-  }
-  .journal-summary {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: 25px;
-  }
-  .journal-summary > div:nth-child(2) {
-    border: 0;
-  }
-  .journal-summary b {
-    font-size: 29px;
-  }
-  .journal-summary span {
-    font-size: 10px;
-  }
-  .list-heading {
-    font-size: 14px;
-    gap: 10px;
-    align-items: flex-start;
-  }
-  .list-heading > span {
-    font-size: 8px;
-    letter-spacing: 0;
-    max-width: 142px;
-    text-align: right;
-    line-height: 1.8;
-  }
-  .quests-grid {
-    grid-template-columns: 1fr;
-    gap: 11px;
-  }
-  .quest-card {
-    padding: 19px 15px 19px;
-    gap: 13px;
-    min-height: 132px;
-  }
-  .quest-card > div {
-    padding-right: 4px;
-  }
-  .quest-card h3 {
-    font-size: 12px;
-  }
-  .quest-card p {
-    font-size: 10px;
-  }
-  .quest-icon {
-    width: 32px;
-    height: 32px;
-  }
-  .quest-card button {
-    font-size: 9px;
-    min-height: 30px;
-  }
-  .quest-progress {
-    margin: 14px 0 7px;
-  }
-  .quest-card small span {
-    font-size: 8px;
-    margin-top: 9px;
-  }
-  .screen-adventure {
-    padding: 12px 0 0;
-  }
-  .screen-adventure .world-wrap {
-    height: calc(100dvh - 172px);
-    min-height: 430px;
-    border-radius: 9px;
-  }
-  .screen-adventure #world {
-    inset: 0;
-  }
-  .adventure-top {
-    left: 10px;
-    right: 10px;
-    top: 11px;
-    gap: 8px;
-  }
-  .adventure-top > .soft-button {
-    font-size: 0;
-    padding: 0;
-    min-height: 31px;
-    width: 31px;
-    flex-shrink: 0;
-  }
-  .adventure-top > .soft-button svg {
-    width: 17px;
-  }
-  .adventure-objective {
-    padding: 11px 13px;
-  }
-  .adventure-objective h2 {
-    font-size: 15px;
-    margin: 6px 0 9px;
-  }
-  .adventure-objective .eyebrow {
-    font-size: 8px;
-  }
-  .adventure-objective > div {
-    gap: 11px;
-    font-size: 8px;
-  }
-  .adventure-objective svg {
-    width: 11px;
-    height: 11px;
-  }
-  .adventure-top > .icon-button {
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-  }
-  .adventure-top > .icon-button svg {
-    width: 15px;
-    height: 15px;
-  }
-  .adventure-controls {
-    left: 12px;
-    right: 12px;
-    bottom: 16px;
-    gap: 8px;
-  }
-  .dpad {
-    grid-template: repeat(2, 38px) / repeat(3, 38px);
-    gap: 4px;
-  }
-  .dpad svg {
-    width: 16px;
-    height: 16px;
-  }
-  .interact-button {
-    font-size: 10px;
-    gap: 6px;
-    padding: 10px 11px;
-    min-height: 41px;
-  }
-  .interact-button svg {
-    width: 14px;
-    height: 14px;
-  }
-  .adventure-hint {
-    font-size: 8px;
-    max-width: 156px;
-    line-height: 1.9;
-    text-align: center;
-    padding: 10px;
-  }
-  .world-label {
-    font-size: 7px;
-    padding: 3px 6px;
-  }
-  .screen-adventure .world-wrap #world {
-    inset: 0;
-  }
-  .screen-adventure ~ .footer {
-    display: none;
-  }
-  dialog {
-    padding: 33px 23px 24px;
-  }
-  dialog h2 {
-    font-size: 21px;
-  }
-  dialog p {
-    font-size: 10px;
-  }
-  .reward-grid {
-    gap: 8px;
-  }
-  .login-days {
-    gap: 4px;
-  }
-  .login-days small {
-    font-size: 6px;
-  }
-  .login-days > span {
-    font-size: 16px;
-    padding: 9px 2px;
-  }
-  .rune-buttons button {
-    min-height: 59px;
-  }
-  .slot-list button {
-    font-size: 9px;
-    padding: 7px 10px;
-  }
-  #toast {
-    font-size: 11px;
-    bottom: 91px;
-    padding: 12px 17px;
-  }
-  .help-steps p {
-    font-size: 10px;
-  }
-  .webgl-fallback {
-    inset: 20% 15%;
-    min-width: 0;
-  }
-  .webgl-fallback p {
-    font-size: 10px;
-  }
-}
-@media (max-width: 360px) {
-  .app-shell {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-  .brand b {
-    font-size: 16px;
-  }
-  .brand-mark {
-    width: 29px;
-    height: 32px;
-  }
-  .brand small {
-    font-size: 5px;
-    letter-spacing: 1.5px;
-  }
-  .currencies {
-    gap: 8px;
-  }
-  .currency {
-    font-size: 9px;
-  }
-  .top-right {
-    gap: 1px;
-  }
-  .currency svg {
-    width: 12px;
-    height: 12px;
-  }
-  .top-right > .icon-button {
-    width: 24px;
-  }
-  .items-grid {
-    gap: 7px;
-  }
-  .item-card {
-    min-height: 145px;
-  }
-  .item-visual {
-    height: 90px;
-  }
-  .item-name {
-    font-size: 9px;
-  }
-  .dye-row {
-    gap: 6px;
-  }
-  .dye-row > span {
-    font-size: 7px;
-  }
-  .dye-row .swatch {
-    width: 16px;
-    height: 16px;
-  }
-  .wardrobe-header .compact {
-    font-size: 8px;
-    padding: 8px;
-  }
-  .screen-closet .world-wrap {
-    height: 365px;
-  }
-  .adventure-objective > div {
-    gap: 7px;
-  }
-  .adventure-objective {
-    padding: 10px;
-  }
-  .adventure-top {
-    gap: 6px;
-  }
-  .adventure-top > .icon-button {
-    display: none;
-  }
-  .interact-button {
-    font-size: 9px;
-    padding: 9px;
-  }
-  .adventure-controls .adventure-hint {
-    max-width: 127px;
-  }
-  .scene-heading h1 {
-    font-size: 16px;
-  }
-}
-@media (min-width: 601px) and (max-height: 760px) {
-  .topbar {
-    height: 80px;
-  }
-  main {
-    min-height: 610px;
-    padding-top: 20px;
-  }
-  .sidebar {
-    padding-top: 20px;
-  }
-  .footer {
-    height: 36px;
-  }
-  .screen-adventure .world-wrap {
-    min-height: 470px;
-    height: calc(100dvh - 155px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *:before,
-  *:after {
-    transition: none !important;
-    animation: none !important;
-    scroll-behavior: auto !important;
-  }
-}
 .light-puzzle {
   display: flex;
-  gap: 9px;
+  gap: 8px;
   justify-content: center;
-  margin: 30px 0 18px;
+  margin: 25px 0 18px;
 }
 .light-puzzle button {
   width: 56px;
@@ -2977,7 +2016,8 @@ dialog p {
   border-radius: 24px;
   background: #f0e7f6;
   position: relative;
-  margin: 32px 0 20px;
+  margin: 30px 0 20px;
+  overflow: hidden;
 }
 .timing-zone {
   position: absolute;
@@ -3005,51 +2045,1796 @@ dialog p {
   letter-spacing: 10px;
   margin: 15px 0 25px;
 }
-.affinity-note {
-  font-size: 8px !important;
-  line-height: 1.6 !important;
-  margin: -7px 0 16px !important;
-  color: #b09a77 !important;
-}
-.adventure-affinity {
-  font-size: 8px;
-  color: #b19975;
-  margin: -3px 0 9px;
-}
 .reward-level {
   line-height: 2;
 }
-@media (min-width: 601px) and (max-height: 600px) {
-  .app-shell:has(.screen-adventure) {
-    padding: 0;
+@media (max-width: 1100px) {
+  .app-shell {
+    padding: 0 20px;
   }
-  .app-shell:has(.screen-adventure) .topbar,
-  .app-shell:has(.screen-adventure) .sidebar,
-  .app-shell:has(.screen-adventure) .footer {
+  .app-body {
+    gap: 16px;
+  }
+  .sidebar {
+    flex-basis: 68px;
+  }
+  .nav-button {
+    width: 56px;
+    min-height: 66px;
+    font-size: 10px;
+  }
+  main {
+    grid-template-columns: minmax(0, 1fr) minmax(315px, 1fr);
+    gap: 16px;
+  }
+  .screen-closet #content {
+    padding: 15px;
+  }
+  .dye-row {
+    gap: 4px;
+  }
+  .dye-row > span {
+    font-size: 9px;
+  }
+  .swatch {
+    width: 26px;
+    height: 26px;
+    border-width: 5px;
+  }
+  .reset-dye {
+    width: 28px;
+  }
+  .scene-heading h1 {
+    font-size: 18px;
+  }
+  .scene-heading p {
+    font-size: 9px;
+  }
+  .item-name {
+    font-size: 11px;
+  }
+  .item-stars small {
+    font-size: 9px;
+  }
+  .item-card {
+    padding: 6px 7px 8px;
+  }
+  .footer {
+    padding-left: 84px;
+  }
+  .map-layout {
+    grid-template-columns: minmax(0, 1.1fr) minmax(300px, 1fr);
+    gap: 16px;
+  }
+  .region-detail {
+    padding: 17px;
+  }
+  .craft-card {
+    padding: 17px;
+    gap: 14px;
+  }
+  .craft-info h3 {
+    font-size: 15px;
+  }
+  .quests-grid {
+    gap: 12px;
+  }
+  .quest-card {
+    padding: 16px 13px 59px;
+    gap: 9px;
+  }
+  .quest-icon {
+    width: 29px;
+    height: 29px;
+  }
+  .quest-card h3 {
+    font-size: 12px;
+  }
+  .quest-card p {
+    font-size: 10px;
+  }
+  .screen-contest #content {
+    padding: 4px;
+  }
+  .screen-contest .section-heading h2 {
+    font-size: 20px;
+  }
+  .contest-card {
+    padding: 15px 18px;
+  }
+}
+@media (min-width: 601px) and (max-height: 760px) {
+  .topbar {
+    height: 60px;
+    flex-basis: 60px;
+  }
+  .footer {
+    height: 25px;
+    flex-basis: 25px;
+  }
+  main {
+    padding-top: 12px;
+  }
+  .wardrobe-header {
+    margin-bottom: 7px;
+  }
+  .wardrobe-header h2 {
+    font-size: 20px;
+  }
+  .category {
+    min-height: 49px;
+    padding: 5px 0 7px;
+    gap: 5px;
+  }
+  .wardrobe-filter {
+    padding: 4px 0;
+  }
+  .screen-closet #content {
+    padding: 12px 14px 10px;
+  }
+  .dye-row {
+    margin-top: 5px;
+    padding: 7px 0;
+  }
+  .adventure-teaser {
+    min-height: 37px;
+    padding-top: 7px;
+  }
+  .adventure-teaser small {
     display: none;
   }
-  .app-shell:has(.screen-adventure) .app-body {
+  .section-heading {
+    margin-bottom: 9px;
+  }
+  .section-heading h2 {
+    font-size: 23px;
+    margin: 4px 0;
+  }
+  .section-heading .eyebrow {
+    font-size: 8px;
+  }
+  .section-heading p {
+    font-size: 10px;
+  }
+  .region-detail {
+    padding: 15px;
+  }
+  .region-detail h2 {
+    font-size: 21px;
+    margin: 7px 0;
+  }
+  .region-detail > p {
+    font-size: 10px;
+  }
+  .region-style {
+    margin: 8px 0 5px;
+  }
+  .affinity-note {
+    margin-bottom: 8px !important;
+  }
+  .stage-list {
+    gap: 6px;
+  }
+  .stage-button {
+    padding: 7px 9px;
+  }
+  .stage-button small {
+    font-size: 9px;
+  }
+  .region-reward {
+    margin-top: 8px;
+    font-size: 9px;
+  }
+  .journey-notes {
+    margin-top: 8px;
+  }
+  .craft-filters {
+    margin-bottom: 10px;
+  }
+  .craft-info h3 {
+    margin: 5px 0;
+  }
+  .craft-info p {
+    font-size: 10px;
+  }
+  .craft-info .tiny-label {
+    font-size: 9px;
+  }
+  .cost {
+    margin: 8px 0;
+  }
+  .journal-summary {
+    padding: 13px 0;
+    margin-bottom: 11px;
+  }
+  .journal-summary b {
+    font-size: 25px;
+  }
+  .journal-summary span {
+    margin-top: 4px;
+  }
+  .contest-emblem {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 7px;
+  }
+  .contest-card h2 {
+    font-size: 20px;
+    margin: 7px 0;
+  }
+  .contest-card > .eyebrow {
+    display: none;
+  }
+  .contest-tag {
+    margin: 8px 0;
+  }
+  .contest-card .contest-tip {
+    font-size: 9px;
+    margin-bottom: 8px;
+  }
+  .theme-tabs {
+    margin-bottom: 8px;
+  }
+  .contest-reward {
+    margin-top: 7px;
+  }
+}
+@media (max-width: 600px) {
+  .app-shell {
+    padding: 0 10px calc(58px + env(safe-area-inset-bottom));
+  }
+  .topbar {
+    height: 56px;
+    flex-basis: 56px;
+    gap: 6px;
+  }
+  .brand {
+    gap: 7px;
+  }
+  .brand-mark {
+    width: 29px;
+    height: 32px;
+    border-radius: 10px 10px 13px 13px;
+  }
+  .brand-mark svg {
+    width: 20px;
+    height: 20px;
+  }
+  .brand b {
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+  .brand small {
+    font-size: 5.5px;
+    letter-spacing: 1.3px;
+    margin-top: 2px;
+  }
+  .top-right {
+    gap: 3px;
+  }
+  .currencies {
+    gap: 8px;
+  }
+  .currency {
+    gap: 3px;
+    font-size: 11px;
+  }
+  .currency svg {
+    width: 13px;
+    height: 13px;
+  }
+  .currency small,
+  .level-pill {
+    display: none;
+  }
+  .top-right > .icon-button {
+    width: 32px;
+    height: 34px;
+  }
+  .top-right > .icon-button svg {
+    width: 17px;
+    height: 17px;
+  }
+  .sidebar {
+    position: fixed;
+    z-index: 10;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+    justify-content: space-around;
+    border-right: 0;
+    border-top: 1px solid #e7d8ee;
+    background: #fffafef5;
+    backdrop-filter: blur(14px);
+    padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
+    gap: 3px;
+    height: calc(58px + env(safe-area-inset-bottom));
+  }
+  .nav-button {
+    width: 20%;
+    max-width: 76px;
+    min-height: 48px;
+    padding: 4px 2px;
+    gap: 3px;
+    border-radius: 10px;
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+  .nav-button svg {
+    width: 20px;
+    height: 20px;
+  }
+  .nav-button.active .nav-dot,
+  .sidebar-bottom {
+    display: none;
+  }
+  .app-body {
+    display: block;
+    min-height: 0;
+  }
+  main {
+    width: 100%;
+    height: 100%;
+    padding: 8px 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 0.94fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .world-wrap {
+    height: 100%;
+    border-radius: 11px;
+  }
+  #world {
+    inset: 0 0 31px;
+  }
+  .scene-heading {
+    left: 13px;
+    top: 10px;
+    right: 8px;
+  }
+  .scene-heading .eyebrow {
+    display: none;
+  }
+  .scene-heading h1 {
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    margin: 0;
+    color: #967aad;
+  }
+  .scene-heading p {
+    display: none;
+  }
+  .scene-tools {
+    bottom: 40px;
+    left: 10px;
+    gap: 6px;
+  }
+  .scene-tools .icon-button {
+    width: 33px;
+    height: 33px;
+  }
+  .scene-tools svg {
+    width: 16px;
+    height: 16px;
+  }
+  .scene-caption {
+    bottom: 9px;
+    left: 50px;
+    right: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .scene-caption .tiny-label {
+    display: none;
+  }
+  .scene-caption h2 {
+    font-size: 16px;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+  .stars {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+  .stars span {
+    display: none;
+  }
+  .drag-hint {
+    display: none;
+  }
+  .screen-closet #content {
+    padding: 9px 10px 6px;
+    border-radius: 11px;
+  }
+  .wardrobe-header {
+    margin-bottom: 4px;
+    min-height: 33px;
+  }
+  .wardrobe-header .eyebrow {
+    display: none;
+  }
+  .wardrobe-header h2 {
+    font-size: 18px;
+    margin: 0;
+  }
+  .wardrobe-header h2 > span {
+    font-size: 10px;
+    margin-left: 5px;
+  }
+  .wardrobe-header .compact {
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 10px;
+    gap: 4px;
+  }
+  .wardrobe-header .compact svg {
+    width: 13px;
+    height: 13px;
+  }
+  .category {
+    font-size: 10px;
+    padding: 4px 0 5px;
+    min-height: 43px;
+    gap: 3px;
+  }
+  .category svg {
+    width: 18px;
+    height: 18px;
+  }
+  .wardrobe-filter {
+    padding: 1px 0;
+    min-height: 27px;
+    font-size: 9px;
+  }
+  .wardrobe-filter button {
+    font-size: 10px;
+    min-height: 27px;
+  }
+  .items-grid {
+    gap: 6px;
+  }
+  .item-card {
+    padding: 3px 5px 5px;
+    border-radius: 8px;
+  }
+  .item-name {
+    font-size: 10px;
+    margin: 1px 0 2px;
+    text-align: center;
+  }
+  .item-stars {
+    font-size: 7px;
+    letter-spacing: 0.4px;
+  }
+  .item-stars small {
+    font-size: 8px;
+  }
+  .item-status {
+    right: 5px;
+    top: 5px;
+  }
+  .item-status svg {
+    width: 10px;
+    height: 10px;
+  }
+  .selected .item-status {
+    width: 15px;
+    height: 15px;
+  }
+  .item-art {
+    max-width: 83px;
+  }
+  .dye-row {
+    flex-wrap: nowrap;
+    gap: 5px;
+    padding: 6px 0 4px;
+    margin-top: 3px;
+    min-height: 36px;
+  }
+  .dye-row > span {
+    font-size: 9px;
+    gap: 3px;
+  }
+  .dye-row > span svg {
+    display: none;
+  }
+  .dye-row .swatch {
+    width: 25px;
+    height: 25px;
+    border-width: 4px;
+  }
+  .reset-dye {
+    width: 28px;
+    height: 28px;
+  }
+  .adventure-teaser {
+    gap: 6px;
+    min-height: 30px;
+    padding-top: 4px;
+  }
+  .adventure-teaser b {
+    font-size: 10px;
+  }
+  .adventure-teaser small {
+    display: none;
+  }
+  .teaser-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+  }
+  .teaser-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+  .footer {
+    display: none;
+  }
+  .section-heading {
+    gap: 8px;
+    margin: 1px 0 10px;
+    align-items: center;
+    min-height: 52px;
+  }
+  .section-heading .eyebrow {
+    font-size: 7px;
+    letter-spacing: 1.2px;
+  }
+  .section-heading h2 {
+    font-size: 19px;
+    letter-spacing: 0.3px;
+    margin: 4px 0;
+  }
+  .section-heading p {
+    display: none;
+  }
+  .section-heading > div {
+    min-width: 0;
+  }
+  .section-heading > .progress-chip {
+    font-size: 9px;
+    padding: 7px;
+    gap: 4px;
+  }
+  .section-heading > .progress-chip svg {
+    width: 12px;
+    height: 12px;
+  }
+  .section-heading > .soft-button {
+    font-size: 10px;
+    padding: 8px;
+    gap: 4px;
+    min-height: 35px;
+  }
+  .section-heading > .soft-button svg {
+    width: 13px;
+    height: 13px;
+  }
+  .progress-chip {
+    font-size: 10px;
+    padding: 7px 10px;
+  }
+  .map-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1.02fr) minmax(0, 1fr);
+    gap: 10px;
+  }
+  .kingdom-map {
+    min-height: 0;
+  }
+  .map-topline {
+    font-size: 6px;
+    letter-spacing: 1px;
+    top: 9px;
+    left: 12px;
+    right: 12px;
+  }
+  .map-topline span:last-child {
+    font-size: 17px;
+  }
+  .map-node > span {
+    width: 35px;
+    height: 35px;
+    border-width: 2px;
+  }
+  .map-node > span svg {
+    width: 17px;
+    height: 17px;
+  }
+  .map-node b {
+    font-size: 9px;
+    padding: 3px 7px;
+    margin-top: 2px;
+  }
+  .map-node small {
+    font-size: 8px;
+    padding: 1px 6px;
+  }
+  .map-note {
+    font-size: 8px;
+    bottom: 7px;
+  }
+  .region-detail {
+    padding: 11px 12px;
+  }
+  .region-detail > .eyebrow {
+    display: none;
+  }
+  .region-badge {
+    width: 31px;
+    height: 31px;
+    top: 9px;
+    right: 12px;
+  }
+  .region-badge svg {
+    width: 17px;
+    height: 17px;
+  }
+  .region-detail h2 {
+    font-size: 18px;
+    letter-spacing: 1px;
+    margin: 0 0 5px;
+  }
+  .region-detail > p:not(.affinity-note) {
+    font-size: 10px;
+    line-height: 1.5;
+    padding-right: 26px;
+  }
+  .region-style {
+    font-size: 10px;
+    margin: 6px 0 4px;
+  }
+  .region-style svg {
+    width: 12px;
+    height: 12px;
+  }
+  .affinity-note {
+    display: none;
+  }
+  .stage-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(43px, 1fr));
+    gap: 6px;
+  }
+  .stage-button {
+    padding: 6px;
+    gap: 5px;
+    border-radius: 6px;
+  }
+  .stage-number {
+    font-size: 16px;
+    width: 20px;
+  }
+  .stage-number svg {
+    width: 15px;
+    height: 15px;
+  }
+  .stage-button b {
+    font-size: 10px;
+  }
+  .stage-button small {
+    font-size: 8px;
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+  .stage-button > svg {
+    display: none;
+  }
+  .region-reward {
+    font-size: 9px;
+    margin-top: 6px;
+    gap: 5px;
+  }
+  .region-reward svg {
+    width: 12px;
+    height: 12px;
+  }
+  .region-detail > .primary-button {
+    min-height: 29px;
+    font-size: 10px;
+    margin-top: 4px;
+    padding: 5px;
+  }
+  .journey-notes {
+    margin-top: 7px;
+    justify-content: center;
+    min-height: 21px;
+  }
+  .journey-notes span {
+    font-size: 9px;
+    gap: 4px;
+  }
+  .journey-notes svg {
+    width: 12px;
+    height: 12px;
+  }
+  .journey-notes span:not(:nth-child(2)) {
+    display: none;
+  }
+  .craft-filters {
+    font-size: 9px;
+    margin-bottom: 10px;
+  }
+  .craft-filters .progress-chip {
+    font-size: 9px;
+    padding: 6px 8px;
+  }
+  .craft-filters > span:last-child {
+    max-width: 125px;
+    line-height: 1.6;
+    text-align: right;
+  }
+  .craft-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .craft-card {
+    padding: 17px;
+    gap: 17px;
+  }
+  .craft-art {
+    width: 34%;
+  }
+  .craft-art .item-art {
+    max-width: 125px;
+    max-height: 185px;
+  }
+  .craft-info .tiny-label {
+    font-size: 10px;
+  }
+  .craft-info h3 {
+    font-size: 15px;
+    margin: 7px 0;
+  }
+  .craft-info p {
+    font-size: 10px;
+  }
+  .cost {
+    font-size: 11px;
+    margin: 9px 0;
+  }
+  .craft-info button {
+    min-height: 38px;
+    padding: 8px 13px;
+    font-size: 11px;
+  }
+  .page-controls {
+    min-height: 46px;
+    padding-top: 8px;
+    gap: 12px;
+  }
+  .page-controls button {
+    min-width: 82px;
+    min-height: 36px;
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+  .page-controls > span {
+    font-size: 10px;
+    min-width: 56px;
+  }
+  main.screen-contest {
+    grid-template-rows: minmax(0, 0.85fr) minmax(0, 1fr);
+  }
+  .screen-contest #content {
+    padding: 0;
+  }
+  .screen-contest .section-heading {
+    display: none;
+  }
+  .theme-tabs {
+    margin-bottom: 7px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .theme-tabs button {
+    font-size: 11px;
+    min-height: 33px;
+    padding: 6px;
+  }
+  .contest-card {
+    padding: 10px 15px;
+    justify-content: center;
+  }
+  .contest-emblem {
+    display: none;
+  }
+  .contest-card > .eyebrow {
+    display: none;
+  }
+  .contest-card h2 {
+    font-size: 18px;
+    margin: 2px 0 5px;
+  }
+  .contest-card > p {
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  .contest-tag {
+    font-size: 10px;
+    padding: 3px 10px;
+    margin: 6px 0;
+  }
+  .style-meter {
+    font-size: 10px;
+    margin: 3px 0 7px;
+  }
+  .style-meter b {
+    font-size: 19px;
+  }
+  .style-meter > div {
+    margin-top: 3px;
+    height: 4px;
+  }
+  .contest-card .contest-tip {
+    font-size: 9px;
+    margin-bottom: 7px;
+  }
+  .contest-card .wide {
+    min-height: 37px;
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+  .contest-card .text-button {
+    font-size: 10px;
+    min-height: 29px;
+    margin-top: 1px;
+  }
+  .contest-reward {
+    margin-top: 5px;
+    font-size: 9px;
+  }
+  .journal-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 13px 0;
+    margin-bottom: 12px;
+  }
+  .journal-summary b {
+    font-size: 22px;
+  }
+  .journal-summary small {
+    font-size: 9px;
     display: block;
   }
-  main.screen-adventure {
-    width: 100%;
-    padding: 0;
-    min-height: 0;
+  .journal-summary span {
+    font-size: 9px;
+    margin-top: 5px;
+  }
+  .journal-tabs {
+    gap: 7px;
+    margin-bottom: 11px;
+    padding-bottom: 8px;
+  }
+  .journal-tabs button {
+    flex: 1;
+    min-height: 37px;
+    padding: 8px;
+    font-size: 11px;
+  }
+  .list-heading {
+    font-size: 12px;
+    margin: 0 0 9px;
+  }
+  .list-heading > span {
+    font-size: 8px;
+    max-width: 125px;
+    text-align: right;
+  }
+  .quests-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+  }
+  .quest-card {
+    padding: 12px 13px;
+    gap: 9px;
+    align-items: center;
+  }
+  .quest-icon {
+    width: 30px;
+    height: 30px;
+  }
+  .quest-card > div {
+    padding-right: 66px;
+  }
+  .quest-card h3 {
+    font-size: 12px;
+    margin: 0 0 5px;
+  }
+  .quest-card p {
+    font-size: 10px;
+  }
+  .quest-progress {
+    margin: 7px 0 5px;
+    height: 4px;
+  }
+  .quest-card small {
+    font-size: 9px;
+  }
+  .quest-card small span {
+    font-size: 9px;
+    display: inline;
+    margin-left: 5px;
+  }
+  .quest-card button {
+    right: 11px;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    min-height: 37px;
+    font-size: 10px;
+    padding: 7px 10px;
+  }
+  .screen-adventure {
+    padding-top: 8px;
   }
   .screen-adventure .world-wrap {
-    height: 100dvh;
+    height: 100%;
     min-height: 0;
-    border: 0;
-    border-radius: 0;
   }
-  .adventure-objective {
-    padding: 10px 13px;
+  .screen-adventure #world {
+    inset: 0;
   }
   .adventure-top {
-    top: 12px;
-    left: 14px;
+    left: 9px;
+    right: 9px;
+    top: 10px;
+    gap: 7px;
+  }
+  .adventure-top > .soft-button {
+    font-size: 0;
+    width: 34px;
+    min-height: 36px;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .adventure-top > .soft-button svg {
+    width: 17px;
+  }
+  .adventure-objective {
+    padding: 9px 11px;
+  }
+  .adventure-objective h2 {
+    font-size: 15px;
+    margin: 5px 0;
+  }
+  .adventure-objective .eyebrow {
+    font-size: 8px;
+  }
+  .adventure-affinity {
+    font-size: 8px;
+    margin-bottom: 6px;
+  }
+  .adventure-objective > div {
+    gap: 8px;
+    font-size: 9px;
+  }
+  .adventure-objective svg {
+    width: 11px;
+    height: 11px;
+  }
+  .adventure-top > .icon-button {
+    width: 31px;
+    height: 33px;
+  }
+  .adventure-top > .icon-button svg {
+    width: 16px;
+    height: 16px;
   }
   .adventure-controls {
+    left: 10px;
+    right: 10px;
+    bottom: 15px;
+    gap: 7px;
+  }
+  .dpad {
+    grid-template: repeat(2, 39px) / repeat(3, 39px);
+    gap: 4px;
+  }
+  .dpad svg {
+    width: 17px;
+    height: 17px;
+  }
+  .movement-help {
+    display: none;
+  }
+  .interact-button {
+    font-size: 10px;
+    gap: 5px;
+    padding: 9px 10px;
+    min-height: 42px;
+  }
+  .interact-button svg {
+    width: 13px;
+    height: 13px;
+  }
+  .adventure-hint {
+    font-size: 9px;
+    max-width: 160px;
+    line-height: 1.7;
+    text-align: center;
+    padding: 9px;
+  }
+  .world-label {
+    font-size: 8px;
+    padding: 3px 6px;
+  }
+  dialog {
+    padding: 32px 22px 24px;
+    max-height: calc(100dvh - 30px);
+  }
+  dialog h2 {
+    font-size: 21px;
+  }
+  dialog p {
+    font-size: 11px;
+  }
+  .modal-close {
+    width: 34px;
+    height: 34px;
+  }
+  .reward-grid {
+    gap: 7px;
+  }
+  .login-days {
+    gap: 4px;
+  }
+  .login-days small {
+    font-size: 6px;
+  }
+  .login-days > span {
+    font-size: 16px;
+    padding: 9px 2px;
+  }
+  .light-puzzle {
+    gap: 6px;
+  }
+  .light-puzzle button {
+    min-width: 0;
+    width: 48px;
+    height: 60px;
+  }
+  .slot-list button {
+    font-size: 10px;
+    padding: 8px 10px;
+    min-height: 38px;
+  }
+  #toast {
+    font-size: 11px;
+    bottom: calc(70px + env(safe-area-inset-bottom));
+    padding: 10px 15px;
+  }
+  .webgl-fallback {
+    inset: 20% 13%;
+  }
+}
+@media (max-width: 360px) {
+  .app-shell {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .brand b {
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+  .brand-mark {
+    width: 26px;
+    height: 29px;
+  }
+  .brand small {
+    font-size: 5px;
+    letter-spacing: 0.9px;
+  }
+  .brand {
+    gap: 5px;
+  }
+  .currencies {
+    gap: 6px;
+  }
+  .currency {
+    font-size: 10px;
+  }
+  .top-right {
+    gap: 1px;
+  }
+  .top-right > .icon-button {
+    width: 29px;
+  }
+  .screen-closet #content {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .dye-row {
+    gap: 3px;
+  }
+  .dye-row > span {
+    font-size: 8px;
+  }
+  .dye-row .swatch {
+    width: 23px;
+    height: 23px;
+  }
+  .adventure-teaser b {
+    font-size: 9px;
+  }
+  .section-heading h2 {
+    font-size: 17px;
+  }
+  .section-heading .progress-chip {
+    font-size: 8px;
+    padding: 6px;
+  }
+  .craft-card {
+    padding: 14px;
+    gap: 12px;
+  }
+  .craft-info h3 {
+    font-size: 14px;
+  }
+  .quest-card {
+    padding: 10px;
+    gap: 7px;
+  }
+  .quest-card p {
+    font-size: 9px;
+  }
+  .quest-card small span {
+    display: block;
+    margin: 3px 0 0;
+  }
+  .adventure-top {
+    gap: 5px;
+  }
+  .adventure-objective {
+    padding: 9px;
+  }
+  .adventure-objective > div {
+    gap: 6px;
+    font-size: 8px;
+  }
+  .adventure-top > .icon-button {
+    display: none;
+  }
+  .adventure-hint {
+    max-width: 132px;
+    font-size: 8px;
+  }
+  .contest-card .contest-tip {
+    font-size: 8px;
+  }
+}
+@media (min-width: 601px) and (max-height: 520px) {
+  .app-shell {
+    padding: 0 12px;
+  }
+  .topbar {
+    height: 48px;
+    flex-basis: 48px;
+  }
+  .brand-mark {
+    width: 29px;
+    height: 32px;
+  }
+  .brand-mark svg {
+    width: 21px;
+    height: 21px;
+  }
+  .brand b {
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+  .brand small {
+    font-size: 6px;
+    letter-spacing: 1.5px;
+  }
+  .top-right > .icon-button {
+    width: 33px;
+    height: 33px;
+  }
+  .footer {
+    display: none;
+  }
+  .app-body {
+    gap: 10px;
+  }
+  .sidebar {
+    flex-basis: 56px;
+    padding: 8px 0;
+    gap: 3px;
+  }
+  .nav-button {
+    width: 46px;
+    min-height: 51px;
+    gap: 3px;
+    font-size: 8px;
+    border-radius: 8px;
+  }
+  .nav-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  .nav-button.active .nav-dot {
+    right: -6px;
+    height: 13px;
+  }
+  .sidebar-bottom {
+    display: none;
+  }
+  main {
+    padding: 8px 0;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(325px, 1.1fr);
+  }
+  #world {
+    inset: 0 0 28px;
+  }
+  .scene-heading {
+    left: 12px;
+    top: 10px;
+  }
+  .scene-heading .eyebrow,
+  .scene-heading p {
+    display: none;
+  }
+  .scene-heading h1 {
+    font-size: 12px;
+    margin: 0;
+  }
+  .scene-tools {
+    left: 10px;
+    bottom: 38px;
+    gap: 5px;
+  }
+  .scene-tools .icon-button {
+    width: 30px;
+    height: 30px;
+  }
+  .scene-tools svg {
+    width: 15px;
+    height: 15px;
+  }
+  .scene-caption {
+    bottom: 8px;
+    left: 45px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .scene-caption .tiny-label,
+  .stars span,
+  .drag-hint {
+    display: none;
+  }
+  .scene-caption h2 {
+    font-size: 15px;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+  .stars {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .screen-closet #content {
+    padding: 8px 10px 6px;
+    border-radius: 10px;
+  }
+  .wardrobe-header {
+    min-height: 30px;
+    margin-bottom: 3px;
+  }
+  .wardrobe-header .eyebrow {
+    display: none;
+  }
+  .wardrobe-header h2 {
+    font-size: 17px;
+    margin-top: 0;
+  }
+  .wardrobe-header h2 > span {
+    font-size: 10px;
+  }
+  .wardrobe-header .compact {
+    min-height: 29px;
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+  .category {
+    min-height: 40px;
+    gap: 3px;
+    font-size: 9px;
+    padding: 3px 0 4px;
+  }
+  .category svg {
+    width: 17px;
+    height: 17px;
+  }
+  .wardrobe-filter {
+    padding: 0;
+    font-size: 9px;
+    min-height: 24px;
+  }
+  .wardrobe-filter button {
+    min-height: 24px;
+    font-size: 9px;
+  }
+  .items-grid {
+    gap: 6px;
+  }
+  .item-card {
+    padding: 3px 6px 5px;
+  }
+  .item-name {
+    font-size: 9px;
+    margin: 0 0 2px;
+    text-align: center;
+  }
+  .item-stars {
+    font-size: 7px;
+    letter-spacing: 0.5px;
+  }
+  .item-stars small {
+    font-size: 8px;
+  }
+  .item-status {
+    top: 4px;
+    right: 4px;
+  }
+  .selected .item-status {
+    width: 15px;
+    height: 15px;
+  }
+  .item-status svg {
+    width: 10px;
+    height: 10px;
+  }
+  .dye-row {
+    padding: 5px 0;
+    margin-top: 3px;
+    min-height: 31px;
+    border-bottom: 0;
+  }
+  .dye-row > span {
+    font-size: 9px;
+  }
+  .dye-row > span svg {
+    display: none;
+  }
+  .swatch {
+    width: 23px;
+    height: 23px;
+    border-width: 4px;
+  }
+  .reset-dye {
+    width: 26px;
+    height: 26px;
+  }
+  .adventure-teaser {
+    display: none;
+  }
+  .section-heading {
+    margin-bottom: 8px;
+    min-height: 38px;
+  }
+  .section-heading .eyebrow,
+  .section-heading p {
+    display: none;
+  }
+  .section-heading h2 {
+    font-size: 20px;
+    margin: 0;
+  }
+  .section-heading > .soft-button {
+    font-size: 10px;
+    padding: 6px 10px;
+    min-height: 32px;
+  }
+  .progress-chip {
+    font-size: 10px;
+    padding: 6px 10px;
+  }
+  .map-layout {
+    gap: 12px;
+    grid-template-columns: minmax(0, 1.12fr) minmax(310px, 1fr);
+  }
+  .region-detail {
+    padding: 10px 12px;
+  }
+  .region-detail > .eyebrow,
+  .region-detail > p:not(.affinity-note),
+  .affinity-note {
+    display: none;
+  }
+  .region-detail h2 {
+    font-size: 19px;
+    margin: 0 0 3px;
+  }
+  .region-badge {
+    width: 30px;
+    height: 30px;
+    top: 9px;
+    right: 12px;
+  }
+  .region-style {
+    font-size: 10px;
+    margin: 4px 0 7px;
+  }
+  .stage-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(40px, 1fr));
+    gap: 6px;
+  }
+  .stage-button {
+    padding: 7px;
+    gap: 5px;
+  }
+  .stage-number {
+    font-size: 16px;
+    width: 19px;
+  }
+  .stage-button b {
+    font-size: 10px;
+  }
+  .stage-button small {
+    font-size: 8px;
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+  .stage-button > svg {
+    display: none;
+  }
+  .region-reward {
+    font-size: 9px;
+    margin-top: 7px;
+  }
+  .journey-notes {
+    display: none;
+  }
+  .map-node > span {
+    width: 36px;
+    height: 36px;
+    border-width: 2px;
+  }
+  .map-node > span svg {
+    width: 18px;
+    height: 18px;
+  }
+  .map-node b {
+    font-size: 9px;
+    padding: 3px 7px;
+    margin-top: 2px;
+  }
+  .map-node small {
+    font-size: 8px;
+  }
+  .map-topline {
+    top: 9px;
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  .map-note {
+    font-size: 8px;
+    bottom: 7px;
+  }
+  .craft-filters {
+    margin-bottom: 7px;
+    font-size: 9px;
+  }
+  .craft-grid {
+    gap: 9px;
+  }
+  .craft-card {
+    padding: 10px 13px;
+    gap: 11px;
+  }
+  .craft-art {
+    width: 30%;
+  }
+  .craft-art .item-art {
+    max-width: 95px;
+    max-height: 110px;
+  }
+  .craft-art .item-stars {
+    display: none;
+  }
+  .craft-info .tiny-label {
+    font-size: 8px;
+  }
+  .craft-info h3 {
+    font-size: 12px;
+    margin: 4px 0;
+  }
+  .craft-info p {
+    display: none;
+  }
+  .cost {
+    font-size: 10px;
+    margin: 5px 0;
+  }
+  .cost svg {
+    width: 11px;
+    height: 11px;
+  }
+  .craft-info button {
+    min-height: 30px;
+    padding: 6px 9px;
+    font-size: 9px;
+  }
+  .page-controls {
+    min-height: 39px;
+    padding-top: 6px;
+    gap: 12px;
+  }
+  .page-controls button {
+    min-height: 31px;
+    padding: 5px 9px;
+    font-size: 10px;
+  }
+  .page-controls > span {
+    font-size: 10px;
+  }
+  .journal-summary {
+    padding: 9px 0;
+    margin-bottom: 9px;
+  }
+  .journal-summary b {
+    font-size: 21px;
+  }
+  .journal-summary span {
+    font-size: 9px;
+    margin-top: 3px;
+  }
+  .journal-summary small {
+    font-size: 10px;
+  }
+  .journal-tabs {
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+  .journal-tabs button {
+    min-height: 30px;
+    padding: 5px 13px;
+    font-size: 10px;
+  }
+  .list-heading {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .list-heading > span {
+    font-size: 8px;
+  }
+  .quests-grid {
+    gap: 9px;
+  }
+  .quest-card {
+    padding: 10px 11px 39px;
+    gap: 7px;
+  }
+  .quest-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .quest-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+  .quest-card h3 {
+    font-size: 11px;
+    margin: 0 0 5px;
+  }
+  .quest-card p {
+    display: none;
+  }
+  .quest-progress {
+    margin: 7px 0 5px;
+    height: 4px;
+  }
+  .quest-card small,
+  .quest-card small span {
+    font-size: 8px;
+  }
+  .quest-card small span {
+    margin-top: 4px;
+  }
+  .quest-card button {
+    bottom: 7px;
+    right: 10px;
+    min-height: 27px;
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+  .screen-contest #content {
+    padding: 0;
+  }
+  .screen-contest .section-heading {
+    display: none;
+  }
+  .theme-tabs {
+    padding: 3px;
+    margin-bottom: 7px;
+  }
+  .theme-tabs button {
+    font-size: 10px;
+    min-height: 29px;
+    padding: 4px;
+  }
+  .contest-emblem {
+    display: none;
+  }
+  .contest-card {
+    padding: 9px 15px;
+  }
+  .contest-card h2 {
+    font-size: 17px;
+    margin: 2px 0 5px;
+  }
+  .contest-card > p {
+    font-size: 9px;
+  }
+  .contest-tag {
+    font-size: 9px;
+    padding: 3px 10px;
+    margin: 5px 0;
+  }
+  .style-meter {
+    font-size: 9px;
+    margin: 2px 0 6px;
+  }
+  .style-meter b {
+    font-size: 18px;
+  }
+  .style-meter > div {
+    margin-top: 3px;
+    height: 4px;
+  }
+  .contest-card .contest-tip {
+    display: none;
+  }
+  .contest-card .wide {
+    min-height: 33px;
+    padding: 6px;
+    font-size: 10px;
+  }
+  .contest-card .text-button {
+    min-height: 27px;
+    font-size: 9px;
+    margin: 0;
+  }
+  .contest-reward {
+    margin-top: 5px;
+    font-size: 8px;
+  }
+  .adventure-top {
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    gap: 9px;
+  }
+  .adventure-objective {
+    padding: 9px 12px;
+  }
+  .adventure-objective h2 {
+    font-size: 15px;
+    margin: 5px 0;
+  }
+  .adventure-affinity {
+    display: none;
+  }
+  .adventure-objective > div {
+    font-size: 9px;
+  }
+  .adventure-controls {
+    left: 12px;
+    right: 12px;
     bottom: 12px;
+  }
+  .dpad {
+    grid-template: repeat(2, 35px) / repeat(3, 35px);
+    gap: 4px;
+  }
+  .movement-help {
+    display: none;
+  }
+  .adventure-hint {
+    padding: 8px 12px;
+    font-size: 10px;
+  }
+  dialog {
+    max-height: calc(100dvh - 24px);
+    padding-top: 25px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* Compact inventory chrome reserves room for the outfit illustrations. */
+@media (max-width: 600px) {
+  .sidebar .nav-button {
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
+  }
+  main.screen-closet {
+    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1fr);
+  }
+  .screen-closet .wardrobe-header {
+    min-height: 30px;
+  }
+  .screen-closet .category {
+    flex-direction: row;
+    gap: 2px;
+    min-height: 35px;
+    padding: 4px 0;
+    font-size: 10px;
+  }
+  .screen-closet .category svg {
+    width: 16px;
+    height: 16px;
+  }
+  .screen-closet .wardrobe-filter {
+    min-height: 25px;
+  }
+  .screen-closet .wardrobe-filter button {
+    min-height: 25px;
+  }
+  .screen-closet .adventure-teaser {
+    display: none;
+  }
+  .screen-closet .dye-row {
+    border-bottom: 0;
+  }
+}
+
+@media (min-width: 601px) and (min-height: 601px) {
+  .screen-journal .quest-card {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    gap: 16px;
+  }
+  .screen-journal .quest-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+  .screen-journal .quest-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+  .screen-journal .quest-card h3 {
+    font-size: 16px;
+  }
+  .screen-journal .quest-card button {
+    position: static;
+    min-width: 108px;
+    min-height: 40px;
+    margin-top: 4px;
+  }
+  .screen-journal .quest-progress {
+    margin: 18px 0 10px;
+  }
+}
+.currency b {
+  max-width: 8ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .currency b {
+    max-width: 6ch;
   }
 }

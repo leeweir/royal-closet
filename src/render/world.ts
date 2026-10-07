@@ -1,11 +1,13 @@
 import * as T from "three";
 import {
   createCharacter,
+  animateCharacter,
   disposeGroup,
   mesh,
   orb,
   material,
 } from "./character";
+import { batchGroup, line } from "./modeling";
 import { GEM_POSITIONS, REGIONS } from "../simulation/data";
 import type { Save, Run } from "../simulation/game";
 export type PointKind = "gem" | "rune" | "fairy" | "portal";
@@ -32,6 +34,8 @@ export class World {
   rotate = 0;
   zoom = 1;
   pose = 0;
+  look = { x: 0, y: 0 };
+  happyUntil = 0;
   last = 0;
   time = 0;
   run: Run | null = null;
@@ -58,15 +62,15 @@ export class World {
     this.renderer.shadowMap.type = T.PCFSoftShadowMap;
     this.renderer.outputColorSpace = T.SRGBColorSpace;
     this.renderer.toneMapping = T.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.1;
+    this.renderer.toneMappingExposure = 1.05;
     this.renderer.setClearColor(0, 0);
     this.renderer.domElement.setAttribute(
       "aria-label",
       "可拖动旋转的 3D 公主；冒险时点击地面移动",
     );
     host.append(this.renderer.domElement);
-    this.scene.add(new T.HemisphereLight("#fff6eb", "#a6a2c1", 2.5));
-    const sun = new T.DirectionalLight("#fff5e7", 3);
+    this.scene.add(new T.HemisphereLight("#fff6eb", "#a6a2c1", 1.65));
+    const sun = new T.DirectionalLight("#fff5e7", 2.5);
     sun.position.set(4, 8, 5);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -76,8 +80,8 @@ export class World {
     sun.shadow.camera.bottom = -12;
     sun.shadow.normalBias = 0.04;
     this.scene.add(sun);
-    const fill = new T.DirectionalLight("#ded7ff", 1.2);
-    fill.position.set(-5, 3, -3);
+    const fill = new T.DirectionalLight("#ded7ff", 1.0);
+    fill.position.set(-4, 3, 5);
     this.scene.add(fill);
     this.scene.add(this.environment);
     this.avatar = createCharacter(s);
@@ -117,6 +121,17 @@ export class World {
       el.setPointerCapture(e.pointerId);
     });
     el.addEventListener("pointermove", (e) => {
+      const rect = el.getBoundingClientRect();
+      this.look.x = T.MathUtils.clamp(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -1,
+        1,
+      );
+      this.look.y = T.MathUtils.clamp(
+        1 - ((e.clientY - rect.top) / rect.height) * 2,
+        -1,
+        1,
+      );
       if (!this.drag || this.paused) return;
       const dx = e.clientX - this.pointer.x;
       if (Math.abs(dx) > 2 || Math.abs(e.clientY - this.pointer.y) > 2)
@@ -152,6 +167,8 @@ export class World {
             T.MathUtils.clamp(hit.z, -7.8, 7.8),
           );
       }
+      if (this.drag && !this.pointer.moved && this.mode === "closet")
+        this.happyUntil = this.time + 2.5;
       this.drag = false;
     });
     el.addEventListener("pointercancel", () => (this.drag = false));
@@ -271,7 +288,7 @@ export class World {
     );
     floor.rotation.x = -Math.PI / 2;
     // A gilded arch and a pair of slender palace pillars frame the character.
-    const curve = new T.EllipseCurve(0, 2.0, 1.56, 1.8, 0, Math.PI, false, 0);
+    const curve = new T.EllipseCurve(0, 2.35, 1.56, 1.9, 0, Math.PI, false, 0);
     const p = curve.getPoints(70).map((v) => new T.Vector3(v.x, v.y, -0.88));
     p.unshift(new T.Vector3(1.56, 0.05, -0.88));
     p.push(new T.Vector3(-1.56, 0.05, -0.88));
@@ -298,17 +315,58 @@ export class World {
           y,
           -1.2,
         );
-      for (let i = 0; i < 12; i++) {
-        const a = i * 2.4;
-        orb(
-          this.environment,
-          i % 3 ? "#e5c6df" : "#cab6d7",
-          side * (1.72 + Math.sin(a) * 0.16),
-          0.25 + i * 0.12,
-          -1.05 + Math.cos(a) * 0.1,
-          0.095,
+      const foliage = new T.Group();
+      this.environment.add(foliage);
+      const stem = material("#b5a99c", 0.3),
+        petals = material("#dfbfd5", 0.05),
+        leaf = material("#c6bdcf");
+      line(
+        foliage,
+        Array.from({ length: 16 }, (_, i) => [
+          side * (1.78 + Math.sin(i * 0.7) * 0.13),
+          0.18 + i * 0.115,
+          -1.05 + Math.cos(i * 0.7) * 0.12,
+        ]),
+        0.01,
+        stem,
+      );
+      for (let i = 0; i < 8; i++) {
+        const x = side * (1.75 + Math.sin(i * 1.5) * 0.12),
+          y = 0.35 + i * 0.19,
+          z = -1.04;
+        for (let j = 0; j < 5; j++) {
+          const a = (j / 5) * Math.PI * 2;
+          const petal = mesh(
+            new T.SphereGeometry(1, 12, 8),
+            petals,
+            foliage,
+            x + Math.cos(a) * 0.047,
+            y + Math.sin(a) * 0.047,
+            z,
+          );
+          petal.scale.set(0.057, 0.04, 0.018);
+          petal.rotation.z = a;
+        }
+        mesh(
+          new T.SphereGeometry(0.026, 12, 8),
+          stem,
+          foliage,
+          x,
+          y,
+          z + 0.018,
         );
+        const smallLeaf = mesh(
+          new T.SphereGeometry(1, 12, 8),
+          leaf,
+          foliage,
+          x + side * 0.08,
+          y - 0.08,
+          z - 0.012,
+        );
+        smallLeaf.scale.set(0.025, 0.1, 0.012);
+        smallLeaf.rotation.z = -side * 0.7;
       }
+      batchGroup(foliage);
     }
     for (let i = 0; i < 7; i++) {
       const a = i * 0.9;
@@ -331,7 +389,7 @@ export class World {
     this.nearKey = "";
     const regionId = Math.min(4, Math.floor(run.stage / 4));
     const region = REGIONS[regionId];
-    this.avatar.scale.setScalar(0.59);
+    this.avatar.scale.setScalar(0.51);
     this.avatar.position.set(0, 0, 6);
     this.target.copy(this.avatar.position);
     this.avatar.rotation.set(0, Math.PI, 0);
@@ -633,6 +691,8 @@ export class World {
     if (document.hidden || this.paused || this.host.closest("[hidden]")) return;
     this.time += dt;
     const t = this.time;
+    let isMoving = false;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (this.mode === "closet") {
       this.avatar.rotation.y = this.rotate;
       this.avatar.position.y =
@@ -642,9 +702,11 @@ export class World {
           : Math.sin(t * 1.8) * 0.014);
       this.avatar.rotation.z =
         this.pose === 1 ? Math.sin(t * 2) * 0.025 : this.pose === 2 ? 0.04 : 0;
-      const dist = (this.camera.aspect < 0.8 ? 7.0 : 6.6) * this.zoom;
-      this.camera.position.set(0.0, 2.08, dist);
-      this.camera.lookAt(0, 1.84, 0);
+      const dist = Math.max(7.2, 4.8 / this.camera.aspect) * this.zoom;
+      this.camera.position.set(0.0, 2.24, dist);
+      this.camera.lookAt(0, 2.07, 0);
+      if (this.pose === 2 && !reduced)
+        this.avatar.rotation.y += Math.sin(t * 0.6) * 0.4;
     } else {
       this.camera.position.set(10, 15, 18);
       const distance = this.camera.aspect < 0.85 ? 1.48 : 1;
@@ -665,6 +727,7 @@ export class World {
           this.target.copy(this.avatar.position);
         } else direction.copy(this.target).sub(this.avatar.position).setY(0);
         const moving = direction.length() > 0.08;
+        isMoving = moving;
         if (moving) {
           const step = Math.min(direction.length(), dt * 3.8);
           direction.normalize();
@@ -700,6 +763,16 @@ export class World {
         }
       }
     }
+    animateCharacter(
+      this.avatar,
+      t,
+      isMoving,
+      this.mode === "closet" ? this.pose : 0,
+      this.look.x,
+      this.look.y,
+      t < this.happyUntil,
+      reduced,
+    );
     this.points.forEach((p) => {
       if (p.kind === "gem") {
         p.object.rotation.y = t * 0.8;
@@ -730,6 +803,11 @@ export class World {
       mode: this.mode,
       drawCalls: this.renderer.info.render.calls,
       geometries: this.renderer.info.memory.geometries,
+      textures: this.renderer.info.memory.textures,
+      design: this.avatar.userData.design,
+      pose: this.pose,
+      headRotation: this.avatar.userData.rig.head.rotation.toArray(),
+      leftArmRotation: this.avatar.userData.rig.left.rotation.toArray(),
       position: { x: this.avatar.position.x, z: this.avatar.position.z },
       points: this.points.map((p) => {
         const v = new T.Vector3(p.x, 0, p.z).project(this.camera);

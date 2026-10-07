@@ -111,6 +111,7 @@ try {
   await screenshot("adventure-reward");
   await click("finish");
   await click("nav", "journal");
+  await click("journal-tab", "achievements");
   await click("claim", "first");
   assert.ok((await state()).claims.includes("first"));
   const prior = await state();
@@ -134,7 +135,9 @@ try {
     await page.waitForTimeout(350);
     assert.equal(
       await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
+        () =>
+          document.documentElement.scrollWidth <= innerWidth &&
+          document.documentElement.scrollHeight <= innerHeight,
       ),
       true,
     );
@@ -143,7 +146,9 @@ try {
     await page.waitForTimeout(200);
     assert.equal(
       await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
+        () =>
+          document.documentElement.scrollWidth <= innerWidth &&
+          document.documentElement.scrollHeight <= innerHeight,
       ),
       true,
     );
@@ -152,7 +157,9 @@ try {
     await screenshot(`adventure-${size.width}`);
     assert.equal(
       await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
+        () =>
+          document.documentElement.scrollWidth <= innerWidth &&
+          document.documentElement.scrollHeight <= innerHeight,
       ),
       true,
     );
