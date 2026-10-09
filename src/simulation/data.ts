@@ -38,6 +38,9 @@ const palettes = [
   ["#6d5a86", "#f3e4f7"],
   ["#c2565f", "#fdf6ee"],
   ["#5f9e8f", "#f3f0e2"],
+  ["#e9e2d8", "#8d8579"],
+  ["#8fa78c", "#f2f3ee"],
+  ["#4a4b52", "#d8cfc2"],
 ];
 const names: Record<Category, string[]> = {
   dress: [
@@ -56,6 +59,9 @@ const names: Record<Category, string[]> = {
     "甜梦洛丽塔",
     "和风振袖",
     "绯樱巫女服",
+    "云白高领针织",
+    "苔绿连帽卫衣",
+    "墨黑长风衣",
   ],
   hair: [
     "银月长发",
@@ -73,6 +79,9 @@ const names: Record<Category, string[]> = {
     "蔷薇姬卷",
     "夜樱公主切",
     "绯穗侧结",
+    "低马尾",
+    "棒球帽短发",
+    "利落及肩直发",
   ],
   crown: [
     "星愿王冠",
@@ -90,6 +99,9 @@ const names: Record<Category, string[]> = {
     "蕾丝发冠",
     "夜樱簪花",
     "绯色巫女结",
+    "珍珠发夹",
+    "棒球帽",
+    "丝巾发带",
   ],
   shoes: [
     "月光舞鞋",
@@ -107,6 +119,9 @@ const names: Record<Category, string[]> = {
     "厚底洛丽塔鞋",
     "风吕敷足袋",
     "绯绳木屐",
+    "白色小白鞋",
+    "厚底老爹鞋",
+    "切尔西短靴",
   ],
   wings: [
     "微光蝶翼",
@@ -124,6 +139,9 @@ const names: Record<Category, string[]> = {
     "蕾丝蝶翼",
     "夜樱薄翼",
     "绯叶之羽",
+    "极简薄纱披肩",
+    "运动风衣薄片",
+    "风衣垂坠薄片",
   ],
   wand: [
     "星愿魔杖",
@@ -141,6 +159,9 @@ const names: Record<Category, string[]> = {
     "蕾丝洋伞",
     "夜樱折扇",
     "绯色御币",
+    "银色钢笔",
+    "运动水壶",
+    "折叠长柄伞",
   ],
 };
 export const STYLES: Style[] = [
@@ -158,6 +179,9 @@ export const STYLES: Style[] = [
   "甜美",
   "甜美",
   "梦幻",
+  "优雅",
+  "自然",
+  "甜美",
   "优雅",
 ];
 /** Series label and set name both follow the dress, so they never drift. */
@@ -177,14 +201,20 @@ export const SERIES = [
   "甜梦",
   "夜樱",
   "绯叶",
+  "云白",
+  "苔绿",
+  "墨黑",
 ];
-export const SET_COUNT = 15;
+/** One set per wardrobe row; the dress list defines how many there are. */
+export const SET_COUNT = names.dress.length;
 /**
  * Sets 0 and 1 form the starter wardrobe. Every later set is drawn at the
  * atelier, so its blueprint hangs in one of the five kingdoms; the new
  * styles share those regions rather than opening a sixth.
  */
-const ITEM_REGION = [0, 0, 0, 1, 2, 3, 4, 2, 3, 1, 4, 2, 3, 4, 1];
+const ITEM_REGION = [
+  0, 0, 0, 1, 2, 3, 4, 2, 3, 1, 4, 2, 3, 4, 1, 3, 2, 4,
+];
 export const ITEMS: Item[] = categories.flatMap(({ id }) =>
   names[id].map((name, i) => ({
     id: `${id}-${i}`,

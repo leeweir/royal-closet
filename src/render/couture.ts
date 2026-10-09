@@ -275,32 +275,52 @@ function rose(
   add(group, combine(petals), material);
 }
 
+type Neckline = "sweetheart" | "collar" | "crew" | "turtleneck";
+/** How high the cloth climbs: its y value at the top of the bodice shell. */
+const NECKLINE_TOP: Record<Neckline, number> = {
+  sweetheart: 2.505,
+  collar: 2.585,
+  crew: 2.615,
+  turtleneck: 2.66,
+};
 function bodice(
   group: T.Group,
   material: T.Material,
   trim: T.Material,
   asymmetric = false,
   corset = false,
+  neckline: Neckline = "sweetheart",
 ) {
   const surface: Surface = (t, a) => {
     const front = Math.max(0, Math.cos(a));
-    const neckline = asymmetric
+    const top = asymmetric
       ? 2.51 - Math.sin(a) * 0.075
-      : 2.505 + front * 0.04 * Math.sin(a * 2) ** 2;
-    return torsoSurface(1.895 + t * (neckline - 1.895), a, 0.013);
+      : NECKLINE_TOP[neckline] + front * 0.04 * Math.sin(a * 2) ** 2;
+    return torsoSurface(1.895 + t * (top - 1.895), a, 0.013);
   };
   add(group, shell(surface, 0, TAU, 96, 36), material).name = "fitted-bodice";
-  // A broad fabric neckline follows the skin; the old metal hoop floated
-  // beyond the shoulders. The front inset gives the torso a readable shape.
+  group.userData.neckline = neckline;
+  // A standing band turns the neckline into a real collar: it climbs the
+  // throat instead of lying flat, so the shoulders are covered rather than
+  // framed by bare skin.
+  const standing = neckline === "turtleneck" || neckline === "crew";
+  const rise = neckline === "turtleneck" ? 0.1 : 0.034;
   const collar: Surface = (t, a) => {
     const p = surface(1, a);
+    // Flat necklines fold down onto the chest; standing ones rise up the
+    // throat, where torsoSurface already narrows to the neck.
+    const y = standing ? p.y + t * rise : p.y - t * 0.058;
     return torsoSurface(
-      p.y - t * 0.058,
+      y,
       a,
-      0.018 + 0.005 * Math.sin(t * Math.PI),
+      (standing ? 0.022 : 0.018) + 0.005 * Math.sin(t * Math.PI),
     );
   };
-  add(group, shell(collar, 0, TAU, 96, 8), trim);
+  add(
+    group,
+    shell(collar, 0, TAU, 96, standing ? 14 : 8),
+    standing ? material : trim,
+  );
   const inset = grid(
     (u, t) => {
       const angle = (u - 0.5) * (0.84 - 0.28 * t);
@@ -729,7 +749,7 @@ export function createCouture(item: Item, color: string): T.Group {
   const metallic = toon("#ffe3a2", "gold trim");
   const silver = toon("#eef6ff", "ivory trim");
   const crystal = toon("#ade4ff", "crystal");
-  const shape = Math.max(0, Math.min(14, item.shape));
+  const shape = Math.max(0, Math.min(17, item.shape));
   const silhouettes = [
     "moonlight-a-line",
     "rose-lolita",
@@ -746,6 +766,9 @@ export function createCouture(item: Item, color: string): T.Group {
     "sweet-lolita-bell",
     "kimono-furisode",
     "vermilion-miko-hakama",
+    "cream-turtleneck-knit-dress",
+    "sage-hoodie-and-bike-shorts",
+    "charcoal-belted-trench",
   ];
   group.userData = {
     silhouette: silhouettes[shape],
@@ -766,6 +789,9 @@ export function createCouture(item: Item, color: string): T.Group {
       ["satin", "brocade"],
       ["satin", "cotton"],
       ["satin", "brocade"],
+      ["knit", "satin"],
+      ["jersey", "knit"],
+      ["satin", "velvet"],
     ][shape],
     waistY: 1.9,
   };
@@ -1208,7 +1234,7 @@ export function createCouture(item: Item, color: string): T.Group {
     add(group, hem(skirt, 0.008), ink);
     crossedCollar(group, satin, ink);
     longSleeves(group, satin, ink, 0.085, 0.3);
-    bodice(group, satin, ink, false, true);
+    bodice(group, satin, ink, false, true, "collar");
     // A wide obi sits above the waist seam; a jade ring closes it.
     const obi = radial(
       () => 0.247,
@@ -1356,7 +1382,7 @@ export function createCouture(item: Item, color: string): T.Group {
       ),
       ivory,
     );
-    bodice(group, satin, ivory, false, true);
+    bodice(group, satin, ivory, false, true, "collar");
     // Mandarin collar: a short standing band above the bodice edge.
     const collar = radial(
       (t) => 0.152 - t * 0.012,
@@ -1413,7 +1439,7 @@ export function createCouture(item: Item, color: string): T.Group {
       ),
       ivory,
     );
-    bodice(group, satin, ivory);
+    bodice(group, satin, ivory, false, false, "collar");
     sailorCollar(group, satin, ivory);
     puffSleeves(group, satin, ivory);
     waist(group, ivory, 0.011);
@@ -1477,7 +1503,7 @@ export function createCouture(item: Item, color: string): T.Group {
       toon("#d8b98a", "wood"),
       buttons,
     );
-    bodice(group, knit, ivory);
+    bodice(group, knit, ivory, false, false, "turtleneck");
     waist(group, ivory, 0.009);
   } else if (shape === 11) {
     // 跃动运动服: a zipped track jacket with side stripes over lined shorts.
@@ -1504,7 +1530,7 @@ export function createCouture(item: Item, color: string): T.Group {
         ),
         jersey,
       );
-    bodice(group, satin, jersey, false, true);
+    bodice(group, satin, jersey, false, true, "crew");
     const jacket: Surface = (t, a) => {
       const y = 2.545 - t * 0.86;
       const p = torsoSurface(y, a, 0.028 + t * 0.014);
@@ -1575,7 +1601,7 @@ export function createCouture(item: Item, color: string): T.Group {
       add(group, shell(tier, 0, TAU, 128, 8), i % 2 ? lace : ivory);
     }
     add(group, hem(bell, 0.012), lace);
-    bodice(group, satin, ivory, false, true);
+    bodice(group, satin, ivory, false, true, "collar");
     puffSleeves(group, satin, lace);
     waist(group, ivory, 0.018);
     bow(group, ivory, new T.Vector3(0, 1.92, 0.2), 0.155);
@@ -1610,7 +1636,7 @@ export function createCouture(item: Item, color: string): T.Group {
     add(group, hem(skirt, 0.01), ivory);
     crossedCollar(group, satin, ivory, 2.585, 0.5, 0.034);
     hangingSleeves(group, satin, ivory, 0.84, 0.28);
-    bodice(group, satin, ivory, false, true);
+    bodice(group, satin, ivory, false, true, "collar");
     // Obi: a broad stiff band with a braided cord and a back knot.
     const obi = radial(
       () => 0.262,
@@ -1661,7 +1687,7 @@ export function createCouture(item: Item, color: string): T.Group {
     add(group, shell(kosode, 0, TAU, 112, 24), ivory);
     // A fitted inner bodice keeps the kosode on the torso envelope; the wide
     // outer panel is a separate drape, not a second shell.
-    bodice(group, ivory, satin);
+    bodice(group, ivory, satin, false, false, "collar");
     crossedCollar(group, satin, ivory, 2.585, 0.42, 0.03);
     // Hakama: two wide pleated legs sharing one waist band.
     for (const side of [-1, 1]) {
@@ -1731,6 +1757,215 @@ export function createCouture(item: Item, color: string): T.Group {
         satin,
       );
     waist(group, ivory, 0.012);
+  } else if (shape === 15) {
+    // 云白高领针织: a column of fine ribbing from a folded turtleneck to a
+    // soft A-line hem, with roomy sleeves that stop at the wrist.
+    const knitBelt = cloth(item.accent, "knit");
+    const column: Surface = (t, a) => {
+      const radius =
+        0.243 +
+        0.235 * Math.pow(Math.sin((t * Math.PI) / 2), 0.66) +
+        Math.cos(a * 30) * 0.005 * t;
+      return new T.Vector3(
+        Math.sin(a) * radius,
+        1.9 - t * 0.88,
+        Math.cos(a) * radius * 0.86,
+      );
+    };
+    add(group, shell(column, 0, TAU, 132, 40), knit);
+    add(group, hem(column, 0.014), knitBelt);
+    // Wide ribbed cuff and hem, the two places a knit reads as a knit.
+    const ribbed = radial(
+      (t) => 0.47 + t * 0.014,
+      (t, a) => 1.03 + t * 0.075 + Math.cos(a * 34) * 0.006,
+      0.86,
+      34,
+      0.009,
+    );
+    add(group, shell(ribbed, 0, TAU, 132, 10), knitBelt);
+    // The turtleneck itself: a folded collar standing off the throat.
+    const neck: Surface = (t, a) => {
+      const y = 2.66 + t * 0.1;
+      const p = torsoSurface(y, a, 0.03 - t * 0.006);
+      return new T.Vector3(p.x, p.y, p.z);
+    };
+    add(group, shell(neck, 0, TAU, 96, 14), knit);
+    add(group, hem(neck, 0.01), knitBelt);
+    bodice(group, knit, knitBelt, false, false, "turtleneck");
+    longSleeves(group, knit, knitBelt, 0.075, 0.3);
+    waist(group, knitBelt, 0.013);
+  } else if (shape === 16) {
+    // 苔绿连帽卫衣: a pullover with a hood resting on the back of the neck,
+    // a pouch pocket and cycling shorts underneath.
+    const shorts = radial(
+      (t) => 0.246 + 0.12 * Math.pow(t, 0.6),
+      (t, a) => 1.9 - t * 0.7 + Math.cos(a * 14) * 0.012 * t,
+      0.82,
+      14,
+      0.02,
+    );
+    add(group, shell(shorts, 0, TAU, 112, 26), satin);
+    add(group, hem(shorts, 0.009), jersey);
+    for (const a of [0, Math.PI])
+      add(
+        group,
+        grid(
+          (u, t) => {
+            const p = at(shorts, 0.55 + t * 0.44, a, 0.006);
+            return new T.Vector3(p.x + (u - 0.5) * 0.016, p.y, p.z * 0.42);
+          },
+          6,
+          14,
+        ),
+        jersey,
+      );
+    const hoodie: Surface = (t, a) => {
+      const p = torsoSurface(2.615 - t * 0.675, a, 0.03 + t * 0.006);
+      return new T.Vector3(p.x, p.y, p.z);
+    };
+    add(group, shell(hoodie, 0, TAU, 112, 26), knit);
+    add(group, hem(hoodie, 0.016), jersey);
+    // Kangaroo pocket sits low and flat across the front.
+    const pocket = grid(
+      (u, t) => {
+        const a = (u - 0.5) * 0.94;
+        return at(
+          (tt, aa) => torsoSurface(2.0 - tt * 0.17, aa, 0.036),
+          t,
+          a,
+          0.006,
+        );
+      },
+      24,
+      16,
+    );
+    add(group, pocket, jersey);
+    // The hood is a soft half-shell behind the neck, not a sphere on the head.
+    const hood: Surface = (t, a) => {
+      const spread = 0.19 + t * 0.18;
+      return new T.Vector3(
+        Math.sin(a) * spread * 0.92,
+        2.575 - t * 0.06 - Math.abs(Math.sin(a)) * 0.05 * t,
+        -0.13 - t * 0.075 + Math.cos(a) * spread * 0.42,
+      );
+    };
+    add(group, shell(hood, 0, TAU, 96, 20), knit);
+    add(group, hem(hood, 0.012), jersey);
+    bodice(group, knit, jersey, false, false, "crew");
+    longSleeves(group, knit, jersey, 0.03, 0.27);
+    // Drawstrings hanging from the collar.
+    for (const side of [-1, 1])
+      add(
+        group,
+        line(
+          [
+            new T.Vector3(side * 0.045, 2.6, 0.2),
+            new T.Vector3(side * 0.05, 2.44, 0.225),
+            new T.Vector3(side * 0.04, 2.3, 0.215),
+          ],
+          0.008,
+        ),
+        jersey,
+      );
+    waist(group, jersey, 0.011);
+  } else if (shape === 17) {
+    // 墨黑长风衣: a belted trench over straight trousers, lapels folded
+    // open and the coat hanging past the knee.
+    const trousers = cloth(
+      new T.Color(color).lerp(new T.Color("#2f3036"), 0.35).getStyle(),
+      "cotton",
+    );
+    // Two straight legs with a centre crease, joined at the hips.
+    for (const side of [-1, 1]) {
+      const leg: Surface = (t, a) => {
+        const radius = 0.105 + 0.022 * Math.pow(t, 0.8);
+        return new T.Vector3(
+          Math.sin(a) * radius,
+          1.86 - t * 1.66,
+          Math.cos(a) * radius * 0.9,
+        );
+      };
+      const geometry = shell(leg, 0, TAU, 84, 30);
+      geometry.translate(side * 0.115, 0, 0);
+      add(group, geometry, trousers);
+      const legHem = hem(leg, 0.009);
+      legHem.translate(side * 0.115, 0, 0);
+      add(group, legHem, jersey);
+      add(
+        group,
+        line(
+          [
+            new T.Vector3(side * 0.115, 1.8, 0.1),
+            new T.Vector3(side * 0.121, 0.7, 0.105),
+            new T.Vector3(side * 0.126, 0.21, 0.1),
+          ],
+          0.0035,
+        ),
+        jersey,
+      );
+    }
+    const hips = radial(
+      (t) => 0.25 + 0.02 * t,
+      (t, a) => 1.93 - t * 0.12,
+      0.84,
+      0,
+      0,
+    );
+    add(group, shell(hips, 0, TAU, 112, 12), trousers);
+    bodice(group, satin, jersey, false, false, "collar");
+    // The coat: an open shell that stops short of the front centre.
+    const coat: Surface = (t, a) => {
+      const radius = 0.262 + 0.185 * Math.pow(t, 0.72);
+      return new T.Vector3(
+        Math.sin(a) * radius,
+        2.6 - t * 1.22,
+        Math.cos(a) * radius * 0.86,
+      );
+    };
+    add(group, shell(coat, 0.42, TAU - 0.42, 116, 34), satin);
+    for (const a of [0.42, TAU - 0.42])
+      add(
+        group,
+        line(
+          Array.from({ length: 30 }, (_, i) => at(coat, i / 29, a, 0.012)),
+          0.013,
+        ),
+        jersey,
+      );
+    add(group, hem(coat, 0.013, 0.42, TAU - 0.42), jersey);
+    // Folded lapels over each side of the chest.
+    for (const side of [-1, 1])
+      add(
+        group,
+        grid(
+          (u, t) => {
+            const a = side * (0.42 - t * 0.34);
+            const p = at(coat, t * 0.56, a, 0.016);
+            return new T.Vector3(
+              p.x + Math.sin(a) * (u - 0.5) * 0.1,
+              p.y,
+              p.z + Math.cos(a) * (u - 0.5) * 0.04,
+            );
+          },
+          12,
+          22,
+        ),
+        jersey,
+      );
+    longSleeves(group, satin, jersey, 0.05, 0.29);
+    // Belt, buckle and a knotted sash at the waist.
+    const belt = radial(
+      () => 0.292,
+      (t, a) => 1.9 - t * 0.1,
+      0.86,
+      0,
+      0,
+    );
+    add(group, shell(belt, 0, TAU, 128, 10), jersey);
+    const buckle = add(group, new T.BoxGeometry(0.075, 0.06, 0.022), metallic);
+    buckle.position.set(0, 1.85, 0.26);
+    sashTails(group, satin, 1.84, 0.5, 0.11);
+    waist(group, jersey, 0.012);
   }
   return group;
 }

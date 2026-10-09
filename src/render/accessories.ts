@@ -669,7 +669,74 @@ export function createCrown(item: Item): T.Group {
     }
     a.sphere([0, 0.055, 0.272], [0.032, 0.028, 0.028], metal);
     a.torus([0, 0.055, 0.288], 0.032, 0.005, cord);
-  }  return silhouette(a.complete(), item, [
+  } else if (item.shape === 15) {
+    // 珍珠发夹: a slim barrette of graduated pearls, worn to one side.
+    const shell = toon("#f4ede2", "anime-accessory");
+    // The bar sweeps across the crown so the pearls read at head width.
+    a.tube(
+      Array.from({ length: 25 }, (_, i): P => {
+        const t = i / 24,
+          theta = -1.15 + t * 2.3;
+        return [
+          Math.sin(theta) * 0.284,
+          0.052 + Math.cos(theta) * 0.03,
+          Math.cos(theta) * 0.284,
+        ];
+      }),
+      0.012,
+      metal,
+    );
+    for (let i = 0; i < 11; i++) {
+      const t = i / 10,
+        theta = -1.02 + t * 2.04;
+      const r = 0.021 - Math.abs(t - 0.5) * 0.01;
+      a.sphere(
+        [
+          Math.sin(theta) * 0.29,
+          0.066 + Math.cos(theta) * 0.03,
+          Math.cos(theta) * 0.29,
+        ],
+        [r, r, r * 0.9],
+        i % 2 ? pearl : shell,
+      );
+    }
+  } else if (item.shape === 16) {
+    // 棒球帽: a soft crown, a forward brim and a small button on top.
+    const cap = toon(item.color, "anime-accessory");
+    const panel = toon(item.accent, "anime-accessory");
+    for (let i = 0; i < 5; i++) {
+      const theta = -0.9 + i * 0.45;
+      a.add(blade(0.34, 0.21, 0.05), i % 2 ? cap : panel, {
+        p: [Math.sin(theta) * 0.06, 0.28, Math.cos(theta) * 0.06],
+        r: [0.42, theta, 0],
+      });
+    }
+    const brim = new T.CylinderGeometry(0.315, 0.315, 0.024, 22);
+    a.add(brim, cap, { p: [0, 0.29, 0.2], s: [1, 1, 1.34] });
+    a.torus([0, 0.05, 0], 0.276, 0.011, cap, [Math.PI / 2, 0, 0]);
+    a.sphere([0, 0.5, 0], [0.026, 0.022, 0.026], cap);
+  } else {
+    // 丝巾发带: a folded silk scarf knotted over the hair.
+    const silk = toon(item.color, "anime-accessory");
+    const silkB = toon(item.accent, "anime-accessory");
+    const band = new T.TorusGeometry(0.279, 0.017, 6, 46);
+    band.scale(1, 1, 1.02);
+    a.add(band, silk, { p: [0, 0.004, 0], r: [Math.PI / 2, 0, 0] });
+    for (const side of [-1, 1])
+      a.add(
+        ribbon(
+          [
+            [side * 0.06, -0.02, -0.262],
+            [side * 0.15, -0.11, -0.288],
+            [side * 0.1, -0.22, -0.27],
+          ],
+          0.05,
+        ),
+        side < 0 ? silkB : silk,
+      );
+    a.sphere([0, -0.01, -0.272], [0.028, 0.024, 0.024], silkB);
+  }
+  return silhouette(a.complete(), item, [
     "fine-jewel-tiara",
     "layered-rose-wreath",
     "laurel-leaf-circlet",
@@ -685,9 +752,16 @@ export function createCrown(item: Item): T.Group {
     "lace-and-rose-coronet",
     "slim-blossom-pin",
     "twisted-paper-and-cord-knot",
+    "graduated-pearl-barrette",
+    "paneled-baseball-cap",
+    "knotted-silk-scarf-band",
   ]);
 }
 
+/** Re-express authored points as vectors; keeps mirrored parts readable. */
+function gridPoints(points: P[]) {
+  return points.map((v) => new T.Vector3(...v));
+}
 function ribbon(path: P[], width: number) {
   const curve = new T.CatmullRomCurve3(path.map((p) => new T.Vector3(...p)));
   const pos: number[] = [],
@@ -1330,7 +1404,74 @@ export function createWings(item: Item): T.Group {
       }
       for (let i = 0; i < 4; i++)
         a.sphere(p(0.34 + i * 0.2, 0.52 - i * 0.06, 0.07), [0.014, 0.018, 0.014], metal);
-    }    a.sphere(p(0.12, -0.06, 0.042), [0.028, 0.1, 0.043], metal);
+    } else if (item.shape === 15) {
+      // 极简薄纱披肩: a plain tulle cape that drapes to the elbows.
+      const gauze = toon(item.color, "anime-accessory");
+      gauze.transparent = true;
+      gauze.opacity = 0.42;
+      gauze.depthWrite = false;
+      const cape = gridPoints([
+        [0, -0.02, 0.02],
+        [0.52, -0.14, -0.08],
+        [0.82, -0.4, -0.18],
+        [0.66, -0.86, -0.16],
+      ] as P[]);
+      const capePath = cape.map((v) => p(v.x, v.y, v.z));
+      a.add(ribbon(capePath, 0.3), gauze);
+      a.add(ribbon(capePath, 0.09), light);
+      a.tube(
+        [
+          [-0.44, 2.53, -0.08],
+          [0, 2.5, -0.14],
+          [0.44, 2.53, -0.08],
+        ],
+        0.008,
+        edge,
+      );
+    } else if (item.shape === 16) {
+      // 运动风衣薄片: two short wind-shell panels that flare off the shoulders.
+      const shell = toon(item.color, "anime-accessory");
+      for (let i = 0; i < 3; i++) {
+        const length = 1.02 - i * 0.16;
+        const start: P = p(0.14 + i * 0.04, 0.06 - i * 0.14, -i * 0.03);
+        const rotation = side * (-0.52 - i * 0.46);
+        const matrix = new T.Matrix4().compose(
+          new T.Vector3(...start),
+          new T.Quaternion().setFromEuler(new T.Euler(0, 0, rotation)),
+          new T.Vector3(1, 1, 1),
+        );
+        a.add(blade(length, 0.21, 0.05, 0.02), i % 2 ? light : shell, {
+          p: start,
+          r: [0, 0, rotation],
+        });
+        a.tube(
+          (
+            [
+              [0, 0.02, 0.014],
+              [0, length * 0.55, 0.05],
+              [0, length * 0.96, 0.02],
+            ] as P[]
+          ).map((v) => new T.Vector3(...v).applyMatrix4(matrix).toArray() as P),
+          0.004,
+          edge,
+        );
+      }
+      for (let i = 0; i < 4; i++)
+        a.sphere(p(0.2 + i * 0.16, -0.1 + i * 0.03, 0.06), [0.014, 0.014, 0.014], metal);
+    } else {
+      // 风衣垂坠薄片: a long, narrow coat flap hanging past the hip.
+      const shell = toon(item.color, "anime-accessory");
+      const flap: P[] = [
+        [0.17, 0.02, 0.04],
+        [0.46, -0.2, -0.08],
+        [0.78, -0.62, -0.2],
+        [0.96, -1.06, -0.3],
+      ];
+      a.add(ribbon(flap.map((v) => p(...v)), 0.26), shell);
+      a.tube(flap.map((v) => p(...v)), 0.0045, edge);
+      a.add(ribbon(flap.map((v) => p(...v)), 0.075), light);
+    }
+    a.sphere(p(0.12, -0.06, 0.042), [0.028, 0.1, 0.043], metal);
     a.complete();
   }
   return silhouette(root, item, [
@@ -1349,6 +1490,9 @@ export function createWings(item: Item): T.Group {
     "openwork-lace-panels",
     "scattered-night-blossom-petals",
     "vermilion-maple-leaves",
+    "sheer-tulle-cape",
+    "flared-wind-shell-panels",
+    "long-coat-flaps",
   ]);
 }
 
@@ -1776,7 +1920,75 @@ export function createWand(item: Item): T.Group {
       );
     }
     a.sphere([0, 0.53, 0.026], [0.012, 0.012, 0.012], metal);
-  }  // Silk ties have a folded surface and a narrow gilded center.
+  } else if (item.shape === 15) {
+    // 银色钢笔: a slim metal pen with a clip and a dark grip section.
+    const barrel = toon("#d9dde4", "anime-accessory");
+    a.add(new T.CylinderGeometry(0.019, 0.021, 0.52, 14), barrel, {
+      p: [0, 0.77, 0],
+    });
+    a.add(new T.CylinderGeometry(0.022, 0.022, 0.026, 14), metal, { p: [0, 0.53, 0] });
+    a.add(new T.CylinderGeometry(0.02, 0.02, 0.16, 14), colored, { p: [0, 0.44, 0] });
+    a.add(new T.ConeGeometry(0.019, 0.14, 14), metal, { p: [0, 1.0, 0] });
+    a.tube(
+      [
+        [0.021, 0.98, 0],
+        [0.03, 0.9, 0],
+        [0.028, 0.82, 0],
+      ],
+      0.005,
+      metal,
+    );
+    for (const y of [0.62, 0.94])
+      a.torus([0, y, 0], 0.021, 0.0035, barrel, [Math.PI / 2, 0, 0]);
+    a.sphere([0, 0.53, 0.024], [0.009, 0.009, 0.009], metal);
+  } else if (item.shape === 16) {
+    // 运动水壶: a squat bottle with a ribbed body and a screw cap.
+    const body = toon(item.color, "anime-accessory");
+    const lid = toon(item.accent, "anime-accessory");
+    a.add(new T.CylinderGeometry(0.062, 0.058, 0.5, 20), body, { p: [0, 0.75, 0] });
+    for (let i = 0; i < 5; i++)
+      a.torus([0, 0.58 + i * 0.09, 0], 0.062, 0.006, lid, [Math.PI / 2, 0, 0]);
+    a.add(new T.CylinderGeometry(0.03, 0.05, 0.06, 18), body, { p: [0, 1.03, 0] });
+    a.add(new T.CylinderGeometry(0.033, 0.033, 0.055, 18), lid, { p: [0, 1.09, 0] });
+    a.add(new T.TorusGeometry(0.036, 0.007, 6, 20, Math.PI * 1.4), lid, {
+      p: [0, 1.11, 0.03],
+      r: [Math.PI / 2, 0, 0],
+    });
+    a.add(new T.CylinderGeometry(0.064, 0.064, 0.028, 20), lid, { p: [0, 0.5, 0] });
+    } else if (item.shape === 14) {
+    // 折叠长柄伞: a closed umbrella with a hooked handle and a furled canopy.
+    const shaft = toon("#5a5560", "anime-accessory");
+    const canopy = toon(item.color, "anime-accessory");
+    const tip = toon(item.accent, "anime-accessory");
+    a.add(new T.CylinderGeometry(0.014, 0.014, 0.44, 12), shaft, { p: [0, 0.79, 0] });
+    a.add(new T.ConeGeometry(0.072, 0.6, 14), canopy, { p: [0, 0.86, 0] });
+    for (let i = 0; i < 8; i++) {
+      const theta = (i / 8) * Math.PI * 2;
+      a.tube(
+        [
+          [Math.cos(theta) * 0.02, 0.57, Math.sin(theta) * 0.02],
+          [Math.cos(theta) * 0.062, 0.9, Math.sin(theta) * 0.062],
+          [Math.cos(theta) * 0.072, 1.15, Math.sin(theta) * 0.072],
+        ],
+        0.0032,
+        tip,
+      );
+    }
+    a.add(new T.CylinderGeometry(0.016, 0.004, 0.07, 10), tip, { p: [0, 1.2, 0] });
+    a.tube(
+      [
+        [0, 0.58, 0],
+        [0, 0.53, 0.03],
+        [0.005, 0.49, 0.075],
+        [0.02, 0.48, 0.1],
+        [0.045, 0.5, 0.1],
+      ],
+      0.016,
+      shaft,
+    );
+    a.torus([0, 0.5, 0], 0.03, 0.014, tip, [0, 0, 0], Math.PI * 1.1);
+  }
+  // Silk ties have a folded surface and a narrow gilded center.
   for (const sign of [-1, 1]) {
     a.add(blade(0.11, 0.042, 0.036), colored, {
       p: [0, 0.735, 0.022],
@@ -1816,6 +2028,9 @@ export function createWand(item: Item): T.Group {
     "closed-lace-parasol",
     "half-open-blossom-fan",
     "sakaki-branch-with-paper-streamers",
+    "slim-metal-pen",
+    "ribbed-sport-bottle",
+    "furled-long-umbrella",
   ]);
 }
 
@@ -2505,7 +2720,112 @@ export function createShoes(
           thong,
         );
       a.sphere([0, 0.1, 0.014], [0.016, 0.012, 0.016], thong);
-    }    a.complete();
+    } else if (item.shape === 15) {
+      // 白色小白鞋: a minimal leather sneaker, clean and low.
+      const upperMat = toon("#f7f7f5", "anime-accessory");
+      const soleMat = toon(item.accent, "anime-accessory");
+      const accent = toon(item.color, "anime-accessory");
+      a.add(
+        profile([
+          [0.15, 0.088, 0.106, -0.06],
+          [0.27, 0.086, 0.096, -0.07],
+          [0.46, 0.09, 0.102, -0.088],
+          [0.43, 0.108, 0.122, -0.09],
+        ]),
+        upperMat,
+      );
+      a.add(new T.BoxGeometry(0.102, 0.036, 0.308), soleMat, {
+        p: [0, 0.038, 0.014],
+      });
+      a.add(shoeSole(), toon("#e4e2dc", "anime-accessory"), {
+        p: [0, 0.026, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
+      // One side stripe and a heel tab mark it as a sneaker, not a slipper.
+      for (const sign of [-1, 1])
+        a.add(blade(0.15, 0.02), accent, {
+          p: [sign * 0.09, 0.09, 0.03],
+          r: [0.4, sign * -1.5, 0.15],
+        });
+      a.add(new T.BoxGeometry(0.032, 0.026, 0.012), accent, {
+        p: [0, 0.2, -0.09],
+      });
+      for (const sign of [-1, 1])
+        a.sphere([sign * 0.03, 0.185, 0.0], [0.008, 0.008, 0.008], accent);
+    } else if (item.shape === 16) {
+      // 厚底老爹鞋: a chunky sole with layered panels.
+      const upperMat = toon("#eceae4", "anime-accessory");
+      const accent = toon(item.color, "anime-accessory");
+      const soleMat = toon(item.accent, "anime-accessory");
+      a.add(
+        profile([
+          [0.16, 0.094, 0.112, -0.062],
+          [0.3, 0.098, 0.104, -0.074],
+          [0.5, 0.102, 0.11, -0.092],
+          [0.42, 0.14, 0.148, -0.094],
+        ]),
+        upperMat,
+      );
+      a.add(new T.BoxGeometry(0.118, 0.075, 0.33), soleMat, {
+        p: [0, 0.058, 0.018],
+      });
+      a.add(new T.BoxGeometry(0.106, 0.03, 0.3), accent, { p: [0, 0.03, 0.02] });
+      a.add(shoeSole(), toon("#cfccc4", "anime-accessory"), {
+        p: [0, 0.022, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
+      for (const sign of [-1, 1])
+        a.add(blade(0.17, 0.024), accent, {
+          p: [sign * 0.094, 0.1, 0.04],
+          r: [0.42, sign * -1.5, 0.2],
+        });
+      a.add(new T.BoxGeometry(0.05, 0.04, 0.016), accent, { p: [0, 0.235, -0.088] });
+      for (let i = 0; i < 3; i++)
+        a.sphere([-0.04 + i * 0.04, 0.215, 0.02], [0.009, 0.009, 0.009], accent);
+    } else {
+      // 切尔西短靴: a plain ankle boot with elastic gussets.
+      const leatherMat = toon(item.color, "anime-accessory");
+      const gusset = toon(item.accent, "anime-accessory");
+      a.add(
+        profile([
+          [0.19, 0.092, 0.11, -0.062],
+          [0.31, 0.086, 0.098, -0.072],
+          [0.46, 0.084, 0.098, -0.086],
+          [0.34, 0.13, 0.136, -0.086],
+        ]),
+        leatherMat,
+      );
+      a.add(shoeSole(), toon("#4a4148", "anime-accessory"), {
+        p: [0, 0.031, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
+      a.add(new T.BoxGeometry(0.064, 0.05, 0.066), toon("#4a4148", "anime-accessory"), {
+        p: [0, 0.028, -0.104],
+      });
+      // Elastic side panels and the pull tab at the heel.
+      for (const sign of [-1, 1])
+        a.add(new T.BoxGeometry(0.014, 0.11, 0.062), gusset, {
+          p: [sign * 0.088, 0.24, -0.045],
+        });
+      a.add(new T.BoxGeometry(0.036, 0.048, 0.012), gusset, {
+        p: [0, 0.36, -0.078],
+      });
+      for (const sign of [-1, 1])
+        a.tube(
+          Array.from({ length: 25 }, (_, i): P => {
+            const t = i / 24,
+              angle = t * Math.PI * 2;
+            return [
+              Math.sin(angle) * 0.082,
+              0.425 + t * 0.01,
+              -0.086 + Math.cos(angle) * 0.1,
+            ];
+          }),
+          0.006,
+          gusset,
+        );
+    }
+    a.complete();
   }
   return silhouette(root, item, [
     "buckled-mary-jane-heels",
@@ -2523,5 +2843,8 @@ export function createShoes(
     "platform-lolita-shoes",
     "split-toe-tabi-and-wrap",
     "two-tooth-wooden-geta",
+    "minimal-low-sneakers",
+    "chunky-layered-sneakers",
+    "elastic-gusset-ankle-boots",
   ]);
 }

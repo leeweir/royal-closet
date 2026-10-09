@@ -84,8 +84,13 @@ test("garment attributes remain finite and fit the waist and shoulder anchors", 
   garments.forEach((group, i) => {
     assert.equal(group.name, "couture");
     assert.ok(bounds[i].min.y > 0.17, "garments stay above the floor");
+    // A column or standing neckline climbs the throat; everything else
+    // stops at the shoulder line.
+    const ceiling = { turtleneck: 2.82, crew: 2.7 }[
+      group.userData.neckline as string
+    ] ?? 2.65;
     assert.ok(
-      bounds[i].max.y >= 2.5 && bounds[i].max.y < 2.65,
+      bounds[i].max.y >= 2.5 && bounds[i].max.y < ceiling,
       "cloth ends around the shoulder line",
     );
     const waist = vertices[i].filter(

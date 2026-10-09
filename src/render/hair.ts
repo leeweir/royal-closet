@@ -147,6 +147,9 @@ export function createHair(item: Item) {
     "#3a2f43",
     "#a8494a",
     "#3d4a44",
+    "#4a3f36",
+    "#2b2a2e",
+    "#6b5847",
   ];
   const color = colors[item.shape];
   const mat = new T.MeshPhysicalMaterial({
@@ -189,7 +192,7 @@ export function createHair(item: Item) {
   root.add(strands);
   const length = [
     1.44, 0.43, 0.63, 1.45, 0.43, 1.48, 1.5, 1.28, 0.44, 0.5, 1.52, 0.6, 1.56,
-    1.5, 0.92, 0.5,
+    1.5, 0.92, 0.5, 1.32, 0.5, 0.46,
   ][item.shape];
   mesh(
     // 0 long, 1 twin tails, 2 braids, 3 long curls, 5 blonde waves, 6 ink
@@ -531,6 +534,84 @@ export function createHair(item: Item) {
           [0.34 + j * 0.016, -0.92, 0.0 - j * 0.02],
         ],
         0.05,
+        mat,
+        shine,
+      );
+  } else if (item.shape === 15) {
+    // 低马尾: a low tie at the nape with a smooth tail over one shoulder.
+    const tie = mesh(
+      new T.TorusGeometry(0.042, 0.013, 8, 22),
+      new T.MeshStandardMaterial({ color: "#d8cfc2" }),
+      strands,
+      0,
+      -0.16,
+      -0.06,
+    );
+    tie.rotation.x = Math.PI / 2;
+    for (let j = 0; j < 4; j++)
+      ribbon(
+        strands,
+        [
+          [0.01 * (j - 1.5), -0.16, -0.07],
+          [0.03 * (j - 1.5), -0.34, -0.13 + j * 0.02],
+          [0.05 * (j - 1.5), -0.6, -0.12 + j * 0.03],
+          [0.07 * (j - 1.5), -0.86, -0.07 + j * 0.03],
+          [0.08 * (j - 1.5), -1.06, 0 + j * 0.02],
+        ],
+        0.048,
+        mat,
+        shine,
+      );
+  } else if (item.shape === 16) {
+    // 棒球帽短发: a short crop under a casual cap, brim forward.
+    const cap = new T.MeshStandardMaterial({ color: "#2b2a2e" });
+    const crown = mesh(
+      new T.SphereGeometry(0.335, 20, 14, 0, Math.PI * 2, 0, Math.PI * 0.52),
+      cap,
+      strands,
+      0,
+      0.28,
+      0,
+    );
+    crown.scale.set(1, 0.86, 1.02);
+    const brim = mesh(new T.CylinderGeometry(0.3, 0.3, 0.022, 20), cap, strands, 0, 0.29, 0.22);
+    brim.scale.set(1, 1, 1.25);
+    for (const side of [-1, 1])
+      ribbon(
+        strands,
+        [
+          [side * 0.26, 0.24, 0.1],
+          [side * 0.32, 0.02, 0.12],
+          [side * 0.3, -0.16, 0.11],
+        ],
+        0.075,
+        mat,
+        shine,
+      );
+  } else {
+    // 利落及肩直发: a blunt, even cut that ends at the collarbone.
+    for (const side of [-1, 1])
+      ribbon(
+        strands,
+        [
+          [side * 0.24, 0.34, 0.11],
+          [side * 0.3, 0.08, 0.13],
+          [side * 0.29, -0.2, 0.12],
+          [side * 0.25, -0.46, 0.1],
+        ],
+        0.095,
+        mat,
+        shine,
+      );
+    for (const side of [-1, 1])
+      ribbon(
+        strands,
+        [
+          [side * 0.14, 0.06, -0.3],
+          [side * 0.2, -0.16, -0.26],
+          [side * 0.18, -0.44, -0.2],
+        ],
+        0.1,
         mat,
         shine,
       );

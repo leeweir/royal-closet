@@ -6,7 +6,7 @@ export function wardrobeArt(item: Item) {
   const a = item.accent;
   const gold = "#c8a267";
   const ink = "#6a557d";
-  const shape = Math.max(0, Math.min(14, item.shape));
+  const shape = Math.max(0, Math.min(17, item.shape));
   const uid = `art-${item.id}`;
   const pearl = (x: number, y: number, r = 1.5) =>
     `<circle cx="${x}" cy="${y}" r="${r}" fill="${a}" stroke="${gold}" stroke-width=".55"/>`;
@@ -50,6 +50,12 @@ export function wardrobeArt(item: Item) {
       `<path d="M35 23l15 11 15-11-3 24H38z" fill="${c}"/><path d="M35 23l-14 9 6 16 11-7m26-18 14 9-6 16-11-7" fill="${c}" stroke="${a}" stroke-width="1.4"/><path d="M35 23q-4 20 8 32m22-32q4 20-8 32" fill="none" stroke="${a}" stroke-width="2.4"/><path d="M38 46h24l5 66-34 0z" fill="${shimmer}"/><path d="M36 47h28l1 14-30 0z" fill="${a}" stroke="${gold}" stroke-width="1"/><path d="M37 54h26" stroke="${gold}" stroke-width="1.2"/>${[36, 62].map((x) => `<path d="M${x} 22l-4 30 8 4 2-30z" fill="${c}" stroke="${a}" stroke-width="1.2"/>`).join("")}${[44, 50, 56].map((x, n) => flower(x, 70 + n % 2 * 14, 3.2, a)).join("")}<path d="M46 61l4 6-4 6-4-6z" fill="${gold}"/>`,
       // 绯樱巫女服: white kosode over a scarlet divided hakama.
       `<path d="M35 23l15 11 15-11-3 26H38z" fill="${c}"/><path d="M35 23l-12 6 4 30 9-5m37-31 12 6-4 30-9-5" fill="${c}" stroke="${a}" stroke-width="1.4"/><path d="M35 23q-3 18 7 30m23-30q3 18-7 30" fill="none" stroke="${a}" stroke-width="2.2"/><path d="M33 56h34l2 12-38 0z" fill="${shimmer}" stroke="${a}" stroke-width="1.4"/><path d="M36 68h13l2 32-17 0zM51 68h13l2 32-17 0z" fill="${c}" stroke="${a}" stroke-width="1.2"/>${Array.from({ length: 4 }, (_, n) => `<path d="M${38 + n * 2.6} 68l-1 26m${27 + n * 2.6 - 27} 0 0 26" stroke="${gold}" stroke-width=".7"/>`).join("")}<path d="M34 100q16 5 32 0" fill="none" stroke="${gold}" stroke-width="2"/>${bow(50, 50, a, 5)}<path d="M50 44l3 4-3 4-3-4z" fill="#a8494a"/>`,
+      // 云白高领针织: a column of ribbing under a folded turtleneck.
+      `<path d="M37 24q13 7 26 0l-2 22H39z" fill="${c}"/><path d="M37 24q-11 3-13 12l4 34 11-4-2-30m26-12q11 3 13 12l-4 34-11-4 2-30" fill="${c}" stroke="${a}" stroke-width="1.2"/><path d="M41 20h18l1 9H40z" fill="${a}"/><path d="M42 17q8 4 16 0l1 7H41z" fill="${c}" stroke="${a}" stroke-width="1"/><path d="M39 44h22l7 62q-18 6-36 0z" fill="${shimmer}"/>${Array.from({ length: 12 }, (_, n) => `<path d="M${39 + n * 2} 106V60" stroke="${a}" stroke-width=".5" opacity=".7"/>`).join("")}<path d="M36 104q14 4 28 0" fill="none" stroke="${a}" stroke-width="2.4"/>${[46, 50, 54].map((x, n) => `<circle cx="${x}" cy="${52 + n * 2}" r="1.6" fill="${gold}"/>`).join("")}`,
+      // 苔绿连帽卫衣: a hood behind the neck over bike shorts.
+      `<path d="M32 26q18 9 36 0l-2 26H34z" fill="${c}" stroke="${a}" stroke-width="1.4"/><path d="M36 24q14-10 28 0-6 12-14 13-8-1-14-13z" fill="${c}" stroke="${a}" stroke-width="1.2"/><path d="M40 30q10 8 20 0" fill="none" stroke="${a}" stroke-width="1.6"/><path d="M32 26l-12 7 4 30 10-4m36-33 12 7-4 30-10-4" fill="${c}" stroke="${a}" stroke-width="1.4"/><path d="M34 52h32l3 12H31z" fill="${a}"/><path d="M40 64q10 5 20 0l6 12q-16 6-32 0z" fill="${shimmer}"/><path d="M34 76q16 5 32 0" fill="none" stroke="${a}" stroke-width="1.6"/><path d="M37 88h13l2 22-17 1zM50 88h13l2 23-17-1z" fill="${c}" stroke="${a}" stroke-width="1.2"/><path d="M47 33v14m6-14v12" stroke="${a}" stroke-width="1.4" fill="none"/>${bow(50, 44, a, 5)}`,
+      // 墨黑长风衣: a belted coat over straight trousers.
+      `<path d="M38 24q12 6 24 0l-2 22H40z" fill="${a}"/><path d="M40 46h19l2 14H38z" fill="${shimmer}"/><path d="M33 24l-10 6 3 40 9-3-2-34m30-9 10 6-3 40-9-3 2-34" fill="${c}" stroke="${a}" stroke-width="1.4"/><path d="M40 24l9 13-4 9-7-14m20-8-9 13 4 9 7-14" fill="${a}" stroke="${a}" stroke-width="1"/><path d="M25 54q25 8 50 0l6 40q-31 9-62 0z" fill="${c}" stroke="${a}" stroke-width="1.4"/><path d="M21 70q29 8 58 0" fill="none" stroke="${a}" stroke-width="5"/><path d="M46 70h8v7h-8z" fill="${gold}"/><path d="M38 72h13l2 40-17 1zM49 72h13l2 41-17-1z" fill="${shimmer}" stroke="${a}" stroke-width="1"/><path d="M44 40h12" stroke="${gold}" stroke-width="1.2"/>`,
     ];
     body = bodies[shape];
   } else if (item.category === "hair") {
@@ -79,6 +85,12 @@ export function wardrobeArt(item: Item) {
       `<path d="M21 54Q10 18 50 15q40 0 29 39l9 58-31 8-7-56-3 0-7 56-31-8z" fill="${shimmer}"/>${face}<path d="M24 44Q22 14 50 14q28 0 26 30L62 28 48 48 34 28z" fill="${c}"/><path d="M22 44q-2 16 3 30l12-2 2-10m41-18q2 16-3 30l-12-2-2-10" fill="${c}" stroke="${a}" stroke-width="1.4"/><path d="M22 46q-2 32 2 60m52-60q2 32-2 60" stroke="${a}" stroke-width="2" fill="none"/>`,
       // 绯穗侧结: one side knot over a loose uneven sweep.
       `<path d="M25 54Q15 18 50 15q35 1 25 40l4 26-24 6-7-30-11 4-8 24-19-8z" fill="${shimmer}"/>${face}<path d="M26 45Q24 15 50 14q26 1 24 31L61 27 49 43 37 28z" fill="${c}"/><path d="M62 44q14 10 14 30-2 22-14 32 6-22 2-36-4-16-14-22z" fill="${c}" stroke="${a}" stroke-width="1.6"/>${bow(62, 42, a, 8)}<path d="M28 40q-8 20-2 40" stroke="${a}" stroke-width="2" fill="none"/>`,
+      // 低马尾: a smooth sweep gathered into a low tail.
+      `<path d="M27 52Q17 18 50 15q33 1 23 38l2 10-22 4-5-12-12 2-6 10z" fill="${shimmer}"/>${face}<path d="M28 44Q26 14 50 14q24 1 22 31L60 26 49 42 38 27z" fill="${c}"/><path d="M52 64q12 12 8 30-3 16-12 22 5-18 3-30-3-14-9-20z" fill="${c}" stroke="${a}" stroke-width="1.4"/>${bow(52, 62, a, 6)}<path d="M30 40q-5 18 0 34" stroke="${a}" stroke-width="1.8" fill="none"/>`,
+      // 棒球帽短发: a cap with a forward brim over a short crop.
+      `<path d="M24 52Q15 20 50 17q35 0 25 35l-4 12-14-2-8-6-14 2-8 4z" fill="${c}"/>${face}<path d="M22 46q0-26 28-26 28 0 28 26 0 6-4 10H26q-4-4-4-10z" fill="#2b2a2e"/><path d="M50 20v26M32 24q4 10 2 22M68 24q-4 10-2 22" stroke="#4a4950" stroke-width="1.4" fill="none"/><path d="M24 54q26-6 52 0l14 4q4 6-8 7H20q-10-2 4-11z" fill="#232227" stroke="${a}" stroke-width="1"/><circle cx="50" cy="20" r="3" fill="#4a4950"/>`,
+      // 利落及肩直发: a blunt, even cut ending at the collarbone.
+      `<path d="M23 52Q13 18 50 15q37 0 27 37l1 26-14 3-8-8-12 6-14-4z" fill="${c}"/><path d="M24 44Q22 14 50 14q28 0 26 30L62 28 48 48 34 28z" fill="${c}"/>${face}<path d="M23 44q-2 16 2 30h13l1-8m38-22q2 16-2 30H62l-1-8" fill="${c}" stroke="${a}" stroke-width="1.4"/><path d="M25 74q25 6 50 0" stroke="${a}" stroke-width="2" fill="none"/>`,
     ];
     body = hair[shape];
   } else if (item.category === "crown") {
@@ -107,6 +119,12 @@ export function wardrobeArt(item: Item) {
       `<path d="M14 64q20-16 42-16" fill="none" stroke="#7a5b53" stroke-width="3.2" stroke-linecap="round"/><path d="M56 48q18 2 30 14" fill="none" stroke="#7a5b53" stroke-width="2" opacity=".55"/>${flower(38, 44, 8, "#f1cbdd")}${flower(64, 40, 6, "#f1cbdd")}<path d="M46 52v12m0 0-3 6m3-6 3 6" stroke="${gold}" stroke-width=".9" fill="none"/><path d="M74 46v10m0 0-2 5m2-5 2 5" stroke="${gold}" stroke-width=".9" fill="none"/>${pearl(46, 70, 2.2)}${pearl(74, 62, 2)}<path d="M30 36q4 6 0 11-4-5 0-11z" fill="#f1cbdd"/>`,
       // 绯色巫女结: folded white paper twist with two red cords.
       `<path d="M50 42l-22 12 8 10 14-8 14 8 8-10z" fill="#fbfbfd" stroke="${gold}" stroke-width=".8"/><path d="M28 54q-6 14 4 20m40-20q6 14-4 20" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/><path d="M32 74q-4 12 2 18m32-18q4 12-2 18" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round"/>${pearl(34, 92, 2.4)}${pearl(66, 92, 2.4)}<circle cx="50" cy="46" r="6" fill="${c}" stroke="${gold}" stroke-width="1"/>${pearl(50, 46, 2)}`,
+      // 珍珠发夹: a slim barrette of graduated pearls.
+      `<path d="M30 54l44-9" stroke="${gold}" stroke-width="3.4" stroke-linecap="round"/>${Array.from({ length: 6 }, (_, n) => `<circle cx="${33 + n * 7.4}" cy="${52 - n * 1.5}" r="${3.4 - Math.abs(n - 2.5) * 0.5}" fill="${a}" stroke="${gold}" stroke-width=".5"/>`).join("")}`,
+      // 棒球帽: a soft paneled crown with a forward brim.
+      `<path d="M18 56q2-30 32-30t32 30q0 6-5 10H23q-5-4-5-10z" fill="${c}"/><path d="M50 26v30M32 30q4 12 2 26M68 30q-4 12-2 26" stroke="${a}" stroke-width="1.6" fill="none"/><path d="M20 60q30-7 60 0l16 5q4 7-10 8H18q-12-3 2-13z" fill="${c}" stroke="${gold}" stroke-width="1.1"/><path d="M18 66q32-6 64 0" stroke="${a}" stroke-width="1.4" fill="none"/><circle cx="50" cy="27" r="3.6" fill="${a}" stroke="${gold}" stroke-width=".6"/>`,
+      // 丝巾发带: a folded scarf band with a knot and two tails.
+      `<path d="M16 62a34 14 0 0 1 68 0" fill="none" stroke="${c}" stroke-width="11"/><path d="M16 62a34 14 0 0 1 68 0" fill="none" stroke="${a}" stroke-width="1.6" stroke-dasharray="7 4" transform="translate(0 -3)"/><path d="M16 62a34 14 0 0 1 68 0" fill="none" stroke="${a}" stroke-width="1.6" stroke-dasharray="7 4" transform="translate(0 3)"/><path d="M62 52q14 6 17 20-11 3-16-6z" fill="${c}" stroke="${a}" stroke-width=".9"/><path d="M74 70q-4 14 2 24-9-8-8-22z" fill="${c}" stroke="${a}" stroke-width=".8"/><path d="M68 68q-9 12-7 24-6-13 4-25z" fill="${a}"/><circle cx="66" cy="60" r="5" fill="${c}" stroke="${gold}" stroke-width=".9"/>`,
     ][shape];
   } else if (item.category === "shoes") {
     const shoe = (x: number, y: number, n: number) =>
@@ -136,6 +154,12 @@ export function wardrobeArt(item: Item) {
           `<path d="M3 34h17l-2 10 20 4q8 9-6 11H3l-3-9z" fill="#f7f5f0"/><path d="M3 34q5-20 14-20 9 1 11 18" fill="#f7f5f0" stroke="${a}" stroke-width="1.4"/><path d="M14 34v14" stroke="${a}" stroke-width="1.2"/><path d="M4 26q9-6 15 0M4 18q8-6 14 0" fill="none" stroke="${c}" stroke-width="5"/><path d="M2 58h36" stroke="${a}" stroke-width="3"/>${pearl(19, 30, 1.8)}`,
           // 绯绳木屐: a geta with two teeth and a vermilion thong.
           `<path d="M1 30h36l1 7H0z" fill="#c8a882" stroke="${a}" stroke-width="1"/><path d="M5 37h7v16H5zM29 37h7v16h-7z" fill="#c8a882" stroke="${a}" stroke-width="1"/><path d="M18 30q-8-2-11 0" stroke="#c2564f" stroke-width="4" fill="none"/><path d="M18 30l-1 12m1-12 5 12" stroke="#c2564f" stroke-width="3" fill="none"/>${pearl(18, 32, 2)}${bow(30, 28, a, 4)}`,
+          // 白色小白鞋: a clean low profile with one side stripe.
+          `<path d="M3 30h17l-2 12 20 4q8 9-6 11H3l-3-9z" fill="#f7f7f5"/><path d="M2 50h36l1 8H1z" fill="${a}"/><path d="M1 58h37v6H1z" fill="#e4e2dc"/><path d="M8 36q10-3 18 2" stroke="${c}" stroke-width="3" fill="none"/><path d="M18 30v14" stroke="#dcdad4" stroke-width="1.4"/>${pearl(20, 32, 1.6)}`,
+          // 厚底老爹鞋: a chunky layered sole under panelled leather.
+          `<path d="M3 26h18l-3 14 21 3q8 8-5 10H3l-3-8z" fill="#eceae4"/><path d="M2 42h38l1 10H1z" fill="${a}"/><path d="M1 52h38v7H0z" fill="#cfccc4"/><path d="M1 59h37v4H0z" fill="#b9b6ae"/><path d="M7 32q11-3 19 3" stroke="${c}" stroke-width="3.4" fill="none"/><path d="M20 26v13" stroke="#d6d4ce" stroke-width="2"/>${pearl(21, 30, 1.8)}`,
+          // 切尔西短靴: a plain ankle boot with elastic gussets.
+          `<path d="M4 6h19l-2 34 20 5q7 10-6 12H4l-2-11z" fill="${c}"/><path d="M4 18h19M4 30h19" stroke="${a}" stroke-width="1.8"/><path d="M1 46h38v9H1z" fill="${a}"/><path d="M2 55h36v5H2z" fill="#4a4148"/><path d="M22 12h9v24h-9z" fill="${a}"/><path d="M22 22h9M22 30h9" stroke="${c}" stroke-width="1" opacity=".6"/><path d="M20 6h11" stroke="${gold}" stroke-width="2.4"/>`,
         ][shape]
       }</g>`;
     body = shoe(14, 34, -8) + shoe(53, 24, 8);
@@ -165,6 +189,12 @@ export function wardrobeArt(item: Item) {
       `<path d="M49 40Q32 20 12 26q-4 24 22 30 16 6 15 22z" fill="#f3d6e4" opacity=".9" stroke="${gold}" stroke-width=".8"/><path d="M49 44Q32 26 14 30M47 52Q30 44 16 50M45 62Q30 62 20 68" fill="none" stroke="#6d5a86" stroke-width="1.4"/>${[[20, 34, -1], [30, 40, -0.4], [16, 52, -1.2], [28, 58, -0.2], [20, 72, -1.4], [34, 70, 0.2]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="7" ry="4" transform="rotate(${r * 30} ${x} ${y})" fill="#f3d6e4" stroke="${a}" stroke-width=".6"/>`).join("")}${star(40, 78, 3)}${pearl(14, 44)}`,
       // 绯叶之羽: broad vermilion maple leaves on a dark branch.
       `<path d="M49 72L6 34l10 24-12 6 34 10-10 20 22-8 8 12z" fill="#c2565f" stroke="${gold}" stroke-width=".8"/><path d="M49 72L14 40m35 32L18 56m31 16L26 90" fill="none" stroke="#5c4a44" stroke-width="1.6"/>${[[22, 44, -20], [34, 52, 10], [18, 66, -30], [32, 72, 20], [24, 86, -12]].map(([x, y, r]) => `<path d="M${x} ${y}l-7-5 9-1-3-8 6 6 4-8-1 9 8-2-6 6 8 5-9-1 2 4-5-3z" transform="rotate(${r} ${x} ${y})" fill="#c2565f" stroke="${gold}" stroke-width=".5"/>`).join("")}${pearl(42, 60)}${star(16, 52, 3)}`,
+      // 极简薄纱披肩: a plain translucent cape.
+      `<path d="M49 42q-24 12-40 30 4 24 22 20 16-6 18-30z" fill="${shimmer}" opacity=".55" stroke="${gold}" stroke-width=".8"/><path d="M46 46Q32 62 14 76M46 56Q32 74 18 86" fill="none" stroke="${a}" stroke-width="1.3"/>${pearl(26, 84, 1.4)}`,
+      // 运动风衣薄片: short flared wind-shell panels.
+      `<path d="M49 62L8 34l12 26-12 6 34 10-12 20 22-8 8 10z" fill="${c}" stroke="${gold}" stroke-width=".8"/><path d="M49 62L16 42m33 20L20 66m29 8L28 92" fill="none" stroke="${a}" stroke-width="1.4"/><path d="M20 40q16 10 28 12" fill="none" stroke="${gold}" stroke-width="1"/>${star(20, 60, 3)}`,
+      // 风衣垂坠薄片: a long narrow coat flap.
+      `<path d="M49 26Q30 28 20 40q-4 34 6 62l24 12q10-32 8-62-2-18-9-26z" fill="${c}" stroke="${gold}" stroke-width=".9"/><path d="M46 32Q32 40 28 54M44 48Q32 58 30 74M42 64Q32 76 32 90" fill="none" stroke="${a}" stroke-width="1.3"/><path d="M26 40q8 30 2 60" fill="none" stroke="${gold}" stroke-width="1.1"/>${pearl(30, 96, 1.4)}`,
     ][shape];
     body =
       half +
@@ -196,6 +226,12 @@ export function wardrobeArt(item: Item) {
       `<path d="M44 110l16-52" stroke="#5c4a44" stroke-width="4"/>${Array.from({ length: 9 }, (_, n) => { const ang = -58 + n * 14.5; const rad = (ang * Math.PI) / 180; const x = 60 + Math.sin(rad) * 40, y = 58 - Math.cos(rad) * 40; return `<path d="M60 58L${x} ${y}" stroke="#5c4a44" stroke-width="1.6"/><path d="M60 58l${x - 60} ${y - 58}" stroke="${n % 2 ? c : a}" stroke-width="7" opacity=".7"/>`; }).join("")}<path d="M20 46q40-24 80 0" fill="none" stroke="${c}" stroke-width="6" opacity=".55"/><path d="M26 42q34-20 68 0" fill="none" stroke="${gold}" stroke-width="1.4"/>${flower(52, 30, 7, "#f1cbdd")}${flower(76, 34, 5.4, "#f1cbdd")}${pearl(60, 58, 3)}`,
       // 绯色御币: a sakaki branch with folded paper streamers.
       `<path d="M48 112L58 44" stroke="#8a6a52" stroke-width="5"/><path d="M58 44q8-14 20-18M58 44q10 4 18 14" fill="none" stroke="#8a6a52" stroke-width="3"/>${[[52, 30, -1], [62, 24, 0], [72, 26, 1], [64, 36, 0.4], [78, 36, 1.2]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="8" ry="3.6" transform="rotate(${r * 30} ${x} ${y})" fill="#9ec7a4" stroke="${gold}" stroke-width=".5"/>`).join("")}${[40, 52, 64, 76].map((x) => `<path d="M${x} 52l3 18-3 0z" fill="#fbfbfd" stroke="${gold}" stroke-width=".6"/>`).join("")}${[40, 52, 64, 76].map((x) => `<path d="M${x + 1} 52v-6" stroke="${c}" stroke-width="1.4"/>`).join("")}${pearl(59, 74, 2.4)}`,
+      // 银色钢笔: a slim pen with a clip and a pointed nib.
+      `<path d="M42 112L62 40" stroke="#d9dde4" stroke-width="5"/><path d="M44 104l18-60" stroke="${a}" stroke-width="1.2"/><path d="M60 44l5-14 8 3-5 14z" fill="#d9dde4" stroke="${gold}" stroke-width=".7"/><path d="M67 32l3-9 4 1-3 9z" fill="${gold}"/><path d="M58 50l4-12" stroke="#8a8692" stroke-width="2"/><path d="M62 58l5-4" stroke="${gold}" stroke-width="1.6"/>${pearl(58, 66, 2)}`,
+      // 运动水壶: a squat ribbed bottle with a screw cap.
+      `<path d="M46 112L58 56" stroke="${c}" stroke-width="6"/><rect x="52" y="30" width="22" height="40" rx="6" fill="${c}" stroke="${gold}" stroke-width="1"/><path d="M52 40h22M52 48h22M52 56h22" stroke="${a}" stroke-width="2"/><rect x="57" y="20" width="12" height="10" rx="3" fill="${a}" stroke="${gold}" stroke-width=".8"/><path d="M69 24q8-2 10 6" fill="none" stroke="${gold}" stroke-width="2"/><rect x="50" y="68" width="26" height="6" rx="2" fill="${a}"/><path d="M60 76l3 30" stroke="${c}" stroke-width="3"/>`,
+      // 折叠长柄伞: a furled canopy with a hooked handle.
+      `<path d="M52 112L62 90" stroke="#5a5560" stroke-width="4"/><path d="M62 88q10-6 12-22 2-20-8-30-6 26-4 52z" fill="${c}" stroke="${gold}" stroke-width="1"/><path d="M63 60q6-8 7-20M66 74q7-6 7-18" fill="none" stroke="${a}" stroke-width="1.2"/><path d="M64 36q6-4 10 2" fill="none" stroke="${gold}" stroke-width="2.6"/><path d="M52 112q-6 4-2 8 4 3 8-3" fill="none" stroke="#5a5560" stroke-width="5" stroke-linecap="round"/>${pearl(64, 34, 2.6)}`,
     ][shape];
   }
   return `<svg viewBox="0 0 100 120" aria-hidden="true" focusable="false" class="item-art" data-art-shape="${item.category}-${shape}"><defs><linearGradient id="${uid}-silk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c}"/><stop offset=".68" stop-color="${c}"/><stop offset=".68" stop-color="${a}"/><stop offset="1" stop-color="${a}"/></linearGradient><filter id="${uid}-shadow" x="-30%" y="-20%" width="160%" height="155%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#897293" flood-opacity=".16"/></filter></defs><g filter="url(#${uid}-shadow)">${body}</g></svg>`;

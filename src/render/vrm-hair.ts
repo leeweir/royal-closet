@@ -21,6 +21,9 @@ export const HAIR_COLORS = [
   "#3a2f43",
   "#a8494a",
   "#3d4a44",
+  "#4a3f36",
+  "#2b2a2e",
+  "#6b5847",
 ];
 export type HairTemplate = {
   geometry: T.BufferGeometry;
@@ -223,7 +226,13 @@ export function createVrmHair(template: HairTemplate, item: Item) {
   }
   // The buns, ponytail and sport braid add their own volume on top of the
   // refined template strands, in the character's bind coordinates.
-  if (item.shape === 7 || item.shape === 9 || item.shape === 11) {
+  if (
+    item.shape === 7 ||
+    item.shape === 9 ||
+    item.shape === 11 ||
+    item.shape === 15 ||
+    item.shape === 17
+  ) {
     const material = new MToonMaterial({
       color: color.clone().multiplyScalar(0.72),
       shadeColorFactor: color.clone().multiplyScalar(0.42),
@@ -312,6 +321,50 @@ export function createVrmHair(template: HairTemplate, item: Item) {
       band.position.set(0, 1.62, -0.3);
       band.rotation.x = Math.PI / 2;
       root.add(band);
+    } else if (item.shape === 15) {
+      // 低马尾: a smooth tail gathered at the nape, falling over one shoulder.
+      for (let j = 0; j < 4; j++)
+        root.add(
+          tress(
+            [
+              [0.02 * (j - 1.5), 3.06, -0.16],
+              [0.05 * (j - 1.5), 2.9, -0.3 - j * 0.02],
+              [0.09 * (j - 1.5), 2.6, -0.36 - j * 0.03],
+              [0.13 * (j - 1.5), 2.26, -0.32 - j * 0.03],
+              [0.15 * (j - 1.5), 1.98, -0.24 - j * 0.02],
+            ],
+            0.062,
+            0.042,
+            material,
+          ),
+        );
+      const tie = new T.Mesh(
+        new T.TorusGeometry(0.05, 0.013, 8, 22),
+        new MToonMaterial({
+          color: new T.Color(item.accent),
+          shadeColorFactor: new T.Color(item.accent).multiplyScalar(0.7),
+        }),
+      );
+      tie.position.set(0, 3.0, -0.24);
+      tie.rotation.x = 0.7;
+      root.add(tie);
+    } else {
+      // 利落及肩直发: a blunt cut that ends at the collarbone.
+      for (const side of [-1, 1])
+        for (let j = -1; j <= 1; j++)
+          root.add(
+            tress(
+              [
+                [side * (0.2 + j * 0.03), 3.02, -0.08 + j * 0.06],
+                [side * (0.26 + j * 0.03), 2.8, -0.14 + j * 0.07],
+                [side * (0.29 + j * 0.03), 2.5, -0.16 + j * 0.07],
+                [side * (0.3 + j * 0.03), 2.2, -0.12 + j * 0.06],
+              ],
+              0.058,
+              0.04,
+              material,
+            ),
+          );
     }
   }
   return root;
