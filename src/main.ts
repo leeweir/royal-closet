@@ -94,9 +94,23 @@ let closetSets = true;
 let setFilter = "all" as "all" | "owned";
 let runwayEntry: { theme: number; outfit: Save["outfit"] } | null = null;
 let craftPage = 0,
+  closetPage = 0,
   journalPage = 0,
   journalTab = "daily";
 const craftPageSize = () => (matchMedia("(max-width:600px)").matches ? 2 : 4);
+/** The closet grid shows two rows of three hangers; more cards page. */
+const CLOSET_PAGE_SIZE = 6;
+function closetSlice<X>(list: X[]) {
+  const total = Math.max(1, Math.ceil(list.length / CLOSET_PAGE_SIZE));
+  closetPage = Math.max(0, Math.min(closetPage, total - 1));
+  return {
+    shown: list.slice(
+      closetPage * CLOSET_PAGE_SIZE,
+      (closetPage + 1) * CLOSET_PAGE_SIZE,
+    ),
+    pager: total > 1 ? pages("closet-page", closetPage, total) : "",
+  };
+}
 function pages(action: string, page: number, total: number) {
   return `<div class="page-controls"><button class="soft-button" data-action="${action}" data-id="${page - 1}" ${page === 0 ? "disabled" : ""}>${icon("chevron-left")} 上一页</button><span>${page + 1} / ${total}</span><button class="soft-button" data-action="${action}" data-id="${page + 1}" ${page >= total - 1 ? "disabled" : ""}>下一页 ${icon("chevron-right")}</button></div>`;
 }
@@ -262,6 +276,7 @@ function renderCloset() {
       (filter === "all" || save.owned.includes(i.id)),
   );
   const heading = `<div class="wardrobe-header"><div><h2>我的衣橱 <span>${save.owned.length}<em> / ${ITEMS.length}</em></span></h2></div><div class="wardrobe-actions"><button class="soft-button compact fitting-toggle" data-action="fitting" aria-pressed="${fitting.active}">${icon("shirt")} ${fitting.active ? "退出试穿" : "试穿模式"}</button><button class="soft-button compact" data-action="slots" ${fitting.active ? 'disabled title="试穿搭配不能收藏，请先退出试穿"' : ""}>${icon("bookmark")} 搭配收藏</button></div></div><div class="category-tabs" role="group" aria-label="服饰分类"><button class="category ${closetSets ? "active" : ""}" data-action="sets" aria-pressed="${closetSets}">${icon("sparkles")}<span>套装</span></button>${categories.map((c) => `<button class="category ${!closetSets && category === c.id ? "active" : ""}" data-action="category" data-id="${c.id}" aria-pressed="${!closetSets && category === c.id}">${icon(c.icon)}<span>${c.name}</span></button>`).join("")}</div>`;
+  const itemPage = closetSlice(list);
   if (closetSets) {
     const sets = COLLECTIONS.filter(
       (set) =>
@@ -271,7 +286,8 @@ function renderCloset() {
     const complete = COLLECTIONS.filter((set) =>
       set.items.every((id) => save.owned.includes(id)),
     ).length;
-    content.innerHTML = `${heading}<div class="wardrobe-filter"><span>${fitting.active ? "试穿不保存 · 离开衣橱恢复" : "一键换齐六件 · 未拥有也可试穿"}</span><span class="filter-actions">已集齐 ${complete} / ${COLLECTIONS.length}<button data-action="set-filter">${setFilter === "all" ? "全部套装" : "已拥有"} ${icon("chevron-right")}</button></span></div><div class="items-grid collection-grid">${sets
+    const setPage = closetSlice(sets);
+    content.innerHTML = `${heading}<div class="wardrobe-filter"><span>${fitting.active ? "试穿不保存 · 离开衣橱恢复" : "一键换齐六件 · 未拥有也可试穿"}</span><span class="filter-actions">已集齐 ${complete} / ${COLLECTIONS.length}<button data-action="set-filter">${setFilter === "all" ? "全部套装" : "已拥有"} ${icon("chevron-right")}</button></span></div><div class="items-grid collection-grid">${setPage.shown
       .map((set) => {
         const owned = set.items.filter((id) => save.owned.includes(id)).length;
         const active = set.items.every(
@@ -280,10 +296,10 @@ function renderCloset() {
         const dress = ITEM[`dress-${set.id}`];
         return `<div class="hanger"><button class="item-card collection-card ${active ? "selected" : ""} ${owned === 6 ? "" : "locked"}" data-action="equip-set" data-id="${set.id}" aria-pressed="${active}" aria-label="${set.name}套装，已拥有 ${owned}/6 件"><span class="item-status">${icon(active ? "check" : owned === 6 ? "sparkles" : "lock")}</span><div class="item-visual">${itemArt(dress)}<span class="set-seal">6 件套</span></div><span class="item-name">${set.name}</span><span class="item-stars"><small>${dress.style}</small></span><span class="collection-progress">${active ? (fitting.active ? "正在试穿 · 不保存" : "正在穿着") : owned === 6 ? (fitting.active ? "试穿整套" : "一键穿上") : `试穿 · 已集齐 ${owned}/6`}</span></button></div>`;
       })
-      .join("")}</div>${sets.length ? "" : `<p class="empty-note">还没有集齐任何一套。未集齐的单品可在织梦工坊制作。</p>`}<div class="collection-note">${icon("wand-sparkles")} 成套穿搭，也有不同的冒险能力。<button class="text-button" data-action="abilities">查看当前能力</button></div><button class="adventure-teaser" data-action="nav" data-id="map"><span class="teaser-icon">${icon("compass")}</span><span><b>穿上整套心动，向童话出发</b><small>未集齐的单品可在织梦工坊制作</small></span>${icon("chevron-right")}</button>`;
+      .join("")}</div>${setPage.pager}${sets.length ? "" : `<p class="empty-note">还没有集齐任何一套。未集齐的单品可在织梦工坊制作。</p>`}<div class="collection-note">${icon("wand-sparkles")} 成套穿搭，也有不同的冒险能力。<button class="text-button" data-action="abilities">查看当前能力</button></div><button class="adventure-teaser" data-action="nav" data-id="map"><span class="teaser-icon">${icon("compass")}</span><span><b>穿上整套心动，向童话出发</b><small>未集齐的单品可在织梦工坊制作</small></span>${icon("chevron-right")}</button>`;
     return;
   }
-  content.innerHTML = `${heading}<div class="wardrobe-filter"><span>${fitting.active ? "试穿不保存 · 离开衣橱恢复" : "轻点换装 · 未拥有可试穿"}</span><button data-action="filter">${filter === "all" ? "全部服饰" : "已拥有"} ${icon("chevron-right")}</button></div><div class="items-grid">${list
+  content.innerHTML = `${heading}<div class="wardrobe-filter"><span>${fitting.active ? "试穿不保存 · 离开衣橱恢复" : "轻点换装 · 未拥有可试穿"}</span><button data-action="filter">${filter === "all" ? "全部服饰" : "已拥有"} ${icon("chevron-right")}</button></div><div class="items-grid">${itemPage.shown
     .map((i) => {
       const owned = save.owned.includes(i.id),
         active = look.outfit[category] === i.id;
@@ -291,7 +307,7 @@ function renderCloset() {
     })
     .join(
       "",
-    )}</div><div class="dye-row"><span>${icon("palette")} 染色</span>${DYES.map(([c, name]) => `<button class="swatch ${look.dye === c ? "active" : ""}" aria-pressed="${look.dye === c}" style="--swatch:${c}" data-action="dye" data-id="${c}" aria-label="染成${name}" title="${name}"></button>`).join("")}<button class="reset-dye" data-action="dye" data-id="reset" aria-label="恢复服装原色">${icon("rotate-ccw")}</button></div><button class="adventure-teaser" data-action="nav" data-id="map"><span class="teaser-icon">${icon("compass")}</span><span><b>衣橱之外，还有整个童话世界</b><small>去冒险收集材料，制作新衣</small></span>${icon("chevron-right")}</button>`;
+    )}</div>${itemPage.pager}<div class="dye-row"><span>${icon("palette")} 染色</span>${DYES.map(([c, name]) => `<button class="swatch ${look.dye === c ? "active" : ""}" aria-pressed="${look.dye === c}" style="--swatch:${c}" data-action="dye" data-id="${c}" aria-label="染成${name}" title="${name}"></button>`).join("")}<button class="reset-dye" data-action="dye" data-id="reset" aria-label="恢复服装原色">${icon("rotate-ccw")}</button></div><button class="adventure-teaser" data-action="nav" data-id="map"><span class="teaser-icon">${icon("compass")}</span><span><b>衣橱之外，还有整个童话世界</b><small>去冒险收集材料，制作新衣</small></span>${icon("chevron-right")}</button>`;
 }
 function renderMap() {
   const current = nextStage(save),
@@ -764,6 +780,7 @@ function handleAction(b: HTMLButtonElement) {
       break;
     case "sets":
       closetSets = true;
+      closetPage = 0;
       renderCloset();
       break;
     case "equip-set": {
@@ -807,14 +824,21 @@ function handleAction(b: HTMLButtonElement) {
     case "category":
       closetSets = false;
       category = id as Category;
+      closetPage = 0;
       renderCloset();
       break;
     case "filter":
       filter = filter === "all" ? "owned" : "all";
+      closetPage = 0;
       renderCloset();
       break;
     case "set-filter":
       setFilter = setFilter === "all" ? "owned" : "all";
+      closetPage = 0;
+      renderCloset();
+      break;
+    case "closet-page":
+      closetPage = Number(id);
       renderCloset();
       break;
     case "craft-page":
