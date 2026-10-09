@@ -701,20 +701,64 @@ export function createCrown(item: Item): T.Group {
       );
     }
   } else if (item.shape === 16) {
-    // 棒球帽: a soft crown, a forward brim and a small button on top.
+    // 棒球帽: a shallow crown that hugs the head, six seam lines on its
+    // surface, and a brim that reaches forward past the brow.
     const cap = toon(item.color, "anime-accessory");
-    const panel = toon(item.accent, "anime-accessory");
-    for (let i = 0; i < 5; i++) {
-      const theta = -0.9 + i * 0.45;
-      a.add(blade(0.34, 0.21, 0.05), i % 2 ? cap : panel, {
-        p: [Math.sin(theta) * 0.06, 0.28, Math.cos(theta) * 0.06],
-        r: [0.42, theta, 0],
-      });
+    const seam = toon(item.accent, "anime-accessory");
+    const R = 0.268,
+      cy = 0.03,
+      flat = 0.68;
+    a.add(
+      new T.SphereGeometry(R, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.52),
+      cap,
+      { p: [0, cy, -0.004], s: [1, flat, 1.02] },
+    );
+    for (let i = 0; i < 6; i++) {
+      const theta = (i / 6) * Math.PI * 2;
+      a.tube(
+        Array.from({ length: 13 }, (_, j): P => {
+          const t = j / 12,
+            phi = t * Math.PI * 0.52;
+          return [
+            Math.sin(theta) * R * Math.sin(phi),
+            cy + Math.cos(phi) * R * flat,
+            -0.004 + Math.cos(theta) * R * 1.02 * Math.sin(phi),
+          ];
+        }),
+        0.0045,
+        seam,
+      );
     }
-    const brim = new T.CylinderGeometry(0.315, 0.315, 0.024, 22);
-    a.add(brim, cap, { p: [0, 0.29, 0.2], s: [1, 1, 1.34] });
-    a.torus([0, 0.05, 0], 0.276, 0.011, cap, [Math.PI / 2, 0, 0]);
-    a.sphere([0, 0.5, 0], [0.026, 0.022, 0.026], cap);
+    // Band on the brow line, tucked under the dome.
+    a.tube(
+      Array.from({ length: 33 }, (_, i): P => {
+        const angle = (i / 32) * Math.PI * 2;
+        return [
+          Math.sin(angle) * R * 1.01,
+          cy + 0.012,
+          -0.004 + Math.cos(angle) * R * 1.03,
+        ];
+      }),
+      0.012,
+      cap,
+    );
+    // Brim: a wide flat plate that projects forward past the brow, built
+    // from a fan of blades so it stays crisp at the outer edge.
+    const brimY = cy - 0.03;
+    a.add(new T.CylinderGeometry(0.245, 0.245, 0.016, 24), cap, {
+      p: [0, brimY, 0.14],
+      s: [1, 1, 1.15],
+    });
+    a.add(new T.SphereGeometry(0.245, 24, 8, 0, Math.PI, Math.PI / 2), cap, {
+      p: [0, brimY, 0.14],
+      s: [1, 0.5, 1.15],
+    });
+    for (let i = -3; i <= 3; i++)
+      a.add(blade(0.1, 0.03, 0.008), seam, {
+        p: [i * 0.038, brimY + 0.008, 0.2],
+        r: [-Math.PI / 2, 0, i * 0.06],
+      });
+    a.sphere([0, cy + R * flat + 0.006, -0.004], [0.021, 0.014, 0.021], seam);
   } else {
     // 丝巾发带: a folded silk scarf knotted over the hair.
     const silk = toon(item.color, "anime-accessory");
@@ -1405,71 +1449,94 @@ export function createWings(item: Item): T.Group {
       for (let i = 0; i < 4; i++)
         a.sphere(p(0.34 + i * 0.2, 0.52 - i * 0.06, 0.07), [0.014, 0.018, 0.014], metal);
     } else if (item.shape === 15) {
-      // 极简薄纱披肩: a plain tulle cape that drapes to the elbows.
+      // 极简薄纱披肩: a layered tulle cape that ripples and gathers at the
+      // elbows. Three offset sweeps give it folds, so it reads as cloth and
+      // not as one flat disc.
       const gauze = toon(item.color, "anime-accessory");
       gauze.transparent = true;
-      gauze.opacity = 0.42;
+      gauze.opacity = 0.4;
       gauze.depthWrite = false;
-      const cape = gridPoints([
-        [0, -0.02, 0.02],
-        [0.52, -0.14, -0.08],
-        [0.82, -0.4, -0.18],
-        [0.66, -0.86, -0.16],
-      ] as P[]);
-      const capePath = cape.map((v) => p(v.x, v.y, v.z));
-      a.add(ribbon(capePath, 0.3), gauze);
-      a.add(ribbon(capePath, 0.09), light);
-      a.tube(
+      const sweeps: P[][] = [
         [
-          [-0.44, 2.53, -0.08],
-          [0, 2.5, -0.14],
-          [0.44, 2.53, -0.08],
+          [0.05, -0.02, 0.05],
+          [0.34, -0.26, -0.02],
+          [0.62, -0.62, -0.1],
+          [0.58, -1.0, -0.14],
         ],
-        0.008,
-        edge,
-      );
+        [
+          [0.04, 0.04, 0.02],
+          [0.4, -0.14, -0.06],
+          [0.78, -0.48, -0.12],
+          [0.74, -0.9, -0.16],
+        ],
+        [
+          [0.03, -0.1, 0.02],
+          [0.3, -0.36, -0.05],
+          [0.5, -0.74, -0.1],
+          [0.44, -1.06, -0.12],
+        ],
+      ];
+      for (let i = 0; i < sweeps.length; i++) {
+        const path = sweeps[i].map((v) => p(...v));
+        a.add(ribbon(path, i === 1 ? 0.2 : 0.17), i % 2 ? gauze : soft);
+        a.tube(path, 0.005, edge);
+      }
+      a.sphere(p(0.04, 0.0, 0.06), [0.05, 0.06, 0.05], metal);
     } else if (item.shape === 16) {
-      // 运动风衣薄片: two short wind-shell panels that flare off the shoulders.
+      // 运动风衣薄片: short wind-shell panels cut on a diagonal, layered so
+      // the shoulder seam and hem stay readable.
       const shell = toon(item.color, "anime-accessory");
-      for (let i = 0; i < 3; i++) {
-        const length = 1.02 - i * 0.16;
-        const start: P = p(0.14 + i * 0.04, 0.06 - i * 0.14, -i * 0.03);
-        const rotation = side * (-0.52 - i * 0.46);
+      for (let i = 0; i < 4; i++) {
+        const length = 0.98 - i * 0.13;
+        const start: P = p(0.15 + i * 0.02, 0.08 - i * 0.15, -i * 0.03);
+        const rotation = side * (-0.62 - i * 0.3);
+        a.add(blade(length, 0.17, 0.05, 0.03), i % 2 ? light : shell, {
+          p: start,
+          r: [0, 0, rotation],
+        });
         const matrix = new T.Matrix4().compose(
           new T.Vector3(...start),
           new T.Quaternion().setFromEuler(new T.Euler(0, 0, rotation)),
           new T.Vector3(1, 1, 1),
         );
-        a.add(blade(length, 0.21, 0.05, 0.02), i % 2 ? light : shell, {
-          p: start,
-          r: [0, 0, rotation],
-        });
         a.tube(
           (
             [
-              [0, 0.02, 0.014],
-              [0, length * 0.55, 0.05],
-              [0, length * 0.96, 0.02],
+              [0, 0.02, 0.015],
+              [0, length * 0.5, 0.055],
+              [0, length * 0.95, 0.02],
             ] as P[]
           ).map((v) => new T.Vector3(...v).applyMatrix4(matrix).toArray() as P),
           0.004,
           edge,
         );
       }
-      for (let i = 0; i < 4; i++)
-        a.sphere(p(0.2 + i * 0.16, -0.1 + i * 0.03, 0.06), [0.014, 0.014, 0.014], metal);
+      a.sphere(p(0.16, 0.06, 0.05), [0.038, 0.05, 0.036], metal);
     } else {
-      // 风衣垂坠薄片: a long, narrow coat flap hanging past the hip.
+      // 风衣垂坠薄片: a long coat panel with a folded lapel edge and a
+      // weighted hem, hanging well past the hip.
       const shell = toon(item.color, "anime-accessory");
-      const flap: P[] = [
-        [0.17, 0.02, 0.04],
-        [0.46, -0.2, -0.08],
-        [0.78, -0.62, -0.2],
-        [0.96, -1.06, -0.3],
+      const outer: P[] = [
+        [0.16, 0.06, 0.05],
+        [0.44, -0.16, -0.04],
+        [0.72, -0.6, -0.14],
+        [0.84, -1.08, -0.22],
       ];
-      a.add(ribbon(flap.map((v) => p(...v)), 0.26), shell);
-      a.tube(flap.map((v) => p(...v)), 0.0045, edge);
-      a.add(ribbon(flap.map((v) => p(...v)), 0.075), light);
+      const inner: P[] = [
+        [0.13, 0.02, 0.06],
+        [0.34, -0.2, -0.02],
+        [0.55, -0.62, -0.1],
+        [0.62, -1.04, -0.16],
+      ];
+      a.add(ribbon(outer.map((v) => p(...v)), 0.3), shell);
+      a.add(ribbon(inner.map((v) => p(...v)), 0.16), light);
+      a.tube(outer.map((v) => p(...v)), 0.006, edge);
+      a.tube(inner.map((v) => p(...v)), 0.004, edge);
+      // A belt tab and a button anchor the panel to the coat.
+      a.add(new T.BoxGeometry(0.09, 0.045, 0.03), light, {
+        p: p(0.3, -0.5, 0.02),
+      });
+      a.sphere(p(0.36, -0.86, 0.0), [0.014, 0.014, 0.014], metal);
     }
     a.sphere(p(0.12, -0.06, 0.042), [0.028, 0.1, 0.043], metal);
     a.complete();
