@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { FittingRoom } from "../src/simulation/fitting";
 import { freshSave } from "../src/simulation/game";
+import { SET_COUNT } from "../src/simulation/data";
 
 test("trying unowned sets, owned items and dye leaves the entire save untouched", () => {
   const saved = freshSave();
@@ -56,7 +57,7 @@ test("invalid preview choices never start or damage a fitting", () => {
     room = new FittingRoom();
   assert.equal(room.tryItem(saved, "missing-item"), false);
   assert.equal(room.tryCollection(saved, -1), false);
-  assert.equal(room.tryCollection(saved, 6), false);
+  assert.equal(room.tryCollection(saved, SET_COUNT), false);
   assert.equal(room.dye(saved, "invalid"), false);
   assert.equal(room.active, false);
   room.tryCollection(saved, 3);

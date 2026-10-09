@@ -11,6 +11,16 @@ export const HAIR_COLORS = [
   "#88b6cc",
   "#655572",
   "#d5b471",
+  "#2f2c3c",
+  "#3b3450",
+  "#5c4a3e",
+  "#8a5f4a",
+  "#c9a68d",
+  "#7d6b58",
+  "#d8a8b6",
+  "#3a2f43",
+  "#a8494a",
+  "#3d4a44",
 ];
 export type HairTemplate = {
   geometry: T.BufferGeometry;
@@ -209,6 +219,99 @@ export function createVrmHair(template: HairTemplate, item: Item) {
         tie.rotation.x = Math.PI / 2;
       }
       root.add(tie);
+    }
+  }
+  // The buns, ponytail and sport braid add their own volume on top of the
+  // refined template strands, in the character's bind coordinates.
+  if (item.shape === 7 || item.shape === 9 || item.shape === 11) {
+    const material = new MToonMaterial({
+      color: color.clone().multiplyScalar(0.72),
+      shadeColorFactor: color.clone().multiplyScalar(0.42),
+      shadingToonyFactor: 0.65,
+      giEqualizationFactor: 0.9,
+      vertexColors: true,
+      side: T.DoubleSide,
+    });
+    if (item.shape === 7) {
+      // 双环飞仙髻: two rings of hair high on the crown, each with a fall.
+      for (const side of [-1, 1]) {
+        for (let k = 0; k < 4; k++) {
+          root.add(
+            tress(
+              Array.from({ length: 13 }, (_, i) => {
+                const t = i / 12;
+                const angle = t * Math.PI * 1.85 + (k * Math.PI) / 2;
+                return [
+                  side * (0.22 + Math.cos(angle) * 0.185),
+                  3.44 + Math.sin(angle) * 0.185 + k * 0.01,
+                  -0.06 + Math.sin(angle * 0.5) * 0.085,
+                ];
+              }),
+              0.052,
+              0.04,
+              material,
+            ),
+          );
+        }
+        root.add(
+          tress(
+            [
+              [side * 0.22, 3.4, -0.11],
+              [side * 0.32, 3.14, -0.22],
+              [side * 0.27, 2.72, -0.25],
+              [side * 0.31, 2.26, -0.2],
+            ],
+            0.05,
+            0.038,
+            material,
+          ),
+        );
+      }
+    } else if (item.shape === 9) {
+      // 元气高马尾: a swept tail from the crown, plus two loose wisps.
+      for (let j = 0; j < 6; j++)
+        root.add(
+          tress(
+            [
+              [0, 3.5, -0.14],
+              [0.032 * (j - 2.5), 3.34, -0.42 - j * 0.018],
+              [0.052 * (j - 2.5), 2.96, -0.62 - j * 0.024],
+              [0.072 * (j - 2.5), 2.44, -0.64 - j * 0.02],
+              [0.094 * (j - 2.5), 1.96, -0.54 - j * 0.016],
+            ],
+            0.078,
+            0.052,
+            material,
+          ),
+        );
+    } else if (item.shape === 11) {
+      // 飒爽运动辫: one tight braid down the back, banded at the end.
+      for (let k = 0; k < 3; k++)
+        root.add(
+          tress(
+            Array.from({ length: 17 }, (_, i) => {
+              const t = i / 16;
+              return [
+                0.042 * Math.sin(t * 19 + k * 2.1),
+                3.24 - t * 1.72,
+                -0.3 + 0.03 * Math.cos(t * 19 + k * 2.1),
+              ];
+            }),
+            0.066,
+            0.048,
+            material,
+          ),
+        );
+      const band = new T.Mesh(
+        new T.TorusGeometry(0.062, 0.016, 8, 22),
+        new MToonMaterial({
+          color: new T.Color(item.accent),
+          shadeColorFactor: new T.Color(item.accent).multiplyScalar(0.7),
+        }),
+      );
+      band.position.set(0, 1.62, -0.3);
+      band.rotation.x = Math.PI / 2;
+      root.add(band);
     }
   }
   return root;

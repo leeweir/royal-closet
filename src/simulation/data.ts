@@ -28,6 +28,16 @@ const palettes = [
   ["#83bfe0", "#f0f8ff"],
   ["#596eab", "#e4d1ff"],
   ["#e8c275", "#fff8ea"],
+  ["#4a4a5e", "#e8e4f5"],
+  ["#c2564f", "#f6e7bd"],
+  ["#5f5a93", "#f2efe6"],
+  ["#3f6ea8", "#fbfbfd"],
+  ["#7a4b6b", "#f7e9f2"],
+  ["#e08a6d", "#fff4ec"],
+  ["#6f8fbf", "#ffe9a8"],
+  ["#6d5a86", "#f3e4f7"],
+  ["#c2565f", "#fdf6ee"],
+  ["#5f9e8f", "#f3f0e2"],
 ];
 const names: Record<Category, string[]> = {
   dress: [
@@ -37,6 +47,15 @@ const names: Record<Category, string[]> = {
     "冰湖圆舞曲",
     "星夜咏叹",
     "晨曦加冕",
+    "水墨仙裳",
+    "齐胸襦裙",
+    "青衿学生装",
+    "海风水手服",
+    "奶油针织",
+    "跃动运动服",
+    "甜梦洛丽塔",
+    "和风振袖",
+    "绯樱巫女服",
   ],
   hair: [
     "银月长发",
@@ -45,8 +64,33 @@ const names: Record<Category, string[]> = {
     "冰蓝长卷",
     "暮色短发",
     "金色诗篇",
+    "墨玉长直",
+    "双环飞仙髻",
+    "齐耳学生发",
+    "元气高马尾",
+    "蓬松空气卷",
+    "飒爽运动辫",
+    "蔷薇姬卷",
+    "夜樱公主切",
+    "绯穗侧结",
   ],
-  crown: ["星愿王冠", "蔷薇花环", "新叶桂冠", "水晶冠冕", "月之环", "日光王冠"],
+  crown: [
+    "星愿王冠",
+    "蔷薇花环",
+    "新叶桂冠",
+    "水晶冠冕",
+    "月之环",
+    "日光王冠",
+    "玉簪流苏",
+    "金步摇冠",
+    "素色发带",
+    "红领巾结",
+    "毛线发圈",
+    "运动发带",
+    "蕾丝发冠",
+    "夜樱簪花",
+    "绯色巫女结",
+  ],
   shoes: [
     "月光舞鞋",
     "蔷薇缎鞋",
@@ -54,6 +98,15 @@ const names: Record<Category, string[]> = {
     "琉璃舞鞋",
     "星夜长靴",
     "金色足音",
+    "云纹绣鞋",
+    "丝绦履",
+    "圆头学生鞋",
+    "白线帆布鞋",
+    "软绒短靴",
+    "轻跃运动鞋",
+    "厚底洛丽塔鞋",
+    "风吕敷足袋",
+    "绯绳木屐",
   ],
   wings: [
     "微光蝶翼",
@@ -62,6 +115,15 @@ const names: Record<Category, string[]> = {
     "冰晶羽翼",
     "星河之翼",
     "曙光天使",
+    "云纹轻纱",
+    "凤羽披帛",
+    "纸鸢书页",
+    "风帆羽翼",
+    "初雪绒羽",
+    "疾风之羽",
+    "蕾丝蝶翼",
+    "夜樱薄翼",
+    "绯叶之羽",
   ],
   wand: [
     "星愿魔杖",
@@ -70,8 +132,59 @@ const names: Record<Category, string[]> = {
     "冰晶法杖",
     "月轮之杖",
     "太阳权杖",
+    "青玉毛笔",
+    "牡丹团扇",
+    "黄铜钢笔",
+    "海风罗盘",
+    "毛线纺锤",
+    "跃动接力棒",
+    "蕾丝洋伞",
+    "夜樱折扇",
+    "绯色御币",
   ],
 };
+export const STYLES: Style[] = [
+  "梦幻",
+  "甜美",
+  "自然",
+  "优雅",
+  "梦幻",
+  "优雅",
+  "自然",
+  "优雅",
+  "自然",
+  "甜美",
+  "自然",
+  "甜美",
+  "甜美",
+  "梦幻",
+  "优雅",
+];
+/** Series label and set name both follow the dress, so they never drift. */
+export const SERIES = [
+  "月光",
+  "蔷薇",
+  "森林",
+  "冰湖",
+  "星夜",
+  "晨曦",
+  "水墨",
+  "芙蓉",
+  "青衿",
+  "海风",
+  "云暖",
+  "跃风",
+  "甜梦",
+  "夜樱",
+  "绯叶",
+];
+export const SET_COUNT = 15;
+/**
+ * Sets 0 and 1 form the starter wardrobe. Every later set is drawn at the
+ * atelier, so its blueprint hangs in one of the five kingdoms; the new
+ * styles share those regions rather than opening a sixth.
+ */
+const ITEM_REGION = [0, 0, 0, 1, 2, 3, 4, 2, 3, 1, 4, 2, 3, 4, 1];
 export const ITEMS: Item[] = categories.flatMap(({ id }) =>
   names[id].map((name, i) => ({
     id: `${id}-${i}`,
@@ -79,18 +192,22 @@ export const ITEMS: Item[] = categories.flatMap(({ id }) =>
     category: id,
     color: palettes[i][0],
     accent: palettes[i][1],
-    style: (["梦幻", "甜美", "自然", "优雅", "梦幻", "优雅"] as Style[])[i],
-    rarity: i < 2 ? 3 : i < 4 ? 4 : 5,
+    style: STYLES[i],
+    rarity: i < 2 ? 3 : i < 6 ? 4 : 5,
     shape: i,
     cost: 100 + i * 85 + (id === "dress" ? 100 : 0),
     material: 3 + i * 2,
-    region: Math.max(0, i - 1),
+    region: ITEM_REGION[i],
   })),
 );
 export const ITEM = Object.fromEntries(ITEMS.map((i) => [i.id, i])) as Record<
   string,
   Item
 >;
+/** The dress of each set, in set order; the rest of the set follows its index. */
+export const ITEM_DRESS_IDS = ITEMS.filter((i) => i.category === "dress").map(
+  (i) => i.id,
+);
 export const REGIONS = [
   {
     name: "花语森林",

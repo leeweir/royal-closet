@@ -1,12 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as T from "three";
-import { ITEM } from "../src/simulation/data";
+import { ITEM, SET_COUNT } from "../src/simulation/data";
 import { createHair } from "../src/render/hair";
 import { disposeGroup } from "../src/render/character";
 
 test("every hairstyle covers the rear scalp continuously from side and back views", () => {
-  for (let style = 0; style < 6; style++) {
+  for (let style = 0; style < SET_COUNT; style++) {
     const hair = createHair(ITEM[`hair-${style}`]);
     hair.updateMatrixWorld(true);
     for (const y of [0.12, 0, -0.14])

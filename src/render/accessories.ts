@@ -359,7 +359,7 @@ export function createCrown(item: Item): T.Group {
       });
     }
     crystal(a, [-0.135, -0.028, 0.263], 0.013, 0.035, stone);
-  } else {
+  } else if (item.shape === 5) {
     ring();
     a.torus([0, 0.052, 0.275], 0.11, 0.009, metal, [0, 0, 0], Math.PI);
     for (let i = 0; i < 13; i++) {
@@ -385,14 +385,306 @@ export function createCrown(item: Item): T.Group {
         [0.012, 0.012, 0.012],
         pearl,
       );
-  }
-  return silhouette(a.complete(), item, [
+  } else if (item.shape === 6) {
+    // 玉簪流苏: a jade pin laid across a low band with two hanging tassels.
+    const jade = toon("#8fc9ac", "anime-accessory");
+    // A slim jade band circles the head under the pin.
+    a.torus([0, 0, 0], 0.268, 0.009, metal, [Math.PI / 2, 0, 0]);
+    a.tube(
+      [
+        [-0.262, 0.03, 0.07],
+        [-0.19, 0.052, 0.15],
+        [-0.04, 0.058, 0.268],
+        [0.15, 0.034, 0.242],
+      ],
+      0.009,
+      jade,
+    );
+    a.tube(
+      [
+        [0.262, 0.026, 0.06],
+        [0.19, 0.04, 0.14],
+        [0.06, 0.05, 0.24],
+      ],
+      0.008,
+      jade,
+    );
+    a.sphere([0.163, 0.03, 0.222], [0.026, 0.02, 0.026], pearl);
+    a.add(blade(0.062, 0.028, 0.02), pearl, {
+      p: [0.15, 0.032, 0.222],
+      r: [0, 0, -1.35],
+    });
+    for (const x of [-0.12, 0.02]) {
+      a.add(shapeMesh(star(0.021)), jade, { p: [x, 0.075, 0.286] });
+      a.tube(
+        [
+          [x, 0.062, 0.288],
+          [x + 0.012, -0.03, 0.3],
+          [x - 0.004, -0.115, 0.294],
+        ],
+        0.0035,
+        metal,
+      );
+      a.sphere([x - 0.004, -0.142, 0.293], [0.017, 0.024, 0.017], pearl);
+    }
+    a.add(shapeMesh(star(0.03)), jade, { p: [-0.255, 0.036, 0.075] });
+  } else if (item.shape === 7) {
+    // 金步摇冠: a gilded band with swaying chains and pendants.
+    a.torus([0, 0, 0], 0.281, 0.011, metal, [Math.PI / 2, 0, 0]);
+    for (let i = 0; i < 5; i++) {
+      const theta = -0.92 + i * 0.46;
+      const x = Math.sin(theta) * 0.278,
+        z = Math.cos(theta) * 0.278;
+      a.add(blade(0.108, 0.034, 0.024), colored, {
+        p: [x, 0.016, z],
+        r: [-0.24, theta, 0],
+      });
+      const links: P[] = [];
+      for (let k = 0; k < 4; k++)
+        links.push([x * (1.045 + k * 0.012), 0.09 - k * 0.052, z * (1.02 + k * 0.02)]);
+      a.tube(links, 0.0032, metal);
+      crystal(a, [links[3][0], links[3][1] - 0.03, links[3][2]], 0.019, 0.032, stone);
+    }
+    for (let i = -2; i <= 2; i++)
+      a.sphere([i * 0.058, 0.028, 0.276 - Math.abs(i) * 0.028], [0.013, 0.013, 0.013], pearl);
+    a.add(shapeMesh(star(0.036)), colored, { p: [0, 0.058, 0.302] });
+  } else if (item.shape === 8) {
+    // 素色发带: a plain ribbon with a small knot, no metal at all.
+    const cloth = toon(item.color, "anime-accessory");
+    const band = new T.TorusGeometry(0.272, 0.013, 6, 48);
+    band.scale(1, 1, 1.02);
+    a.add(band, cloth, { p: [0, 0, 0], r: [Math.PI / 2, 0, 0] });
+    a.add(
+      ribbon(
+        [
+          [-0.14, 0.03, 0.245],
+          [-0.19, 0.075, 0.275],
+          [-0.235, 0.135, 0.26],
+        ],
+        0.042,
+      ),
+      cloth,
+    );
+    a.add(
+      ribbon(
+        [
+          [0.1, 0.028, 0.253],
+          [0.16, 0.07, 0.283],
+          [0.205, 0.128, 0.268],
+        ],
+        0.038,
+      ),
+      cloth,
+    );
+    a.sphere([-0.055, 0.036, 0.272], [0.022, 0.019, 0.02], cloth);
+  } else if (item.shape === 9) {
+    // 红领巾结: a knotted scarf whose two broad ties run out along the collar.
+    const cloth = toon("#d2483f", "anime-accessory");
+    // The band follows the collar line so the knot reads at head width.
+    a.torus([0, 0.03, 0], 0.285, 0.016, cloth, [Math.PI / 2, 0, 0], Math.PI * 0.72);
+    for (const side of [-1, 1])
+      a.add(
+        ribbon(
+          [
+            [side * 0.03, 0.035, 0.27],
+            [side * 0.14, 0.02, 0.276],
+            [side * 0.245, -0.02, 0.22],
+          ],
+          0.062,
+        ),
+        cloth,
+      );
+    a.sphere([0, 0.04, 0.278], [0.034, 0.028, 0.029], cloth);
+    a.add(
+      ribbon(
+        [
+          [0, 0.02, 0.28],
+          [-0.018, -0.075, 0.29],
+          [0.012, -0.17, 0.278],
+        ],
+        0.062,
+      ),
+      cloth,
+    );
+  } else if (item.shape === 10) {
+    // 毛线发圈: a chunky knit tie wrapping a loose side bun.
+    const wool = toon(item.color, "anime-accessory");
+    const coil = new T.TorusGeometry(0.058, 0.019, 8, 28);
+    a.add(coil, wool, { p: [0.163, 0.055, 0.232], r: [0.2, 0.8, 0] });
+    const coil2 = new T.TorusGeometry(0.058, 0.019, 8, 28);
+    a.add(coil2, wool, { p: [0.198, 0.058, 0.213], r: [1.15, 0.35, 0] });
+    // Three wool strands sweep across to the far side of the head.
+    for (let i = 0; i < 3; i++)
+      a.tube(
+        [
+          [0.14 + i * 0.014, 0.062 + i * 0.012, 0.246 - i * 0.014],
+          [-0.02 + i * 0.02, 0.11 + i * 0.014, 0.3 - i * 0.012],
+          [-0.15 - i * 0.016, 0.075 + i * 0.01, 0.26 - i * 0.01],
+          [-0.225 - i * 0.012, 0.02 + i * 0.008, 0.19 - i * 0.008],
+        ],
+        0.017,
+        wool,
+      );
+    a.sphere([0.185, 0.036, 0.246], [0.048, 0.046, 0.046], pearl);
+    a.sphere([-0.238, 0.014, 0.178], [0.026, 0.024, 0.024], wool);
+  } else if (item.shape === 11) {
+    // 运动发带: a wide band that reads as stretch jersey, cinched at the back.
+    const jersey = toon(item.color, "anime-accessory");
+    const band = new T.TorusGeometry(0.271, 0.021, 6, 44);
+    band.scale(1, 1, 1.03);
+    a.add(band, jersey, { p: [0, 0.012, 0], r: [Math.PI / 2, 0, 0] });
+    for (const y of [-0.006, 0.03])
+      a.torus([0, y, 0], 0.272, 0.005, toon(item.accent, "anime-accessory"), [
+        Math.PI / 2,
+        0,
+        0,
+      ]);
+    a.add(
+      ribbon(
+        [
+          [-0.02, 0.02, -0.268],
+          [0.01, -0.04, -0.3],
+          [0.055, -0.115, -0.276],
+        ],
+        0.05,
+      ),
+      jersey,
+    );
+    a.add(
+      ribbon(
+        [
+          [0.02, 0.02, -0.268],
+          [-0.03, -0.035, -0.298],
+          [-0.07, -0.105, -0.272],
+        ],
+        0.044,
+      ),
+      jersey,
+    );
+  } else if (item.shape === 12) {
+    // 蕾丝发冠: a lace band with a bow sunk in the middle of small roses.
+    const band = new T.TorusGeometry(0.276, 0.011, 6, 48);
+    a.add(band, pearl, { p: [0, 0, 0], r: [Math.PI / 2, 0, 0], s: [1, 1, 1.02] });
+    for (let i = 0; i < 9; i++) {
+      const theta = -1.5 + i * 0.375;
+      a.torus(
+        [Math.sin(theta) * 0.28, 0.01, Math.cos(theta) * 0.286],
+        0.023,
+        0.005,
+        pearl,
+        [0, theta, 0],
+      );
+    }
+    rose(a, [0, 0.062, 0.288], 0.05, toon("#f0bccb", "anime-accessory"), metal);
+    for (const side of [-1, 1]) {
+      a.add(
+        ribbon(
+          [
+            [side * 0.07, 0.03, 0.276],
+            [side * 0.142, 0.068, 0.288],
+            [side * 0.108, 0.026, 0.283],
+          ],
+          0.052,
+        ),
+        pearl,
+      );
+      a.sphere([side * 0.152, 0.046, 0.26], [0.016, 0.02, 0.016], metal);
+      a.sphere([side * 0.101, 0.062, 0.273], [0.014, 0.014, 0.014], metal);
+    }
+  } else if (item.shape === 13) {
+    // 夜樱簪花: a blossom pin resting on a slim band across the head.
+    const wood = toon("#7a5b53", "anime-accessory");
+    const petal = toon("#f1cbdd", "anime-accessory");
+    a.torus([0, 0, 0], 0.266, 0.007, wood, [Math.PI / 2, 0, 0]);
+    a.tube(
+      [
+        [-0.264, 0.03, 0.08],
+        [-0.2, 0.05, 0.152],
+        [-0.05, 0.066, 0.278],
+        [0.13, 0.052, 0.262],
+        [0.24, 0.03, 0.15],
+      ],
+      0.0065,
+      wood,
+    );
+    for (const [x, y, z, r] of [
+      [-0.06, 0.07, 0.286, 0.046],
+      [0.108, 0.062, 0.278, 0.038],
+    ]) {
+      for (let n = 0; n < 5; n++) {
+        const theta = (n / 5) * Math.PI * 2;
+        a.add(blade(r * 1.5, r * 0.62, 0.014), petal, {
+          p: [x, y, z],
+          r: [0, 0, theta - Math.PI / 2],
+        });
+      }
+      a.sphere([x, y, z + 0.012], [0.013, 0.013, 0.011], metal);
+    }
+    for (const x of [-0.16, 0.05]) {
+      a.tube(
+        [
+          [x, 0.045, 0.262],
+          [x + 0.008, -0.045, 0.272],
+          [x - 0.006, -0.1, 0.268],
+        ],
+        0.0028,
+        metal,
+      );
+      a.sphere([x - 0.006, -0.122, 0.267], [0.014, 0.019, 0.014], petal);
+    }
+  } else if (item.shape === 14) {
+    // 绯色巫女结: a white paper twist with two red cords, tied at the crown.
+    const paper = toon("#fbfbfd", "anime-accessory");
+    const cord = toon(item.color, "anime-accessory");
+    // The cord runs around the crown, so the knot reads at head width.
+    a.torus([0, 0.01, 0], 0.277, 0.009, cord, [Math.PI / 2, 0, 0]);
+    for (const side of [-1, 1]) {
+      a.add(
+        ribbon(
+          [
+            [side * 0.03, 0.05, 0.262],
+            [side * 0.155, 0.115, 0.264],
+            [side * 0.086, 0.168, 0.246],
+            [side * 0.205, 0.225, 0.196],
+          ],
+          0.072,
+        ),
+        paper,
+      );
+      a.tube(
+        [
+          [side * 0.02, 0.04, 0.268],
+          [side * 0.11, 0.02, 0.276],
+          [side * 0.07, -0.075, 0.286],
+          [side * 0.13, -0.15, 0.266],
+        ],
+        0.008,
+        cord,
+      );
+      a.sphere([side * 0.13, -0.172, 0.264], [0.017, 0.023, 0.017], cord);
+      a.add(shapeMesh(star(0.026)), paper, {
+        p: [side * 0.248, -0.026, 0.12],
+        r: [0, side * -0.9, 0],
+      });
+    }
+    a.sphere([0, 0.055, 0.272], [0.032, 0.028, 0.028], metal);
+    a.torus([0, 0.055, 0.288], 0.032, 0.005, cord);
+  }  return silhouette(a.complete(), item, [
     "fine-jewel-tiara",
     "layered-rose-wreath",
     "laurel-leaf-circlet",
     "faceted-crystal-diadem",
     "floating-crescent-halo",
     "radiant-sun-crown",
+    "jade-hairpin-with-tassels",
+    "gilded-swaying-pendant-crown",
+    "plain-ribbon-headband",
+    "knotted-scarf-tie",
+    "chunky-knit-tie",
+    "wide-jersey-headband",
+    "lace-and-rose-coronet",
+    "slim-blossom-pin",
+    "twisted-paper-and-cord-knot",
   ]);
 }
 
@@ -684,7 +976,7 @@ export function createWings(item: Item): T.Group {
           { p: pos, r: [0, 0, side * theta] },
         );
       }
-    } else {
+    } else if (item.shape === 5) {
       const feather = toon("#fff9e8", "anime-accessory");
       const pale = toon("#eee7d9", "anime-accessory");
       const spine = toon("#ddd7e7", "anime-feather-spine");
@@ -744,8 +1036,301 @@ export function createWings(item: Item): T.Group {
           r: [0, 0, rotation],
         });
       }
-    }
-    a.sphere(p(0.12, -0.06, 0.042), [0.028, 0.1, 0.043], metal);
+    } else if (item.shape === 6 || item.shape === 7) {
+      // 云纹轻纱 and 凤羽披帛 both drape a scarf over the shoulders, but the
+      // hanfu cloud is a soft ripple and the tang phoenix is a long feather.
+      const phoenix = item.shape === 7;
+      const cloth = toon(
+        phoenix
+          ? new T.Color(item.color).lerp(new T.Color("#e4b06a"), 0.45).getStyle()
+          : item.color,
+        "anime-accessory",
+      );
+      const paths: P[][] = phoenix
+        ? [
+            [
+              [0.1, -0.02, 0],
+              [0.42, 0.44, -0.09],
+              [0.96, 0.6, -0.13],
+              [1.24, 0.31, -0.05],
+            ],
+            [
+              [0.12, -0.14, -0.03],
+              [0.5, -0.4, 0.06],
+              [1.06, -0.28, 0.13],
+              [1.22, -0.56, 0.06],
+            ],
+            [
+              [0.09, 0.06, -0.06],
+              [0.4, 0.74, -0.16],
+              [0.92, 0.86, -0.14],
+              [1.1, 0.62, -0.08],
+            ],
+          ]
+        : [
+            [
+              [0.1, -0.02, 0.01],
+              [0.44, 0.28, -0.03],
+              [0.94, 0.4, -0.05],
+              [1.2, 0.2, 0.02],
+            ],
+            [
+              [0.11, -0.1, -0.02],
+              [0.48, -0.28, 0.05],
+              [1.0, -0.2, 0.1],
+              [1.18, -0.42, 0.03],
+            ],
+          ];
+      for (let i = 0; i < paths.length; i++) {
+        const path = paths[i].map((v) => p(...v));
+        a.add(ribbon(path, phoenix ? 0.062 : 0.082), phoenix && i === 1 ? light : cloth);
+        a.tube(path, 0.0036, phoenix ? metal : edge);
+      }
+      if (phoenix)
+        for (let i = 0; i < 9; i++) {
+          const t = i / 8;
+          a.add(blade(0.18 + i * 0.01, 0.02), light, {
+            p: p(0.3 + t * 0.85, 0.5 - t * 0.62, -0.1 - t * 0.02),
+            r: [0, 0, side * (-0.9 + t * 0.5)],
+          });
+        }
+      else
+        for (let i = 0; i < 4; i++) {
+          const theta = 0.5 + i * 0.62;
+          a.torus(
+            p(0.36 + i * 0.22, 0.26 + Math.sin(theta) * 0.18, -0.04),
+            0.062,
+            0.006,
+            edge,
+            [0, 0, 0],
+            Math.PI * 1.28,
+          );
+        }
+    } else if (item.shape === 8) {
+      // 纸鸢书页: pressed pages fanning out behind the shoulders.
+      const page = toon("#f6f1e4", "anime-accessory");
+      const line = toon(item.color, "anime-accessory");
+      for (let i = 0; i < 6; i++) {
+        const rotation = side * (-0.32 - i * 0.36);
+        const length = 0.92 - i * 0.052;
+        const start: P = p(0.12 + i * 0.02, -0.02 - i * 0.048, -i * 0.02);
+        a.add(blade(length, 0.2, 0.03, 0), i % 2 ? page : light, {
+          p: start,
+          r: [0, 0, rotation],
+        });
+        const matrix = new T.Matrix4().compose(
+          new T.Vector3(...start),
+          new T.Quaternion().setFromEuler(new T.Euler(0, 0, rotation)),
+          new T.Vector3(1, 1, 1),
+        );
+        for (let k = 1; k < 5; k++)
+          a.tube(
+            [
+              [0, length * (k / 6), 0.031],
+              [0, length * (k / 6 + 0.08), 0.031],
+            ].map((v) => new T.Vector3(...v).applyMatrix4(matrix).toArray() as P),
+            0.0026,
+            line,
+          );
+      }
+      for (let i = 0; i < 4; i++)
+        a.sphere(p(0.2 + i * 0.16, -0.14 + i * 0.05, 0.07), [0.016, 0.02, 0.016], metal);
+    } else if (item.shape === 9) {
+      // 风帆羽翼: two stiff triangular sails on a gilded boom.
+      const sail = toon(item.color, "anime-accessory");
+      for (let i = 0; i < 3; i++) {
+        const length = 0.98 - i * 0.2;
+        const start: P = p(0.1 + i * 0.05, -0.04 - i * 0.06, -i * 0.02);
+        const rotation = side * (-0.5 - i * 0.42);
+        const matrix = new T.Matrix4().compose(
+          new T.Vector3(...start),
+          new T.Quaternion().setFromEuler(new T.Euler(0, 0, rotation)),
+          new T.Vector3(1, 1, 1),
+        );
+        const shape = new T.Shape();
+        shape.moveTo(0, 0.02);
+        shape.lineTo(0, length);
+        shape.lineTo(0.42 - i * 0.04, length * 0.24);
+        shape.closePath();
+        a.add(new T.ExtrudeGeometry(shape, { depth: 0.012, bevelEnabled: false }), i % 2 ? light : sail, { p: start, r: [0, 0, rotation] });
+        a.tube(
+          [
+            [0, 0.02, 0.014],
+            [0.3 - i * 0.03, length * 0.22, 0.014],
+          ].map((v) => new T.Vector3(...v).applyMatrix4(matrix).toArray() as P),
+          0.005,
+          metal,
+        );
+      }
+      a.tube(
+        (
+          [
+            [0.08, -0.12, 0.02],
+            [0.62, 0.06, 0.01],
+            [1.18, -0.06, 0],
+          ] as P[]
+        ).map((v) => p(...v)),
+        0.009,
+        metal,
+      );
+    } else if (item.shape === 10) {
+      // 初雪绒羽: small soft down clusters, short and rounded.
+      const down = toon("#ffffff", "anime-accessory");
+      for (let i = 0; i < 14; i++) {
+        const t = i / 13;
+        const pos = p(
+          0.16 + t * 0.72,
+          0.3 - t * 0.5 + Math.sin(t * 9) * 0.05,
+          -0.02 - t * 0.03,
+        );
+        a.sphere(pos, [0.072 + (i % 3) * 0.014, 0.084 + (i % 2) * 0.02, 0.05], i % 2 ? light : soft);
+        if (i % 2 === 0)
+          a.add(blade(0.14, 0.032, 0.018), edge, {
+            p: pos,
+            r: [0, 0, side * (0.7 - t * 1.1)],
+          });
+      }
+      a.tube(
+        (
+          [
+            [0.12, 0.02, 0.03],
+            [0.5, 0.02, 0.02],
+            [0.86, -0.12, 0.01],
+          ] as P[]
+        ).map((v) => p(...v)),
+        0.014,
+        toon("#e9e2f2", "anime-feather-spine"),
+      );
+    } else if (item.shape === 11) {
+      // 疾风之羽: four swept arrow quills with an outer rim.
+      const quill = toon(item.color, "anime-accessory");
+      for (let i = 0; i < 4; i++) {
+        const t = i / 3;
+        const start: P = p(0.11 + i * 0.03, -0.06 + i * 0.08, -i * 0.02);
+        const length = 1.06 - i * 0.08;
+        const rotation = side * (-0.9 + i * 0.34);
+        a.add(blade(length, 0.15, 0.05, 0.02), i % 2 ? light : quill, {
+          p: start,
+          r: [0, 0, rotation],
+        });
+        const matrix = new T.Matrix4().compose(
+          new T.Vector3(...start),
+          new T.Quaternion().setFromEuler(new T.Euler(0, 0, rotation)),
+          new T.Vector3(1, 1, 1),
+        );
+        a.tube(
+          [
+            [0, 0.02, 0.012],
+            [0, length * 0.5, 0.055],
+            [0, length * 0.97, 0.02],
+          ].map((v) => new T.Vector3(...v).applyMatrix4(matrix).toArray() as P),
+          0.0045,
+          edge,
+        );
+        a.add(blade(0.16, 0.026, 0.03), metal, {
+          p: p(start[0] + 0.3 * -Math.sin(rotation), start[1] + 0.3 * Math.cos(rotation), start[2]),
+          r: [0, 0, rotation],
+        });
+      }
+    } else if (item.shape === 12) {
+      // 蕾丝蝶翼: two lace panels in heart-ish lobes with open cutwork.
+      const pearl = toon("#fff4f8", "anime-accessory");
+      const lace = toon(item.accent, "anime-wing-lace");
+      lace.transparent = true;
+      lace.opacity = 0.9;
+      lace.depthWrite = false;
+      for (let i = 0; i < 2; i++) {
+        const scale = i ? 0.66 : 1;
+        const center: P = p(i ? 0.5 : 0.42, i ? -0.36 : 0.34, i ? 0.05 : 0);
+        const reach = 0.62 * scale;
+        a.add(
+          blade(reach, 0.5 * scale, 0.06, 0),
+          i ? light : lace,
+          { p: center, r: [0, 0, side * (i ? 0.85 : -0.5)] },
+        );
+        for (let k = 0; k < 5; k++)
+          a.torus(
+            [
+              center[0] + 0.1 + k * 0.1 * scale,
+              center[1] + Math.sin(k * 1.1) * 0.1 * scale,
+              center[2] + 0.05,
+            ],
+            0.021 * scale,
+            0.004,
+            pearl,
+          );
+      }
+      rose(a, p(0.24, 0.12, 0.07), 0.062, toon("#f0bccb", "anime-accessory"), metal);
+    } else if (item.shape === 13) {
+      // 夜樱薄翼: pale petals scattered along a curved spine.
+      const petal = toon("#f3d6e4", "anime-accessory");
+      const spine = toon("#6d5a86", "anime-accessory");
+      a.tube(
+        (
+          [
+            [0.1, -0.1, 0.03],
+            [0.34, 0.26, 0.02],
+            [0.76, 0.36, 0.01],
+            [1.1, 0.1, 0],
+          ] as P[]
+        ).map((v) => p(...v)),
+        0.008,
+        spine,
+      );
+      for (let i = 0; i < 11; i++) {
+        const t = i / 10;
+        const pos = p(
+          0.16 + t * 0.88,
+          0.34 - Math.pow(t - 0.4, 2) * 1.6 + (i % 2 ? 0.06 : -0.06),
+          -0.01 - t * 0.02,
+        );
+        a.add(blade(0.16 + (i % 3) * 0.02, 0.052, 0.02), i % 2 ? petal : soft, {
+          p: pos,
+          r: [0, 0, side * (1.15 - t * 2.1)],
+        });
+      }
+      for (let i = 0; i < 3; i++)
+        a.sphere(p(0.4 + i * 0.24, 0.1 + i * 0.08, 0.06), [0.017, 0.017, 0.017], metal);
+    } else if (item.shape === 14) {
+      // 绯叶之羽: broad vermilion maple leaves along a dark branch.
+      const maple = toon(item.color, "anime-accessory");
+      const branch = toon("#5c4a44", "anime-accessory");
+      a.tube(
+        (
+          [
+            [0.1, -0.06, 0.03],
+            [0.3, 0.34, 0.02],
+            [0.66, 0.5, 0.01],
+            [1.02, 0.42, 0],
+          ] as P[]
+        ).map((v) => p(...v)),
+        0.008,
+        branch,
+      );
+      for (let i = 0; i < 7; i++) {
+        const t = i / 6;
+        const pos = p(
+          0.18 + t * 0.78,
+          0.4 + Math.sin(t * 2.6) * 0.12 - t * 0.06,
+          -0.01 - t * 0.02,
+        );
+        for (const lobe of [-1, 1])
+          a.add(blade(0.24 - i * 0.012, 0.14, 0.03, 0), i % 2 ? light : maple, {
+            p: pos,
+            r: [0, 0, side * (0.5 + lobe * 0.42) - t * 0.3],
+          });
+        a.tube(
+          [
+            pos,
+            [pos[0] + 0.1 * side, pos[1] + 0.2, pos[2] + 0.02],
+          ],
+          0.0026,
+          edge,
+        );
+      }
+      for (let i = 0; i < 4; i++)
+        a.sphere(p(0.34 + i * 0.2, 0.52 - i * 0.06, 0.07), [0.014, 0.018, 0.014], metal);
+    }    a.sphere(p(0.12, -0.06, 0.042), [0.028, 0.1, 0.043], metal);
     a.complete();
   }
   return silhouette(root, item, [
@@ -755,6 +1340,15 @@ export function createWings(item: Item): T.Group {
     "faceted-ice-crystal-fan",
     "floating-star-orbit-ribbons",
     "layered-anime-angel-feathers",
+    "cloud-patterned-gauze-drape",
+    "phoenix-feather-shawl",
+    "pressed-paper-fan",
+    "stiff-sail-panels",
+    "soft-snow-down-clusters",
+    "swept-arrow-quills",
+    "openwork-lace-panels",
+    "scattered-night-blossom-petals",
+    "vermilion-maple-leaves",
   ]);
 }
 
@@ -878,7 +1472,7 @@ export function createWand(item: Item): T.Group {
         [0.007, 0.007, 0.007],
         pearl,
       );
-  } else {
+  } else if (item.shape === 5) {
     a.torus([0, 0.969, 0], 0.092, 0.014, metal);
     a.sphere([0, 0.969, 0], [0.067, 0.067, 0.026], colored);
     for (let i = 0; i < 12; i++) {
@@ -894,8 +1488,295 @@ export function createWand(item: Item): T.Group {
       });
     }
     a.sphere([0, 0.969, 0.038], [0.026, 0.026, 0.012], pearl);
-  }
-  // Silk ties have a folded surface and a narrow gilded center.
+  } else if (item.shape === 6) {
+    // 青玉毛笔: a jade brush with an ink tip and a tasseled cap.
+    const jade = toon("#8fc9ac", "anime-accessory");
+    const ink = toon("#33313f", "anime-accessory");
+    a.add(new T.CylinderGeometry(0.026, 0.03, 0.3, 12), jade, {
+      p: [0, 0.79, 0],
+    });
+    for (const y of [0.66, 0.92])
+      a.torus([0, y, 0], 0.03, 0.005, metal, [Math.PI / 2, 0, 0]);
+    a.add(new T.ConeGeometry(0.029, 0.13, 12), ink, {
+      p: [0, 1.03, 0],
+    });
+    a.sphere([0, 1.085, 0], [0.012, 0.018, 0.012], ink);
+    a.tube(
+      [
+        [0.03, 0.7, 0.012],
+        [0.05, 0.62, 0.02],
+        [0.036, 0.545, 0.015],
+      ],
+      0.0035,
+      metal,
+    );
+    a.sphere([0.036, 0.516, 0.014], [0.013, 0.019, 0.013], pearl);
+    a.add(shapeMesh(star(0.032)), jade, { p: [-0.032, 0.885, 0.026] });
+  } else if (item.shape === 7) {
+    // 牡丹团扇: a round silk fan on a lacquered handle.
+    const silk = toon(item.accent, "anime-accessory");
+    const frame = toon("#9a6a52", "anime-accessory");
+    a.torus([0, 1.0, 0], 0.186, 0.007, frame);
+    a.add(
+      new T.CircleGeometry(0.183, 32),
+      silk,
+      { p: [0, 1.0, 0.008] },
+    );
+    rose(a, [0, 1.0, 0.024], 0.072, toon("#e79ab4", "anime-accessory"), metal);
+    for (let i = 0; i < 6; i++) {
+      const theta = 0.4 + i * 1.02;
+      a.add(blade(0.06, 0.019, 0.012), silk, {
+        p: [Math.cos(theta) * 0.115, 1.0 + Math.sin(theta) * 0.115, 0.022],
+        r: [0, 0, theta - Math.PI / 2],
+      });
+    }
+    a.add(new T.CylinderGeometry(0.016, 0.02, 0.42, 12), frame, {
+      p: [0, 0.6, 0],
+    });
+    a.sphere([0, 0.82, 0.012], [0.021, 0.021, 0.021], metal);
+    for (let i = 0; i < 3; i++)
+      a.sphere([0, 0.43 - i * 0.05, 0.024], [0.009, 0.009, 0.009], pearl);
+  } else if (item.shape === 8) {
+    // 黄铜钢笔: a school fountain pen with a visible nib.
+    const brass = toon("#c8a267", "anime-accessory");
+    const barrel = toon(item.color, "anime-accessory");
+    a.add(new T.CylinderGeometry(0.019, 0.022, 0.46, 14), barrel, {
+      p: [0, 0.75, 0],
+    });
+    a.add(new T.CylinderGeometry(0.023, 0.023, 0.02, 14), metal, {
+      p: [0, 0.985, 0],
+    });
+    for (const y of [0.62, 0.9])
+      a.torus([0, y, 0], 0.021, 0.004, brass, [Math.PI / 2, 0, 0]);
+    const nib = new T.Shape();
+    nib.moveTo(-0.02, 0);
+    nib.lineTo(0.02, 0);
+    nib.lineTo(0.007, 0.13);
+    nib.lineTo(0, 0.165);
+    nib.lineTo(-0.007, 0.13);
+    nib.closePath();
+    a.add(shapeMesh(nib, 0.012), brass, { p: [0, 1.0, -0.006] });
+    a.add(new T.CylinderGeometry(0.012, 0.006, 0.05, 10), toon("#3a3446", "anime-accessory"), {
+      p: [0, 1.175, 0],
+    });
+    a.add(new T.CylinderGeometry(0.024, 0.024, 0.012, 14), brass, {
+      p: [0, 0.5, 0],
+    });
+    for (let i = 0; i < 4; i++)
+      a.sphere([0, 0.55 + i * 0.02, 0.026], [0.006, 0.006, 0.006], metal);
+  } else if (item.shape === 9) {
+    // 海风罗盘: an open brass compass with a needle.
+    const brass = toon("#cbb07a", "anime-accessory");
+    const glass = toon("#cfe9f5", "anime-accessory");
+    glass.transparent = true;
+    glass.opacity = 0.72;
+    glass.depthWrite = false;
+    a.add(new T.CylinderGeometry(0.152, 0.152, 0.026, 28), brass, {
+      p: [0, 0.99, 0],
+      r: [Math.PI / 2, 0, 0],
+    });
+    for (const r of [0.152, 0.121, 0.088])
+      a.torus([0, 0.99, 0.006], r, 0.005, brass, [0, 0, 0]);
+    a.add(new T.CircleGeometry(0.084, 28), glass, { p: [0, 0.99, 0.014] });
+    for (let i = 0; i < 8; i++) {
+      const theta = (i / 8) * Math.PI * 2;
+      a.add(blade(i % 2 ? 0.016 : 0.03, 0.007, 0), i % 2 ? brass : toon("#d9584f", "anime-accessory"), {
+        p: [Math.cos(theta) * 0.058, 0.99 + Math.sin(theta) * 0.058, 0.014],
+        r: [0, 0, theta - Math.PI / 2],
+      });
+    }
+    a.add(blade(0.062, 0.016, 0.004), toon("#d9584f", "anime-accessory"), {
+      p: [0, 0.99, 0.018],
+      r: [0, 0, 0.6],
+    });
+    a.add(blade(0.062, 0.016, 0.004), toon("#4a5f8f", "anime-accessory"), {
+      p: [0, 0.99, 0.018],
+      r: [0, 0, 0.6 + Math.PI],
+    });
+    a.sphere([0, 0.99, 0.02], [0.011, 0.011, 0.011], metal);
+    a.torus([0, 0.9, -0.036], 0.035, 0.007, brass, [0.5, 0, 0], Math.PI);
+  } else if (item.shape === 10) {
+    // 毛线纺锤: a drop spindle wound with wool.
+    const wood = toon("#a9805e", "anime-accessory");
+    const wool = toon(item.color, "anime-accessory");
+    a.add(new T.CylinderGeometry(0.009, 0.009, 0.5, 10), wood, {
+      p: [0, 0.79, 0],
+    });
+    a.add(new T.ConeGeometry(0.054, 0.1, 14), wood, {
+      p: [0, 1.02, 0],
+      r: [Math.PI, 0, 0],
+    });
+    a.sphere([0, 1.09, 0], [0.019, 0.026, 0.019], wood);
+    for (let i = 0; i < 7; i++) {
+      const y = 0.72 - i * 0.036;
+      const r = 0.048 + Math.sin((i / 6) * Math.PI) * 0.028;
+      a.torus([0, y, 0], r, 0.019, wool, [Math.PI / 2, 0, 0]);
+    }
+    a.add(new T.CylinderGeometry(0.062, 0.062, 0.014, 16), wood, {
+      p: [0, 0.44, 0],
+    });
+    a.tube(
+      [
+        [0.05, 0.62, 0.02],
+        [0.11, 0.42, 0.05],
+        [0.09, 0.2, 0.03],
+        [0.13, 0.02, 0.06],
+      ],
+      0.006,
+      wool,
+    );
+    a.sphere([0.02, 0.53, 0.03], [0.017, 0.017, 0.017], pearl);
+  } else if (item.shape === 11) {
+    // 跃动接力棒: a baton with racing stripes and a whistle.
+    const baton = toon(item.accent, "anime-accessory");
+    const stripe = toon(item.color, "anime-accessory");
+    a.add(new T.CylinderGeometry(0.033, 0.033, 0.52, 16), baton, {
+      p: [0, 0.76, 0],
+    });
+    for (const sign of [-1, 1])
+      a.add(new T.CylinderGeometry(0.037, 0.037, 0.03, 16), stripe, {
+        p: [0, 0.76 + sign * 0.12, 0],
+      });
+    for (const sign of [-1, 1])
+      a.add(new T.SphereGeometry(0.033, 16, 10), stripe, {
+        p: [0, 0.76 + sign * 0.26, 0],
+      });
+    a.add(new T.CylinderGeometry(0.019, 0.019, 0.03, 14), stripe, {
+      p: [0, 0.5, 0],
+    });
+    const whistle = toon("#dfe4ee", "anime-accessory");
+    a.add(new T.BoxGeometry(0.075, 0.05, 0.042, 2, 2, 2), whistle, {
+      p: [0.062, 0.79, 0.018],
+      r: [0, 0.3, 0.1],
+    });
+    a.add(new T.TorusGeometry(0.019, 0.006, 6, 20, Math.PI * 1.5), metal, {
+      p: [0.098, 0.825, 0.012],
+      r: [0, Math.PI / 2, 0],
+    });
+    a.sphere([0, 0.5, 0.024], [0.012, 0.012, 0.012], metal);
+  } else if (item.shape === 12) {
+    // 蕾丝洋伞: a closed lace parasol with a scalloped canopy.
+    const silk = toon(item.accent, "anime-accessory");
+    const lace = toon(item.color, "anime-accessory");
+    lace.transparent = true;
+    lace.opacity = 0.82;
+    lace.depthWrite = false;
+    a.add(new T.CylinderGeometry(0.008, 0.008, 0.46, 10), toon("#8a7f96", "anime-accessory"), {
+      p: [0, 0.78, 0],
+    });
+    a.add(new T.ConeGeometry(0.115, 0.4, 12), silk, { p: [0, 0.92, 0] });
+    for (let i = 0; i < 8; i++) {
+      const theta = (i / 8) * Math.PI * 2;
+      a.tube(
+        [
+          [Math.cos(theta) * 0.02, 0.72, Math.sin(theta) * 0.02],
+          [Math.cos(theta) * 0.082, 0.95, Math.sin(theta) * 0.082],
+          [Math.cos(theta) * 0.115, 1.116, Math.sin(theta) * 0.115],
+        ],
+        0.0034,
+        metal,
+      );
+    }
+    for (let i = 0; i < 10; i++) {
+      const theta = (i / 10) * Math.PI * 2;
+      a.add(blade(0.058, 0.024, 0.016), lace, {
+        p: [Math.cos(theta) * 0.1, 0.73, Math.sin(theta) * 0.1],
+        r: [-Math.PI / 2 - 0.3, theta, 0],
+      });
+    }
+    a.sphere([0, 1.13, 0], [0.019, 0.026, 0.019], metal);
+    a.add(new T.TorusGeometry(0.032, 0.007, 6, 22, Math.PI), toon("#8a7f96", "anime-accessory"), {
+      p: [0, 0.542, 0],
+      r: [0, Math.PI / 2, 0],
+    });
+    for (let i = 0; i < 3; i++)
+      a.sphere([0, 0.6 - i * 0.03, 0.026], [0.008, 0.008, 0.008], pearl);
+  } else if (item.shape === 13) {
+    // 夜樱折扇: a folded fan, half open, with blossoms.
+    const paper = toon(item.accent, "anime-accessory");
+    const petal = toon(item.color, "anime-accessory");
+    const blossom = toon("#f1cbdd", "anime-accessory");
+    const rib = toon("#5c4a44", "anime-accessory");
+    for (let i = 0; i < 9; i++) {
+      const spread = -0.66 + i * 0.145;
+      const length = 0.27 + i * 0.002;
+      a.add(blade(length, 0.038, 0.012), i % 2 ? paper : petal, {
+        p: [0, 0.86, 0],
+        r: [0, 0, spread],
+      });
+      a.tube(
+        [
+          [0, 0.862, 0.008],
+          [Math.sin(spread) * length * 0.55, 0.86 + Math.cos(spread) * length * 0.55, 0.012],
+          [Math.sin(spread) * length * 0.98, 0.86 + Math.cos(spread) * length * 0.98, 0.01],
+        ],
+        0.0036,
+        rib,
+      );
+    }
+    a.sphere([0, 0.858, 0.014], [0.017, 0.017, 0.014], metal);
+    for (let i = 0; i < 3; i++)
+      a.add(shapeMesh(star(0.022)), blossom, {
+        p: [
+          Math.sin(-0.3 + i * 0.34) * 0.2,
+          0.86 + Math.cos(-0.3 + i * 0.34) * 0.2,
+          0.03,
+        ],
+      });
+    a.tube(
+      [
+        [0, 0.6, 0.014],
+        [0.02, 0.57, 0.02],
+        [-0.01, 0.53, 0.016],
+      ],
+      0.0032,
+      rib,
+    );
+  } else if (item.shape === 14) {
+    // 绯色御币: a sakaki branch with folded paper streamers.
+    const wood = toon("#8a6a52", "anime-accessory");
+    const paper = toon("#fbfbfd", "anime-accessory");
+    const cord = toon(item.color, "anime-accessory");
+    const sakakiLeaf = toon("#9ec7a4", "anime-accessory");
+    a.add(new T.CylinderGeometry(0.013, 0.017, 0.4, 10), wood, {
+      p: [0, 0.7, 0],
+    });
+    a.add(new T.CylinderGeometry(0.01, 0.01, 0.3, 8), wood, {
+      p: [0, 1.0, 0],
+      r: [0, 0, 0.5],
+    });
+    a.add(new T.CylinderGeometry(0.008, 0.008, 0.24, 8), wood, {
+      p: [0.03, 1.0, 0],
+      r: [0, 0, -0.7],
+    });
+    for (let i = 0; i < 5; i++) {
+      const x = -0.05 + i * 0.025;
+      for (const side of [-1, 1])
+        a.add(blade(0.1 + (i % 2) * 0.03, 0.036, 0.02), sakakiLeaf, {
+          p: [x, 1.06 + (i % 2) * 0.02, side * 0.012],
+          r: [side * 0.3, 0, side * (1.1 - i * 0.1)],
+        });
+    }
+    for (let i = 0; i < 4; i++) {
+      const x = -0.075 + i * 0.05;
+      const zig = new T.Shape();
+      zig.moveTo(-0.026, 0);
+      zig.lineTo(0.026, 0);
+      zig.lineTo(0.014, 0.1);
+      zig.lineTo(-0.014, 0.1);
+      zig.closePath();
+      a.add(shapeMesh(zig, 0.006), paper, { p: [x, 1.0, 0.026] });
+      a.tube(
+        [
+          [x, 1.008, 0.028],
+          [x + 0.008, 1.05, 0.03],
+        ],
+        0.0026,
+        cord,
+      );
+    }
+    a.sphere([0, 0.53, 0.026], [0.012, 0.012, 0.012], metal);
+  }  // Silk ties have a folded surface and a narrow gilded center.
   for (const sign of [-1, 1]) {
     a.add(blade(0.11, 0.042, 0.036), colored, {
       p: [0, 0.735, 0.022],
@@ -926,6 +1807,15 @@ export function createWand(item: Item): T.Group {
     "three-prism-ice-scepter",
     "suspended-crescent-star-staff",
     "twelve-ray-sun-scepter",
+    "jade-brush-with-ink-tip",
+    "round-silk-peony-fan",
+    "brass-school-fountain-pen",
+    "open-brass-mariner-compass",
+    "wool-wound-drop-spindle",
+    "striped-relay-baton",
+    "closed-lace-parasol",
+    "half-open-blossom-fan",
+    "sakaki-branch-with-paper-streamers",
   ]);
 }
 
@@ -1021,10 +1911,14 @@ export function createShoes(
       0.004,
       trim,
     );
-    a.add(shoeSole(), item.shape === 3 ? trim : sole, {
-      p: [0, 0.031, 0],
-      r: [Math.PI / 2, 0, 0],
-    });
+    // The running shoe and the platform shoe bring their own replacement
+    // soles; keeping the base sole as well would push a foot past its
+    // six-merged-mesh budget.
+    if (item.shape !== 11 && item.shape !== 12)
+      a.add(shoeSole(), item.shape === 3 ? trim : sole, {
+        p: [0, 0.031, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
     a.tube(
       [
         [-0.088, 0.05, -0.07],
@@ -1193,7 +2087,7 @@ export function createShoes(
       a.add(new T.BoxGeometry(0.063, 0.05, 0.064), leather, {
         p: [0, 0.025, -0.105],
       });
-    } else {
+    } else if (item.shape === 5) {
       // Gold silk pumps with pearl chains and a sculpted fan at the toe.
       a.tube(
         [
@@ -1224,8 +2118,394 @@ export function createShoes(
       a.add(new T.CylinderGeometry(0.027, 0.019, 0.048, 10), metal, {
         p: [0, 0.03, -0.1],
       });
-    }
-    a.complete();
+    } else if (item.shape === 6) {
+      // 云纹绣鞋: flat cloth shoes with an upturned cloud toe and a soft sole.
+      const cloths = toon(item.color, "anime-accessory");
+      a.add(
+        profile([
+          [0.15, 0.083, 0.1, -0.06],
+          [0.27, 0.079, 0.088, -0.068],
+          [0.44, 0.08, 0.092, -0.086],
+          [0.46, 0.084, 0.1, -0.088],
+        ]),
+        cloths,
+      );
+      a.add(shoeSole(), toon("#e8ded0", "anime-accessory"), {
+        p: [0, 0.031, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
+      // Upturned cloud toe: three stacked curls above the instep.
+      for (let i = 0; i < 3; i++)
+        a.torus(
+          [0, 0.1 + i * 0.016, 0.19 + i * 0.012],
+          0.026 - i * 0.005,
+          0.006,
+          trim,
+          [1.2, 0, 0],
+          Math.PI * 1.35,
+        );
+      a.tube(
+        [
+          [-0.088, 0.05, -0.07],
+          [-0.1, 0.05, 0.1],
+          [-0.07, 0.05, 0.235],
+          [0, 0.048, 0.286],
+          [0.07, 0.05, 0.235],
+          [0.1, 0.05, 0.1],
+          [0.088, 0.05, -0.07],
+        ],
+        0.005,
+        trim,
+      );
+      for (const side of [-1, 1])
+        a.add(shapeMesh(star(0.019)), trim, {
+          p: [side * 0.052, 0.107, 0.14],
+          r: [-0.7, 0, 0],
+        });
+    } else if (item.shape === 7) {
+      // 丝绦履: silk-soled slippers wrapped with long crossing ribbons.
+      const silk = toon(item.color, "anime-accessory");
+      a.add(
+        profile([
+          [0.13, 0.084, 0.101, -0.05],
+          [0.25, 0.08, 0.09, -0.07],
+          [0.42, 0.081, 0.094, -0.088],
+          [0.47, 0.086, 0.103, -0.09],
+        ]),
+        silk,
+      );
+      a.add(shoeSole(), toon("#d9cbb8", "anime-accessory"), {
+        p: [0, 0.03, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
+      for (const sign of [-1, 1])
+        for (let k = 0; k < 2; k++)
+          a.tube(
+            Array.from({ length: 34 }, (_, i): P => {
+              const t = i / 33;
+              const angle = sign * (t * Math.PI * 1.9 + k * 1.6);
+              return [
+                Math.sin(angle) * (0.078 - k * 0.012),
+                0.14 + t * 0.3 + k * 0.03,
+                -0.055 + Math.cos(angle) * (0.086 - k * 0.014),
+              ];
+            }),
+            0.0055,
+            trim,
+          );
+      for (const sign of [-1, 1])
+        a.add(blade(0.085, 0.026, 0.028), trim, {
+          p: [sign * 0.07, 0.44, -0.06],
+          r: [0, 0, sign * 1.0],
+        });
+      a.tube(
+        [
+          [-0.08, 0.055, -0.05],
+          [-0.09, 0.055, 0.1],
+          [0, 0.052, 0.25],
+          [0.09, 0.055, 0.1],
+          [0.08, 0.055, -0.05],
+        ],
+        0.0045,
+        trim,
+      );
+    } else if (item.shape === 8) {
+      // 圆头学生鞋: a plain rounded loafer with a single strap.
+      const leathers = toon("#3f3644", "anime-accessory");
+      a.add(
+        profile([
+          [0.14, 0.086, 0.104, -0.058],
+          [0.26, 0.082, 0.093, -0.07],
+          [0.44, 0.085, 0.099, -0.09],
+          [0.44, 0.1, 0.116, -0.092],
+        ]),
+        leathers,
+      );
+      a.tube(
+        Array.from({ length: 49 }, (_, i) => shoeCollar((i / 48) * Math.PI * 2)),
+        0.005,
+        trim,
+      );
+      a.add(new T.BoxGeometry(0.104, 0.016, 0.05), sole, {
+        p: [0, 0.036, 0],
+      });
+      a.add(shoeSole(), toon("#4a414f", "anime-accessory"), {
+        p: [0, 0.03, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
+      a.tube(
+        [
+          [-0.082, 0.15, 0.03],
+          [-0.05, 0.206, 0.03],
+          [0.05, 0.206, 0.03],
+          [0.082, 0.15, 0.03],
+        ],
+        0.011,
+        trim,
+      );
+      a.add(new T.BoxGeometry(0.03, 0.022, 0.012), metal, {
+        p: [0.072, 0.188, 0.044],
+        r: [0, 0, -0.3],
+      });
+      a.tube(
+        [
+          [-0.088, 0.052, -0.068],
+          [-0.1, 0.052, 0.1],
+          [0, 0.05, 0.29],
+          [0.1, 0.052, 0.1],
+          [0.088, 0.052, -0.068],
+        ],
+        0.004,
+        trim,
+      );
+    } else if (item.shape === 9) {
+      // 白线帆布鞋: a canvas plimsoll with a white rubber toe cap and laces.
+      // Canvas, toe cap and eyelets share three materials so a pair stays
+      // within the accessory draw budget.
+      const canvas = toon("#f4f6f8", "anime-accessory");
+      const accent = toon(item.color, "anime-accessory");
+      const rubber = toon("#e6e2da", "anime-accessory");
+      a.add(
+        profile([
+          [0.15, 0.086, 0.105, -0.06],
+          [0.27, 0.084, 0.095, -0.07],
+          [0.47, 0.088, 0.102, -0.088],
+          [0.44, 0.106, 0.122, -0.09],
+        ]),
+        canvas,
+      );
+      a.add(shoeSole(), rubber, { p: [0, 0.03, 0], r: [Math.PI / 2, 0, 0] });
+      a.add(new T.BoxGeometry(0.098, 0.014, 0.13), canvas, {
+        p: [0, 0.08, 0.095],
+      });
+      for (let i = 0; i < 4; i++) {
+        const y = 0.115 + i * 0.033;
+        for (const sign of [-1, 1])
+          a.sphere([sign * 0.038, y, 0.084 - i * 0.013], [0.009, 0.009, 0.009], accent);
+        a.tube(
+          [
+            [-0.036, y - 0.006, 0.086 - i * 0.013],
+            [0, y + 0.006, 0.094 - i * 0.013],
+            [0.036, y - 0.006, 0.086 - i * 0.013],
+          ],
+          0.0034,
+          accent,
+        );
+      }
+      // White rubber toe cap over the canvas at the front.
+      a.add(shoeUpper(), rubber, { p: [0, 0.001, 0], s: [0.99, 0.62, 0.3] });
+      a.tube(
+        [
+          [-0.088, 0.052, -0.068],
+          [-0.1, 0.052, 0.1],
+          [0, 0.05, 0.29],
+          [0.1, 0.052, 0.1],
+          [0.088, 0.052, -0.068],
+        ],
+        0.0046,
+        accent,
+      );
+    } else if (item.shape === 10) {
+      // 软绒短靴: a soft fleece ankle boot with a rolled cuff.
+      const fleece = toon(item.color, "anime-accessory");
+      a.add(
+        profile([
+          [0.18, 0.087, 0.106, -0.06],
+          [0.3, 0.08, 0.092, -0.07],
+          [0.46, 0.078, 0.092, -0.084],
+          [0.34, 0.12, 0.128, -0.082],
+        ]),
+        fleece,
+      );
+      a.add(shoeSole(), sole, { p: [0, 0.031, 0], r: [Math.PI / 2, 0, 0] });
+      for (let i = 0; i < 3; i++) {
+        const y = 0.3 + i * 0.042;
+        a.torus(
+          [0, y, -0.082],
+          0.088 + i * 0.002,
+          0.022 - i * 0.004,
+          i % 2 ? trim : fleece,
+          [0, 0, 0],
+        );
+      }
+      a.torus([0, 0.42, -0.082], 0.092, 0.024, trim);
+      a.add(new T.BoxGeometry(0.062, 0.046, 0.06), sole, {
+        p: [0, 0.028, -0.098],
+      });
+      a.add(shapeMesh(star(0.024)), metal, {
+        p: [-0.064, 0.3, 0.02],
+        r: [0, -1.1, 0],
+      });
+    } else if (item.shape === 11) {
+      // 轻跃运动鞋: a running shoe on a thick sole with a swoosh. The mesh
+      // upper replaces the base leather rather than covering it, so a foot
+      // keeps six merged meshes: base, upper, midsole, outsole, trim and gold.
+      const meshTop = toon("#f2f4f7", "anime-accessory");
+      const accent = toon(item.color, "anime-accessory");
+      const midsole = toon(item.accent, "anime-accessory");
+      a.add(
+        profile([
+          [0.15, 0.09, 0.108, -0.06],
+          [0.28, 0.092, 0.1, -0.072],
+          [0.48, 0.096, 0.106, -0.09],
+          [0.4, 0.13, 0.14, -0.092],
+        ]),
+        meshTop,
+      );
+      a.add(new T.BoxGeometry(0.108, 0.05, 0.312), midsole, {
+        p: [0, 0.045, 0.02],
+      });
+      a.add(shoeSole(), toon("#2f3540", "anime-accessory"), {
+        p: [0, 0.022, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
+      // The instep stripes reuse the accent midsole tone and the swoosh the
+      // mesh fabric, so a foot stays at six merged meshes.
+      for (let i = 0; i < 4; i++)
+        a.tube(
+          [
+            [-0.048, 0.132 + i * 0.03, 0.06 - i * 0.02],
+            [0, 0.14 + i * 0.03, 0.068 - i * 0.02],
+            [0.048, 0.132 + i * 0.03, 0.06 - i * 0.02],
+          ],
+          0.0042,
+          midsole,
+        );
+      for (let i = 0; i < 5; i++)
+        a.add(blade(0.11 - i * 0.012, 0.026, 0.03), meshTop, {
+          p: [-0.086 + i * 0.008, 0.08 + i * 0.014, -0.01 - i * 0.012],
+          r: [0.5, -1.4, 0.35],
+        });
+      a.tube(
+        [
+          [0.09, 0.13, -0.04],
+          [0.104, 0.1, -0.08],
+        ],
+        0.004,
+        accent,
+      );
+    } else if (item.shape === 12) {
+      // 厚底洛丽塔鞋: a platform shoe with a bow and buttons. The patent
+      // shares the base upper so a foot keeps six merged meshes.
+      const patent = toon(item.color, "anime-accessory");
+      const platform = toon("#8e8098", "anime-accessory");
+      a.add(
+        profile([
+          [0.13, 0.092, 0.108, -0.056],
+          [0.25, 0.088, 0.096, -0.066],
+          [0.4, 0.09, 0.1, -0.082],
+          [0.42, 0.11, 0.12, -0.084],
+        ]),
+        patent,
+      );
+      a.add(new T.BoxGeometry(0.104, 0.075, 0.3), platform, {
+        p: [0, 0.055, 0.016],
+      });
+      a.add(shoeSole(), toon("#302b38", "anime-accessory"), {
+        p: [0, 0.032, 0],
+        r: [Math.PI / 2, 0, 0],
+      });
+      a.tube(
+        [
+          [-0.082, 0.17, 0.028],
+          [-0.05, 0.232, 0.028],
+          [0.05, 0.232, 0.028],
+          [0.082, 0.17, 0.028],
+        ],
+        0.012,
+        trim,
+      );
+      for (const sign of [-1, 1])
+        a.add(
+          ribbon(
+            [
+              [sign * 0.012, 0.2, 0.042],
+              [sign * 0.058, 0.226, 0.052],
+              [sign * 0.03, 0.19, 0.048],
+            ],
+            0.042,
+          ),
+          trim,
+        );
+      a.sphere([0, 0.205, 0.05], [0.017, 0.015, 0.015], metal);
+      for (let i = 0; i < 3; i++)
+        a.sphere([-0.05 + i * 0.05, 0.062, 0.14 - Math.abs(i - 1) * 0.02], [0.011, 0.011, 0.011], metal);
+      a.sphere([0, 0.15, 0.186], [0.019, 0.015, 0.019], metal);
+    } else if (item.shape === 13) {
+      // 风吕敷足袋: a split-toe tabi with a wrapped cloth ankle.
+      const cloths = toon("#f7f5f0", "anime-accessory");
+      const wrap = toon(item.color, "anime-accessory");
+      a.add(shoeUpper(), cloths, { s: [0.96, 0.94, 0.97] });
+      a.add(
+        profile([
+          [0.15, 0.058, 0.062, -0.062],
+          [0.26, 0.056, 0.06, -0.07],
+          [0.36, 0.058, 0.064, -0.078],
+        ]),
+        cloths,
+      );
+      // The split between the big toe and the others.
+      a.add(new T.BoxGeometry(0.006, 0.05, 0.16), wrap, {
+        p: [0.026, 0.075, 0.09],
+      });
+      for (let i = 0; i < 3; i++)
+        a.tube(
+          Array.from({ length: 33 }, (_, j): P => {
+            const t = j / 32,
+              angle = t * Math.PI * 2;
+            return [
+              Math.sin(angle) * (0.062 - i * 0.005),
+              0.13 + i * 0.045 + Math.sin(t * Math.PI) * 0.012,
+              -0.07 + Math.cos(angle) * (0.074 - i * 0.006),
+            ];
+          }),
+          0.008,
+          wrap,
+        );
+      a.tube(
+        [
+          [0, 0.28, 0.024],
+          [0, 0.32, -0.02],
+          [0, 0.29, -0.064],
+        ],
+        0.005,
+        wrap,
+      );
+      a.add(new T.BoxGeometry(0.06, 0.026, 0.024), wrap, {
+        p: [0, 0.3, 0.038],
+      });
+    } else if (item.shape === 14) {
+      // 绯绳木屐: a geta with two teeth and a vermilion thong.
+      const woodClog = toon("#c8a882", "anime-accessory");
+      const thong = toon(item.color, "anime-accessory");
+      a.add(new T.BoxGeometry(0.108, 0.026, 0.31), woodClog, {
+        p: [0, 0.078, 0.012],
+      });
+      for (const sign of [-1, 1])
+        a.add(new T.BoxGeometry(0.096, 0.062, 0.03), woodClog, {
+          p: [0, 0.032, 0.012 + sign * 0.088],
+        });
+      a.tube(
+        [
+          [-0.052, 0.096, 0.13],
+          [0, 0.104, 0.132],
+          [0.052, 0.096, 0.13],
+        ],
+        0.012,
+        thong,
+      );
+      for (const sign of [-1, 1])
+        a.tube(
+          [
+            [sign * 0.05, 0.096, 0.128],
+            [sign * 0.018, 0.112, 0.06],
+            [0.004 * sign, 0.102, 0.018],
+          ],
+          0.0075,
+          thong,
+        );
+      a.sphere([0, 0.1, 0.014], [0.016, 0.012, 0.016], thong);
+    }    a.complete();
   }
   return silhouette(root, item, [
     "buckled-mary-jane-heels",
@@ -1234,5 +2514,14 @@ export function createShoes(
     "faceted-glass-slippers",
     "triple-buckle-knee-boots",
     "pearl-chain-gold-silk-pumps",
+    "cloud-toe-embroidered-shoes",
+    "silk-ribbon-wrap-slippers",
+    "rounded-school-loafers",
+    "white-toe-canvas-plimsolls",
+    "soft-fleece-ankle-boots",
+    "cushioned-running-shoes",
+    "platform-lolita-shoes",
+    "split-toe-tabi-and-wrap",
+    "two-tooth-wooden-geta",
   ]);
 }

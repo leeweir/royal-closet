@@ -25,7 +25,7 @@ try {
   await page.evaluate(async () => {
     window.fit = await import("/tests/wardrobe-fit-checks.ts");
   });
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 15; i++) {
     const result = await page.evaluate((i) => {
       const v = window.__PRINCESS_PREVIEW__;
       v.setAngle(0);
@@ -56,7 +56,7 @@ try {
     });
     await page.screenshot({ path: `test-results/anime-dress-${i}-wave.png` });
   }
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 15; i++) {
     await page.evaluate((i) => {
       const v = window.__PRINCESS_PREVIEW__;
       v.pose(false, 0);
@@ -125,7 +125,7 @@ try {
     ],
   ]) {
     const cards = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 15; i++) {
       const data = (
         await fs.readFile(`test-results/anime-${category}-${i}-front.png`)
       ).toString("base64");

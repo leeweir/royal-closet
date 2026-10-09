@@ -29,7 +29,7 @@ try {
       )
       .first()
       .click();
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 15; i++) {
     for (const cat of ["dress", "hair", "crown", "shoes", "wings", "wand"])
       save.outfit[cat] = `${cat}-${i}`;
     await p.evaluate(

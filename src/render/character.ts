@@ -239,8 +239,11 @@ export function animateCharacter(
     bone("leftUpperArm").rotation.z = -0.97;
     bone("hips").rotation.y = Math.sin(t * 1.6) * 0.035;
   }
-  const dress = Number(rig.keys.couture?.match(/dress-(\d)/)?.[1] ?? 0);
-  const stride = [0.32, 0.52, 0.48, 0.26, 0.52, 0.32][dress];
+  const dress = Number(rig.keys.couture?.match(/dress-(\d+)/)?.[1] ?? 0);
+  const stride = [
+    0.32, 0.52, 0.48, 0.26, 0.52, 0.32, 0.3, 0.32, 0.44, 0.44, 0.3, 0.56, 0.36,
+    0.26, 0.36,
+  ][dress];
   for (const [i, side] of (["left", "right"] as const).entries()) {
     const foot = walkFoot(rig.walkPhase + i * 0.5, stride);
     const leg =

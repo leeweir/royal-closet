@@ -5,7 +5,7 @@ import * as T from "three";
 import { MToonMaterial } from "@pixiv/three-vrm";
 import { torsoSurface } from "../src/render/body-fit";
 import { createCouture } from "../src/render/couture";
-import { ITEMS } from "../src/simulation/data";
+import { ITEMS, SET_COUNT } from "../src/simulation/data";
 
 // Hold the dye constant: these checks must prove changes in the cloth's geometry.
 const garments = ITEMS.filter((item) => item.category === "dress").map((item) =>
@@ -55,7 +55,7 @@ function width(points: T.Vector3[], lowY: number, highY: number) {
   );
 }
 
-test("all six dresses change geometry even with the same dye", () => {
+test("every dress changes geometry even with the same dye", () => {
   const signatures = garments.map((group) => {
     const hash = createHash("sha256");
     for (const mesh of meshes(group)) {
@@ -76,7 +76,8 @@ test("all six dresses change geometry even with the same dye", () => {
     }
     return hash.digest("hex");
   });
-  assert.equal(new Set(signatures).size, 6);
+  assert.equal(signatures.length, SET_COUNT);
+  assert.equal(new Set(signatures).size, SET_COUNT);
 });
 
 test("garment attributes remain finite and fit the waist and shoulder anchors", () => {
@@ -154,6 +155,63 @@ test("royal dress has the broadest court skirt and a long rear train", () => {
     bounds[5].min.z < bounds[0].min.z - 0.75,
     "train extends beyond an ordinary skirt",
   );
+});
+
+test("the six everyday silhouettes read as six different cuts", () => {
+  const hem = (i: number) => {
+    const low = bounds[i].min.y;
+    const near = vertices[i].filter((p) => p.y < low + 0.02);
+    return Math.max(...near.map((p) => Math.abs(p.x)));
+  };
+  // 6 水墨 hanfu and 7 齐胸 tang wrap both reach the floor, but the hanfu
+  // keeps a wider knife-pleated hem and a shorter sleeve.
+  for (const i of [6, 7])
+    assert.ok(
+      bounds[i].min.y > 0.17 && bounds[i].min.y < 0.24,
+      "floor length",
+    );
+  assert.ok(hem(6) > 0.7, "hanfu skirt keeps a broad pleated hem");
+  assert.ok(hem(7) > 0.7, "tang wrap skirt keeps a broad hem");
+  const sleeveReach = (i: number) => {
+    const s = garments[i].getObjectByName("sleeve-left");
+    assert.ok(s, "silhouette has authored sleeves");
+    let reach = 0;
+    s.traverse((o) => {
+      if (!(o instanceof T.Mesh)) return;
+      const at = o.geometry.getAttribute("position");
+      for (let j = 0; j < at.count; j++)
+        reach = Math.max(
+          reach,
+          Math.abs(new T.Vector3().fromBufferAttribute(at, j).x),
+        );
+    });
+    return reach;
+  };
+  // 8 学生装 and 9 水手服 leave the legs visible above a pleated skirt.
+  for (const i of [8, 9]) {
+    assert.ok(
+      bounds[i].min.y > 1.1 && bounds[i].min.y < 1.3,
+      "school skirts end above the knee",
+    );
+    assert.ok(hem(i) > 0.45 && hem(i) < 0.6, "crisp knee length pleats");
+  }
+  // 11 运动服 is the shortest hem of the fifteen; 10 针织 reaches the ankle.
+  assert.ok(bounds[11].min.y > 1.1 && bounds[11].min.y < 1.2);
+  assert.ok(hem(11) < 0.45, "shorts stay close to the thigh");
+  assert.ok(hem(10) < 0.65 && bounds[10].min.y < 0.3, "long soft knit skirt");
+  // 12 洛丽塔 and 13 振袖 are the two widest new hems, with the kimono
+  // distinguished by the long hanging sleeve instead.
+  assert.ok(hem(12) > 0.7);
+  assert.ok(sleeveReach(13) > 0.7 && bounds[13].min.y > 0.17);
+  assert.ok(sleeveReach(13) > sleeveReach(6) + 0.15, "furisode sleeve hangs long");
+  // 14 巫女 splits into two hakama legs rather than one tube.
+  const lower = vertices[14].filter((p) => p.y < 0.9);
+  assert.ok(
+    lower.some((p) => p.x > 0.05) && lower.some((p) => p.x < -0.05),
+    "hakama is divided",
+  );
+  const gap = lower.filter((p) => Math.abs(p.x) < 0.03);
+  assert.ok(gap.length < lower.length * 0.2, "the two legs stay apart");
 });
 
 test("anime cloth uses cel shading and opaque fabric trim within the draw budget", () => {

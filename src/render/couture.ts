@@ -7,7 +7,15 @@ import { torsoSurface } from "./body-fit";
 // Garment coordinates match the character's waist, bust and shoulder anchors.
 // All ornament geometry is attached to the cloth, never to the character's skin.
 type Surface = (t: number, a: number) => T.Vector3;
-type Cloth = "satin" | "velvet" | "lace" | "tulle";
+type Cloth =
+  | "satin"
+  | "velvet"
+  | "lace"
+  | "tulle"
+  | "brocade"
+  | "knit"
+  | "jersey"
+  | "cotton";
 const TAU = Math.PI * 2;
 const gold = "#dbb875";
 
@@ -352,6 +360,262 @@ function waist(group: T.Group, material: T.Material, thickness = 0.014) {
   add(group, ring, material);
 }
 
+function longSleeves(
+  group: T.Group,
+  material: T.Material,
+  cuff: T.Material,
+  flare = 0.05,
+  wrist = 0.33,
+) {
+  // Sleeves hang from the same shoulder anchors as the puff caps so the rig
+  // can swing them with the upper arm on every silhouette.
+  for (const side of [-1, 1]) {
+    const armAttachment = new T.Group();
+    armAttachment.name = side < 0 ? "sleeve-left" : "sleeve-right";
+    group.add(armAttachment);
+    const arm = grid(
+      (u, t) => {
+        const a = u * TAU;
+        const radius = 0.066 + flare * Math.pow(t, 1.35);
+        return new T.Vector3(
+          side * (0.34 + t * 0.055) + Math.sin(a) * radius,
+          2.545 - t * (0.28 + wrist),
+          Math.cos(a) * radius * 0.82,
+        );
+      },
+      48,
+      26,
+    );
+    add(armAttachment, arm, material);
+    const hemRing = grid(
+      (u, t) => {
+        const a = u * TAU,
+          r = 0.066 + flare + t * 0.014;
+        return new T.Vector3(
+          side * 0.395 + Math.sin(a) * r,
+          2.265 - wrist - t * 0.05,
+          Math.cos(a) * r * 0.82,
+        );
+      },
+      48,
+      8,
+    );
+    add(armAttachment, hemRing, cuff);
+  }
+}
+
+/** Flat sailor collar with two front points; a fuku signature, not a shawl. */
+function sailorCollar(group: T.Group, material: T.Material, trim: T.Material) {
+  const back = grid(
+    (u, t) => {
+      const a = (u - 0.5) * Math.PI * 1.16;
+      const y = 2.585 - t * 0.2;
+      const p = torsoSurface(y, a + Math.PI, 0.026 + t * 0.012);
+      return new T.Vector3(p.x, p.y + Math.sin(u * Math.PI) * 0.012, p.z);
+    },
+    32,
+    14,
+  );
+  add(group, back, material);
+  for (const side of [-1, 1]) {
+    const point = grid(
+      (u, t) => {
+        const a = side * (0.06 + t * 0.66);
+        const p = at(
+          (tt, aa) => torsoSurface(2.585 - tt * 0.24, aa, 0.03),
+          t * 0.96,
+          a -
+            side * (u - 0.5) * (0.2 - t * 0.12) +
+            Math.sin(t * Math.PI) * 0.02,
+          0.008,
+        );
+        return new T.Vector3(p.x, p.y - t * 0.035, p.z);
+      },
+      20,
+      24,
+    );
+    add(group, point, material);
+    add(
+      group,
+      line(
+        Array.from({ length: 25 }, (_, i) => {
+          const t = i / 24;
+          return at(
+            (tt, aa) => torsoSurface(2.585 - tt * 0.24, aa, 0.037),
+            t * 0.96,
+            side * (0.06 + t * 0.66),
+            0,
+          );
+        }),
+        0.005,
+      ),
+      trim,
+    );
+  }
+  const knot = add(
+    group,
+    new T.BoxGeometry(0.062, 0.05, 0.036, 2, 2, 2),
+    trim,
+  );
+  knot.position.set(0, 2.395, 0.202);
+  knot.rotation.z = 0.1;
+  add(
+    group,
+    ribbon(
+      [
+        new T.Vector3(0, 2.39, 0.204),
+        new T.Vector3(-0.03, 2.3, 0.211),
+        new T.Vector3(0.05, 2.16, 0.198),
+        new T.Vector3(0.02, 2.06, 0.192),
+      ],
+      0.052,
+    ),
+    trim,
+  );
+}
+
+/** Hanging sash ends with a knot; used by the kimono-family silhouettes. */
+function sashTails(
+  group: T.Group,
+  material: T.Material,
+  y: number,
+  reach: number,
+  width = 0.1,
+) {
+  add(
+    group,
+    ribbon(
+      [
+        new T.Vector3(0, y, 0.185),
+        new T.Vector3(0.03, y - reach * 0.35, 0.21),
+        new T.Vector3(-0.04, y - reach * 0.72, 0.2),
+        new T.Vector3(0.01, y - reach, 0.16),
+      ],
+      width,
+    ),
+    material,
+  );
+  add(
+    group,
+    ribbon(
+      [
+        new T.Vector3(0, y, 0.185),
+        new T.Vector3(-0.02, y - reach * 0.3, 0.215),
+        new T.Vector3(0.05, y - reach * 0.66, 0.203),
+        new T.Vector3(0.04, y - reach * 0.98, 0.17),
+      ],
+      width,
+    ),
+    material,
+  );
+}
+
+/**
+ * Knife pleats as a surface: the fold offset grows with `t` so a pleated
+ * skirt reads as crisp vertical channels rather than a wavy tube.
+ */
+function pleated(
+  r: (t: number) => number,
+  y: (t: number, a: number) => number,
+  depth = 0.8,
+  folds = 20,
+  foldSize = 0.03,
+  sharp = 1,
+): Surface {
+  return (t, a) => {
+    const fold = Math.asin(Math.sin(a * folds)) / (Math.PI / 2);
+    const radius = r(t) + fold * foldSize * Math.pow(t, sharp);
+    return new T.Vector3(
+      Math.sin(a) * radius,
+      y(t, a),
+      Math.cos(a) * radius * depth,
+    );
+  };
+}
+
+/** Crossed collar band over the bodice — the hanfu and kimono neckline. */
+function crossedCollar(
+  group: T.Group,
+  material: T.Material,
+  trim: T.Material,
+  top = 2.58,
+  drop = 0.24,
+  ease = 0.021,
+) {
+  for (const side of [-1, 1]) {
+    const band = grid(
+      (u, t) => {
+        const a = side * (0.1 + t * 0.62);
+        const y = top - t * drop;
+        const p = torsoSurface(y, a, ease);
+        return new T.Vector3(
+          p.x + Math.sin(a) * 0.006,
+          p.y + (u - 0.5) * 0.006,
+          p.z + Math.cos(a) * 0.006,
+        );
+      },
+      10,
+      28,
+    );
+    add(group, band, material);
+    add(
+      group,
+      line(
+        Array.from({ length: 29 }, (_, i) => {
+          const t = i / 28;
+          const a = side * (0.1 + t * 0.62);
+          return torsoSurface(top - t * drop, a, ease + 0.008);
+        }),
+        0.0045,
+      ),
+      trim,
+    );
+  }
+}
+
+/** A wide drape of fabric hanging from the shoulders; the kimono sleeve. */
+function hangingSleeves(
+  group: T.Group,
+  material: T.Material,
+  trim: T.Material,
+  reach = 0.78,
+  spread = 0.235,
+) {
+  for (const side of [-1, 1]) {
+    const armAttachment = new T.Group();
+    armAttachment.name = side < 0 ? "sleeve-left" : "sleeve-right";
+    group.add(armAttachment);
+    const drape = grid(
+      (u, t) => {
+        const a = u * TAU;
+        const radius = 0.072 + spread * Math.pow(t, 0.72);
+        return new T.Vector3(
+          side * (0.335 + t * 0.05) + Math.sin(a) * radius,
+          2.55 - t * reach,
+          Math.cos(a) * radius * 0.66,
+        );
+      },
+      44,
+      24,
+    );
+    add(armAttachment, drape, material);
+    const cuffRing = grid(
+      (u, t) => {
+        const a = u * TAU,
+          r = 0.072 + spread + t * 0.02;
+        return new T.Vector3(
+          side * 0.385 + Math.sin(a) * r,
+          2.55 - reach - t * 0.05,
+          Math.cos(a) * r * 0.66,
+        );
+      },
+      44,
+      8,
+    );
+    add(armAttachment, cuffRing, trim);
+  }
+}
+
 function puffSleeves(group: T.Group, material: T.Material, lace: T.Material) {
   for (const side of [-1, 1]) {
     const armAttachment = new T.Group();
@@ -448,10 +712,24 @@ export function createCouture(item: Item, color: string): T.Group {
     new T.Color(color).lerp(new T.Color("#655090"), 0.3).getStyle(),
     "velvet",
   );
+  // The everyday silhouettes read as fabric, not as lacquer: a deep ink for
+  // hanfu piping, plus matte knit and jersey for the casual and sporty sets.
+  const ink = cloth(
+    new T.Color(color).lerp(new T.Color("#2c2a3d"), 0.55).getStyle(),
+    "brocade",
+  );
+  const knit = cloth(
+    new T.Color(color).lerp(new T.Color("#f3e9dc"), 0.4).getStyle(),
+    "knit",
+  );
+  const jersey = cloth(
+    new T.Color(color).lerp(new T.Color("#ffffff"), 0.2).getStyle(),
+    "jersey",
+  );
   const metallic = toon("#ffe3a2", "gold trim");
   const silver = toon("#eef6ff", "ivory trim");
   const crystal = toon("#ade4ff", "crystal");
-  const shape = Math.max(0, Math.min(5, item.shape));
+  const shape = Math.max(0, Math.min(14, item.shape));
   const silhouettes = [
     "moonlight-a-line",
     "rose-lolita",
@@ -459,6 +737,15 @@ export function createCouture(item: Item, color: string): T.Group {
     "ice-mermaid",
     "witch-pleats-and-tails",
     "royal-open-robe-and-train",
+    "ink-hanfu-ruqun",
+    "tang-chest-wrap",
+    "republican-student-uniform",
+    "sailor-fuku",
+    "cream-knit-casual",
+    "track-jacket-and-shorts",
+    "sweet-lolita-bell",
+    "kimono-furisode",
+    "vermilion-miko-hakama",
   ];
   group.userData = {
     silhouette: silhouettes[shape],
@@ -469,6 +756,16 @@ export function createCouture(item: Item, color: string): T.Group {
       ["satin", "lace", "tulle"],
       ["satin", "velvet"],
       ["satin", "lace", "velvet", "brocade"],
+      ["satin", "brocade"],
+      ["satin", "brocade", "tulle"],
+      ["satin", "velvet"],
+      ["satin", "lace"],
+      ["knit", "satin"],
+      ["jersey", "satin"],
+      ["satin", "lace", "tulle"],
+      ["satin", "brocade"],
+      ["satin", "cotton"],
+      ["satin", "brocade"],
     ][shape],
     waistY: 1.9,
   };
@@ -804,7 +1101,7 @@ export function createCouture(item: Item, color: string): T.Group {
     buckle.position.set(0, 1.895, 0.19);
     buckle.rotation.z = -0.2;
     bow(group, satin, new T.Vector3(0, 2.4, 0.201), 0.125);
-  } else {
+  } else if (shape === 5) {
     const base = radial(
       (t) => 0.235 + 0.755 * Math.pow(Math.sin((t * Math.PI) / 2), 0.82),
       (t, a) => 1.895 - 1.655 * t + Math.cos(a * 20) * 0.018 * t,
@@ -896,6 +1193,544 @@ export function createCouture(item: Item, color: string): T.Group {
     jewel.scale(0.9, 1.4, 0.4);
     ornamentInstances(group, jewel, crystal, jewels);
     bow(group, satin, new T.Vector3(0, 1.916, -0.22), 0.265);
+  } else if (shape === 6) {
+    // 水墨仙裳: a cross-collared ruqun with a high waistband and a long,
+    // evenly pleated skirt that flows past the ankles.
+    const skirt = pleated(
+      (t) => 0.242 + 0.5 * Math.pow(Math.sin((t * Math.PI) / 2), 0.72),
+      (t) => 1.9 - 1.685 * t,
+      0.82,
+      24,
+      0.026,
+      1.1,
+    );
+    add(group, shell(skirt, 0, TAU, 148, 46), satin);
+    add(group, hem(skirt, 0.008), ink);
+    crossedCollar(group, satin, ink);
+    longSleeves(group, satin, ink, 0.085, 0.3);
+    bodice(group, satin, ink, false, true);
+    // A wide obi sits above the waist seam; a jade ring closes it.
+    const obi = radial(
+      () => 0.247,
+      (t, a) => 1.985 - t * 0.12 + Math.cos(a * 24) * 0.004,
+      0.8,
+      24,
+      0.012,
+    );
+    add(group, shell(obi, 0, TAU, 128, 12), ivory);
+    add(group, hem(obi, 0.006), ink);
+    const jade = toon("#7fc2a8", "jade");
+    const jadeRing = add(
+      group,
+      new T.TorusGeometry(0.042, 0.011, 8, 24),
+      jade,
+    );
+    jadeRing.position.set(0, 1.93, 0.2);
+    jadeRing.rotation.x = Math.PI / 2;
+    sashTails(group, ivory, 1.9, 0.5, 0.075);
+    // Ink-wash blossoms climbing the skirt.
+    const petals: T.BufferGeometry[] = [];
+    for (let i = 0; i < 7; i++) {
+      const a = -0.5 + i * 0.42,
+        t = 0.3 + (i % 3) * 0.2;
+      const center = at(skirt, t, a, 0.012);
+      for (let n = 0; n < 5; n++) {
+        const angle = (n / 5) * TAU;
+        petals.push(
+          line(
+            [
+              center.clone(),
+              center
+                .clone()
+                .add(
+                  new T.Vector3(
+                    Math.sin(angle) * 0.036,
+                    0.03 - Math.cos(angle) * 0.036,
+                    Math.sin(a) * 0.012,
+                  ),
+                ),
+            ],
+            0.006,
+            2,
+          ),
+        );
+      }
+    }
+    add(group, combine(petals), ink);
+  } else if (shape === 7) {
+    // 齐胸襦裙: the skirt band ties above the bust, with a translucent
+    // outer layer and two waist streamers.
+    const skirt = radial(
+      (t) => 0.246 + 0.47 * Math.pow(Math.sin((t * Math.PI) / 2), 0.66),
+      (t, a) => 2.24 - 2.03 * t + Math.cos(a * 16) * 0.02 * t,
+      0.82,
+      16,
+      0.024,
+    );
+    add(group, shell(skirt, 0, TAU, 136, 44), satin);
+    const over = radial(
+      (t) => 0.252 + 0.5 * Math.pow(t, 0.7),
+      (t, a) => 2.23 - t * 2.0 + Math.cos(a * 12) * 0.028 * t,
+      0.83,
+      12,
+      0.03,
+    );
+    add(group, shell(over, 0, TAU, 120, 30), tulle).renderOrder = 1;
+    add(group, hem(skirt, 0.009), metallic);
+    // The chest-wrap sits over a fitted inner bodice, so the fabric still
+    // follows the torso envelope where the bandeau leaves a gap.
+    bodice(group, satin, ivory);
+    const bandeau = grid(
+      (u, t) => {
+        const a = (u - 0.5) * TAU;
+        return torsoSurface(2.4 - t * 0.16, a, 0.014);
+      },
+      96,
+      20,
+    );
+    add(group, bandeau, satin);
+    const chestBand = radial(
+      () => 0.243,
+      (t, a) => 2.395 - t * 0.115 + Math.cos(a * 22) * 0.005,
+      0.8,
+      22,
+      0.01,
+    );
+    add(group, shell(chestBand, 0, TAU, 128, 12), ivory);
+    add(group, hem(chestBand, 0.007), metallic);
+    for (const a of [0.34, TAU - 0.34])
+      add(
+        group,
+        line(
+          Array.from({ length: 26 }, (_, i) => {
+            const t = i / 25;
+            const p = at(skirt, 0.02 + t * 0.42, a + t * 0.05, 0.014);
+            return new T.Vector3(p.x + Math.sin(a) * 0.03, p.y, p.z);
+          }),
+          0.007,
+        ),
+        ivory,
+      );
+    add(
+      group,
+      ribbon(
+        [
+          new T.Vector3(0, 2.39, 0.2),
+          new T.Vector3(-0.05, 2.24, 0.226),
+          new T.Vector3(0.04, 2.02, 0.222),
+          new T.Vector3(-0.02, 1.82, 0.19),
+        ],
+        0.09,
+      ),
+      ivory,
+    );
+    for (let i = 0; i < 5; i++) {
+      const bead = add(
+        group,
+        new T.OctahedronGeometry(0.019 - i * 0.0015, 0),
+        crystal,
+      );
+      bead.position.set(0, 2.36 - i * 0.045, 0.215);
+    }
+    sashTails(group, satin, 1.9, 0.42);
+  } else if (shape === 8) {
+    // 青衿学生装: a stand collar, a straight buttoned bodice and a knee
+    // length knife-pleated skirt with a twin white stripe.
+    const skirt = pleated(
+      (t) => 0.24 + 0.235 * Math.pow(t, 0.8),
+      (t, a) => 1.9 - t * 0.68 + Math.cos(a * 20) * 0.012 * t,
+      0.82,
+      20,
+      0.022,
+      1,
+    );
+    add(group, shell(skirt, 0, TAU, 128, 30), satin);
+    add(group, hem(skirt, 0.007), ivory);
+    add(
+      group,
+      line(
+        Array.from({ length: 97 }, (_, i) =>
+          at(skirt, 0.795, (i / 96) * TAU, 0.008),
+        ),
+        0.006,
+      ),
+      ivory,
+    );
+    bodice(group, satin, ivory, false, true);
+    // Mandarin collar: a short standing band above the bodice edge.
+    const collar = radial(
+      (t) => 0.152 - t * 0.012,
+      (t, a) => 2.585 + t * 0.045,
+      0.72,
+      0,
+      0,
+    );
+    add(group, shell(collar, 0, TAU, 96, 10), satin);
+    add(group, hem(collar, 0.006), ivory);
+    // Button placket down the front.
+    const placket = grid(
+      (u, t) =>
+        at(
+          (tt, aa) => torsoSurface(2.53 - tt * 0.6, aa, 0.017),
+          t,
+          (u - 0.5) * 0.075,
+          0,
+        ),
+      8,
+      24,
+    );
+    add(group, placket, ivory);
+    const buttons: { position: T.Vector3; angle: number; scale: number }[] = [];
+    for (let i = 0; i < 5; i++)
+      buttons.push({
+        position: torsoSurface(2.5 - i * 0.115, 0, 0.03),
+        angle: 0,
+        scale: 1,
+      });
+    ornamentInstances(group, new T.CylinderGeometry(0.013, 0.013, 0.007, 12), metallic, buttons);
+    longSleeves(group, satin, ivory, 0.02, 0.29);
+    waist(group, ivory, 0.012);
+    bow(group, satin, new T.Vector3(0, 1.905, 0.2), 0.115);
+  } else if (shape === 9) {
+    // 海风水手服: a sailor collar with a knotted tie over a pleated skirt.
+    const skirt = pleated(
+      (t) => 0.24 + 0.24 * Math.pow(t, 0.85),
+      (t, a) => 1.9 - t * 0.66 + Math.cos(a * 22) * 0.01 * t,
+      0.82,
+      22,
+      0.024,
+      1,
+    );
+    add(group, shell(skirt, 0, TAU, 128, 30), satin);
+    add(group, hem(skirt, 0.008), ivory);
+    add(
+      group,
+      line(
+        Array.from({ length: 97 }, (_, i) =>
+          at(skirt, 0.86, (i / 96) * TAU, 0.009),
+        ),
+        0.007,
+      ),
+      ivory,
+    );
+    bodice(group, satin, ivory);
+    sailorCollar(group, satin, ivory);
+    puffSleeves(group, satin, ivory);
+    waist(group, ivory, 0.011);
+  } else if (shape === 10) {
+    // 奶油针织: an oversized ribbed cardigan over a soft long skirt.
+    const skirt: Surface = (t, a) => {
+      const r = 0.243 + 0.3 * Math.pow(t, 0.72);
+      return new T.Vector3(
+        Math.sin(a) * r,
+        1.9 - t * 1.66,
+        Math.cos(a) * r * 0.84,
+      );
+    };
+    add(group, shell(skirt, 0, TAU, 120, 44), satin);
+    add(group, hem(skirt, 0.012), knit);
+    // Ribbed hem band in a deeper tone.
+    const ribbed = radial(
+      (t) => 0.545 + t * 0.02,
+      (t, a) => 0.245 + t * 0.09 + Math.cos(a * 30) * 0.006,
+      0.84,
+      30,
+      0.008,
+    );
+    add(group, shell(ribbed, 0, TAU, 120, 10), knit);
+    const cardigan: Surface = (t, a) => {
+      const front = Math.max(0, Math.cos(a));
+      const y = 2.58 - t * 0.92;
+      const p = torsoSurface(y, a, 0.032 + t * 0.02);
+      return new T.Vector3(
+        p.x * (1 + t * 0.12),
+        p.y,
+        p.z * (1 + t * 0.16) - front * t * 0.012,
+      );
+    };
+    add(group, shell(cardigan, 0, TAU, 112, 26), knit);
+    add(group, hem(cardigan, 0.012), ivory);
+    for (const side of [-1, 1])
+      add(
+        group,
+        line(
+          Array.from({ length: 21 }, (_, i) => {
+            const t = i / 20;
+            const a = side * 0.42;
+            return torsoSurface(2.58 - t * 0.9, a, 0.038 + t * 0.02);
+          }),
+          0.009,
+        ),
+        ivory,
+      );
+    longSleeves(group, knit, ivory, 0.045, 0.27);
+    const buttons: { position: T.Vector3; angle: number; scale: number }[] = [];
+    for (let i = 0; i < 4; i++)
+      buttons.push({
+        position: torsoSurface(2.4 - i * 0.19, 0.3, 0.045),
+        angle: 0.3,
+        scale: 1,
+      });
+    ornamentInstances(
+      group,
+      new T.SphereGeometry(0.016, 12, 10),
+      toon("#d8b98a", "wood"),
+      buttons,
+    );
+    bodice(group, knit, ivory);
+    waist(group, ivory, 0.009);
+  } else if (shape === 11) {
+    // 跃动运动服: a zipped track jacket with side stripes over lined shorts.
+    const shorts = radial(
+      (t) => 0.246 + 0.13 * Math.pow(t, 0.6),
+      (t, a) => 1.9 - t * 0.74 + Math.cos(a * 14) * 0.012 * t,
+      0.8,
+      14,
+      0.02,
+    );
+    add(group, shell(shorts, 0, TAU, 112, 26), satin);
+    add(group, hem(shorts, 0.009), jersey);
+    // The inner seam makes the shorts read as two legs, not a tube.
+    for (const a of [0, Math.PI])
+      add(
+        group,
+        grid(
+          (u, t) => {
+            const p = at(shorts, 0.55 + t * 0.44, a, 0.006);
+            return new T.Vector3(p.x + (u - 0.5) * 0.016, p.y, p.z * 0.42);
+          },
+          6,
+          14,
+        ),
+        jersey,
+      );
+    bodice(group, satin, jersey, false, true);
+    const jacket: Surface = (t, a) => {
+      const y = 2.545 - t * 0.86;
+      const p = torsoSurface(y, a, 0.028 + t * 0.014);
+      return new T.Vector3(p.x, p.y, p.z);
+    };
+    add(group, shell(jacket, 0, TAU, 112, 24), satin);
+    add(group, hem(jacket, 0.01), jersey);
+    // Centre zip and the racing stripe down each sleeve.
+    add(
+      group,
+      line(
+        Array.from({ length: 22 }, (_, i) =>
+          torsoSurface(2.545 - (i / 21) * 0.84, 0, 0.045),
+        ),
+        0.007,
+      ),
+      jersey,
+    );
+    const collar = radial(
+      (t) => 0.156 - t * 0.01,
+      (t, a) => 2.57 + t * 0.05,
+      0.74,
+      0,
+      0,
+    );
+    add(group, shell(collar, 0, TAU, 96, 10), satin);
+    add(group, hem(collar, 0.006), jersey);
+    longSleeves(group, satin, jersey, 0.03, 0.26);
+    for (const side of [-1, 1])
+      add(
+        group,
+        line(
+          Array.from({ length: 18 }, (_, i) => {
+            const t = i / 17;
+            const r = 0.062 + 0.03 * t;
+            const a = side * 1.5;
+            return new T.Vector3(
+              side * (0.34 + t * 0.055) + Math.sin(a) * r,
+              2.545 - t * 0.54,
+              Math.cos(a) * r * 0.82,
+            );
+          }),
+          0.011,
+        ),
+        jersey,
+      );
+    waist(group, jersey, 0.014);
+    bow(group, jersey, new T.Vector3(0, 1.895, 0.2), 0.09);
+  } else if (shape === 12) {
+    // 甜梦洛丽塔: a bell skirt on layered ruffles with a large back bow.
+    const bell = radial(
+      (t) => 0.244 + 0.46 * Math.pow(Math.sin((t * Math.PI) / 2), 0.6),
+      (t, a) => 1.9 - t * 0.95 + Math.cos(a * 18) * 0.022 * t,
+      0.88,
+      18,
+      0.026,
+    );
+    add(group, shell(bell, 0, TAU, 136, 34), satin);
+    for (let i = 0; i < 3; i++) {
+      const tier = radial(
+        (t) => 0.244 + 0.46 * Math.pow(Math.sin(((0.62 + i * 0.19) * Math.PI) / 2), 0.6) + t * 0.085,
+        (t, a) => 1.9 - (0.62 + i * 0.19) * 0.95 - t * 0.11 +
+          Math.cos(a * 16) * 0.03,
+        0.88,
+        16,
+        0.03,
+      );
+      add(group, shell(tier, 0, TAU, 128, 8), i % 2 ? lace : ivory);
+    }
+    add(group, hem(bell, 0.012), lace);
+    bodice(group, satin, ivory, false, true);
+    puffSleeves(group, satin, lace);
+    waist(group, ivory, 0.018);
+    bow(group, ivory, new T.Vector3(0, 1.92, 0.2), 0.155);
+    bow(group, satin, new T.Vector3(0, 1.93, -0.225), 0.3);
+    sashTails(group, ivory, 1.86, 0.55, 0.11);
+    const pearls: { position: T.Vector3; angle: number; scale: number }[] = [];
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * TAU;
+      pearls.push({ position: at(bell, 0.3, a, 0.014), angle: a, scale: 1 });
+    }
+    ornamentInstances(
+      group,
+      new T.SphereGeometry(0.012, 10, 8),
+      ivory,
+      pearls,
+    );
+  } else if (shape === 13) {
+    // 和风振袖: a crossed kimono collar, a wide obi and long hanging sleeves.
+    const kimono: Surface = (t, a) => {
+      const p = torsoSurface(2.53 - t * 0.86, a, 0.03 + t * 0.018);
+      return new T.Vector3(p.x * (1 + t * 0.06), p.y, p.z * (1 + t * 0.05));
+    };
+    add(group, shell(kimono, 0, TAU, 112, 26), satin);
+    const skirt = radial(
+      (t) => 0.246 + 0.215 * Math.pow(t, 0.78),
+      (t, a) => 1.9 - t * 1.7 + Math.cos(a * 16) * 0.016 * t,
+      0.83,
+      16,
+      0.022,
+    );
+    add(group, shell(skirt, 0, TAU, 128, 44), satin);
+    add(group, hem(skirt, 0.01), ivory);
+    crossedCollar(group, satin, ivory, 2.585, 0.5, 0.034);
+    hangingSleeves(group, satin, ivory, 0.84, 0.28);
+    bodice(group, satin, ivory, false, true);
+    // Obi: a broad stiff band with a braided cord and a back knot.
+    const obi = radial(
+      () => 0.262,
+      (t, a) => 2.0 - t * 0.28 + Math.cos(a * 20) * 0.005,
+      0.82,
+      20,
+      0.01,
+    );
+    add(group, shell(obi, 0, TAU, 128, 14), ivory);
+    add(group, hem(obi, 0.007), metallic);
+    add(
+      group,
+      line(
+        Array.from({ length: 97 }, (_, i) =>
+          at(obi, 0.5, (i / 96) * TAU, 0.012),
+        ),
+        0.008,
+      ),
+      metallic,
+    );
+    const obiKnot = add(group, new T.BoxGeometry(0.17, 0.1, 0.06), ivory);
+    obiKnot.position.set(0, 1.86, -0.245);
+    const obiCord = add(
+      group,
+      new T.TorusGeometry(0.05, 0.012, 8, 24),
+      metallic,
+    );
+    obiCord.position.set(0, 1.86, -0.278);
+    obiCord.rotation.x = Math.PI / 2;
+    sashTails(group, ivory, 1.83, 0.6, 0.13);
+    // Scattered blossom stamps down the front panels.
+    const stamps: { position: T.Vector3; angle: number; scale: number }[] = [];
+    for (let i = 0; i < 9; i++) {
+      const a = -0.42 + i * 0.22;
+      stamps.push({
+        position: at(skirt, 0.34 + (i % 3) * 0.2, a, 0.012),
+        angle: a,
+        scale: i % 2 ? 0.8 : 1,
+      });
+    }
+    ornamentInstances(group, starGeometry(0.03, 0.006), metallic, stamps);
+  } else if (shape === 14) {
+    // 绯樱巫女服: a white kosode over a scarlet divided hakama.
+    const kosode: Surface = (t, a) => {
+      const p = torsoSurface(2.55 - t * 0.72, a, 0.026 + t * 0.012);
+      return new T.Vector3(p.x, p.y, p.z);
+    };
+    add(group, shell(kosode, 0, TAU, 112, 24), ivory);
+    // A fitted inner bodice keeps the kosode on the torso envelope; the wide
+    // outer panel is a separate drape, not a second shell.
+    bodice(group, ivory, satin);
+    crossedCollar(group, satin, ivory, 2.585, 0.42, 0.03);
+    // Hakama: two wide pleated legs sharing one waist band.
+    for (const side of [-1, 1]) {
+      const leg = pleated(
+        (t) => 0.145 + 0.1 * Math.pow(t, 0.7),
+        (t, a) => 1.86 - t * 1.66,
+        0.92,
+        10,
+        0.03,
+        1,
+      );
+      const geometry = shell(leg, 0, TAU, 96, 34);
+      geometry.translate(side * 0.135, 0, 0);
+      add(group, geometry, satin);
+      const legHem = hem(leg, 0.01);
+      legHem.translate(side * 0.135, 0, 0);
+      add(group, legHem, ivory);
+    }
+    const band = radial(
+      () => 0.255,
+      (t, a) => 1.95 - t * 0.11,
+      0.8,
+      0,
+      0,
+    );
+    add(group, shell(band, 0, TAU, 112, 10), satin);
+    add(group, hem(band, 0.007), ivory);
+    // Long white sleeves with a red cuff tie.
+    hangingSleeves(group, ivory, satin, 0.6, 0.11);
+    // Chest cord and the sakaki sprig at the back of the obi.
+    add(
+      group,
+      line(
+        [
+          new T.Vector3(-0.09, 2.44, 0.2),
+          new T.Vector3(0, 2.39, 0.226),
+          new T.Vector3(0.09, 2.44, 0.2),
+        ],
+        0.008,
+      ),
+      metallic,
+    );
+    add(
+      group,
+      ribbon(
+        [
+          new T.Vector3(0, 2.44, 0.224),
+          new T.Vector3(0.05, 2.31, 0.23),
+          new T.Vector3(-0.04, 2.17, 0.215),
+          new T.Vector3(0.02, 2.03, 0.195),
+        ],
+        0.075,
+      ),
+      satin,
+    );
+    for (const a of [1.35, TAU - 1.35])
+      add(
+        group,
+        line(
+          Array.from({ length: 18 }, (_, i) => {
+            const t = i / 17;
+            const p = at(kosode, 0.1 + t * 0.8, a, 0.014);
+            return new T.Vector3(p.x, p.y, p.z);
+          }),
+          0.006,
+        ),
+        satin,
+      );
+    waist(group, ivory, 0.012);
   }
   return group;
 }

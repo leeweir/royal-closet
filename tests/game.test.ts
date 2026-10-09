@@ -17,7 +17,7 @@ import {
   validateSave,
   exchange,
 } from "../src/simulation/game.ts";
-import { ITEMS } from "../src/simulation/data.ts";
+import { ITEMS, SET_COUNT, categories } from "../src/simulation/data.ts";
 function completedRun(s: ReturnType<typeof freshSave>, stage = 0) {
   const run = createRun(s, stage)!;
   assert.ok(run);
@@ -32,7 +32,7 @@ test("starter wardrobe has 12 valid items and all six equipped categories", () =
   assert.equal(s.owned.length, 12);
   assert.equal(Object.keys(s.outfit).length, 6);
   assert.ok(Object.values(s.outfit).every((id) => s.owned.includes(id)));
-  assert.equal(ITEMS.length, 36);
+  assert.equal(ITEMS.length, categories.length * SET_COUNT);
 });
 test("locked items cannot be equipped or crafted early", () => {
   const s = freshSave();
@@ -109,7 +109,7 @@ test("every item can be crafted after progression without negative resources", (
   for (let i = 0; i < 20; i++) finishRun(s, completedRun(s, i));
   for (const item of ITEMS)
     if (!s.owned.includes(item.id)) assert.equal(craft(s, item.id), true);
-  assert.equal(s.owned.length, 36);
+  assert.equal(s.owned.length, ITEMS.length);
   assert.ok(s.coins >= 0 && s.thread >= 0);
 });
 test("insufficient materials never partially debit currencies", () => {

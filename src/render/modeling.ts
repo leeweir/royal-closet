@@ -6,6 +6,12 @@ export function shareTexture<X extends T.Texture>(tex: X) {
   sharedTextures.add(tex);
   return tex;
 }
+/** Cel-shaded materials reused across the wardrobe; disposeGroup leaves them. */
+export const sharedMaterials = new WeakSet<T.Material>();
+export function shareMaterial<X extends T.Material>(material: X) {
+  sharedMaterials.add(material);
+  return material;
+}
 /** Look a named descendant up once and remember it for per-frame use. */
 export function cachedChild(root: T.Object3D, name: string) {
   const cache = (root.userData.children ??= {}) as Record<

@@ -1,18 +1,19 @@
-import { ITEM, REGIONS, categories, type Category } from "./data";
+import {
+  ITEM,
+  ITEM_DRESS_IDS,
+  REGIONS,
+  categories,
+  type Category,
+} from "./data";
 import type { Outfit, Save } from "./game";
 export type GroundPoint = { x: number; z: number };
-export const COLLECTIONS = [
-  "月光序曲",
-  "蔷薇来信",
-  "森之精灵",
-  "冰湖圆舞曲",
-  "星夜咏叹",
-  "晨曦加冕",
-].map((name, index) => ({
+// Derived from the wardrobe itself: adding a set to the data file adds it to
+// the set tab, the fitting room and the atelier with no second list to update.
+export const COLLECTIONS = ITEM_DRESS_IDS.map((id, index) => ({
   id: index,
-  name,
+  name: ITEM[id].name,
   items: categories.map((c) => `${c.id}-${index}`),
-  style: ITEM[`dress-${index}`].style,
+  style: ITEM[id].style,
 }));
 /** Sets change atomically; an incomplete collection never replaces part of a look. */
 export function equipCollection(save: Save, index: number) {
@@ -233,14 +234,20 @@ export function stageLayout(stage: number) {
     angle,
   };
 }
+/** Per-silhouette adventure tuning, indexed by item.shape; one entry per set. */
+const SHOE_SPEED = [0, 8, 18, 12, 23, 15, 10, 8, 6, 16, 14, 26, 4, 18, 12];
+const WING_PICKUP = [
+  0.9, 1.05, 1.15, 1.25, 1.45, 1.35, 1.2, 1.4, 1.2, 1.5, 1.25, 1.5, 1.3, 1.3,
+  1.35,
+];
 export function adventureAbilities(outfit: Outfit, region: number) {
   const shoe = ITEM[outfit.shoes].shape,
     wing = ITEM[outfit.wings].shape,
     wand = ITEM[outfit.wand].shape;
   const resonance =
     region >= 0 && ITEM[outfit.dress].style === REGIONS[region].style;
-  const speedBonus = [0, 8, 18, 12, 23, 15][shoe];
-  const pickupRadius = [0.9, 1.05, 1.15, 1.25, 1.45, 1.35][wing];
+  const speedBonus = SHOE_SPEED[shoe];
+  const pickupRadius = WING_PICKUP[wing];
   return {
     speed: 2.6 * (1 + speedBonus / 100),
     speedBonus,
@@ -254,10 +261,11 @@ export function adventureAbilities(outfit: Outfit, region: number) {
 export function itemAbility(category: Category, id: string) {
   const item = ITEM[id];
   if (category === "dress") return `${item.style}地区：魔法更广，恢复更快`;
-  if (category === "shoes")
-    return `步速 +${[0, 8, 18, 12, 23, 15][item.shape]}%`;
+  // These read from the same tables the adventure uses, so a new shoe or
+  // wing can never show a value the game does not actually apply.
+  if (category === "shoes") return `步速 +${SHOE_SPEED[item.shape]}%`;
   if (category === "wings")
-    return `靠近 ${[0.9, 1.05, 1.15, 1.25, 1.45, 1.35][item.shape].toFixed(2)} 米自动采晶`;
+    return `靠近 ${WING_PICKUP[item.shape].toFixed(2)} 米自动采晶`;
   if (category === "wand")
     return `共鸣采晶范围 ${(2.1 + item.shape * 0.16).toFixed(1)} 米`;
   return `${item.style}搭配：舞会加分与地区奖励`;

@@ -45,7 +45,13 @@ export function refineHairSurface(
     faces: number[] = [],
     joints: number[] = [],
     influences: number[] = [];
-  const short = style === 1 || style === 2 || style === 4;
+  // Styles whose silhouette ends at the jaw: the existing long strands are
+  // trimmed there rather than compressed, which would crease them at the cheek.
+  // 1 twin tails, 2 braids, 4 bob, 7 buns, 8 student bob, 9 high ponytail,
+  // 11 sport braid, 14 side tie. Styles 6/10/12/13 stay long.
+  const short =
+    style === 1 || style === 2 || style === 4 || style === 7 || style === 8 ||
+    style === 9 || style === 11 || style === 14;
   const cuts: number[] = [];
   const write = (
     point: T.Vector3,

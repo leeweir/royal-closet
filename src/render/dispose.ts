@@ -1,5 +1,5 @@
 import * as T from "three";
-import { sharedTextures } from "./modeling";
+import { sharedTextures, sharedMaterials } from "./modeling";
 export function disposeGroup(root: T.Object3D) {
   const geos = new Set<T.BufferGeometry>(),
     mats = new Set<T.Material>(),
@@ -18,5 +18,7 @@ export function disposeGroup(root: T.Object3D) {
   });
   geos.forEach((g) => g.dispose());
   textures.forEach((t) => t.dispose());
-  mats.forEach((m) => m.dispose());
+  mats.forEach((m) => {
+    if (!sharedMaterials.has(m)) m.dispose();
+  });
 }

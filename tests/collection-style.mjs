@@ -78,7 +78,7 @@ try {
     "720 animated frames, idle and turning: hair remains below the crown",
     physics,
   );
-  for (let style = 0; style < 6; style++) {
+  for (let style = 0; style < 15; style++) {
     const materialTypes = await page.evaluate((style) => {
       const p = window.__PRINCESS_PREVIEW__;
       for (const category of [
@@ -145,7 +145,7 @@ try {
   await page.screenshot({ path: "test-results/preview-mobile-side.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "All 36 items across six complete collections use toon materials; front/side screenshots saved.",
+    "All 90 items across fifteen complete collections use toon materials; front/side screenshots saved.",
   );
 } finally {
   await browser.close();

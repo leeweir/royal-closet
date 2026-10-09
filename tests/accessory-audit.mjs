@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as T from "three";
 import { MToonMaterial } from "@pixiv/three-vrm";
-import { ITEMS } from "../src/simulation/data.ts";
+import { ITEMS, SET_COUNT } from "../src/simulation/data.ts";
 import {
   createCrown,
   createWings,
@@ -20,6 +20,8 @@ const makers = {
 const silhouettes = new Map(),
   fingerprints = new Map(),
   calls = new Map();
+// One shape per set in every category, so the audit follows the data.
+const perCategory = SET_COUNT;
 const results = [];
 for (const item of ITEMS.filter((i) => makers[i.category])) {
   const root = makers[item.category](item);
@@ -105,16 +107,16 @@ for (const item of ITEMS.filter((i) => makers[i.category])) {
 for (const category of Object.keys(makers)) {
   assert.equal(
     silhouettes.get(category).size,
-    6,
-    `${category}: six named silhouettes`,
+    perCategory,
+    `${category}: one named silhouette per set`,
   );
   assert.equal(
     fingerprints.get(category).size,
-    6,
-    `${category}: six different geometries independent of color`,
+    perCategory,
+    `${category}: one distinct geometry per set, independent of color`,
   );
 }
-for (let shape = 0; shape < 6; shape++) {
+for (let shape = 0; shape < perCategory; shape++) {
   const total = Object.keys(makers).reduce(
     (sum, category) => sum + calls.get(`${category}-${shape}`),
     0,
@@ -123,5 +125,5 @@ for (let shape = 0; shape < 6; shape++) {
 }
 console.table(results);
 console.log(
-  "24 accessory models: finite geometry, six distinct shapes per category, animation pivots and render budgets verified.",
+  `${perCategory * 4} accessory models: finite geometry, one distinct shape per set, animation pivots and render budgets verified.`,
 );

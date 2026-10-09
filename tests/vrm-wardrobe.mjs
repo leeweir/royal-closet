@@ -52,7 +52,7 @@ try {
     await page.waitForTimeout(150);
   };
   console.log("VRM loaded", await diagnostics());
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 15; i++) {
     await turn(0);
     await click("equip", `dress-${i}`);
     await page.waitForTimeout(250);
@@ -75,7 +75,7 @@ try {
   // to neutral. New garments must keep the original bind pose.
   await turn(0.65);
   await click("pose");
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 15; i++) {
     await click("equip", `dress-${i}`);
     await page.waitForTimeout(150);
     await page
@@ -87,7 +87,7 @@ try {
   await turn(0);
   for (const category of ["hair", "crown", "shoes", "wings", "wand"]) {
     await click("category", category);
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 15; i++) {
       await click("equip", `${category}-${i}`);
       if (category === "hair")
         await page.screenshot({ path: `test-results/vrm-hair-${i}.png` });

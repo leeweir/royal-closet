@@ -552,6 +552,18 @@ main.screen-adventure {
   gap: 4px;
   min-height: 28px;
 }
+/* Set tab keeps its running count beside the all/owned toggle. */
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.empty-note {
+  padding: 18px 4px;
+  font-size: 12px;
+  color: #aa94b5;
+  text-align: center;
+}
 .wardrobe-filter svg {
   width: 13px;
   height: 13px;
