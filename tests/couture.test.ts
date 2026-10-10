@@ -178,7 +178,9 @@ test("the six everyday silhouettes read as six different cuts", () => {
   assert.ok(hem(6) > 0.7, "hanfu skirt keeps a broad pleated hem");
   assert.ok(hem(7) > 0.7, "tang wrap skirt keeps a broad hem");
   const sleeveReach = (i: number) => {
-    const s = garments[i].getObjectByName("sleeve-left");
+    const s =
+      garments[i].getObjectByName("sleeve-left") ??
+      garments[i].getObjectByName("arm-left");
     assert.ok(s, "silhouette has authored sleeves");
     let reach = 0;
     s.traverse((o) => {

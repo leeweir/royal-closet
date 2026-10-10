@@ -235,10 +235,12 @@ export function stageLayout(stage: number) {
   };
 }
 /** Per-silhouette adventure tuning, indexed by item.shape; one entry per set. */
-const SHOE_SPEED = [0, 8, 18, 12, 23, 15, 10, 8, 6, 16, 14, 26, 4, 18, 12];
+const SHOE_SPEED = [
+  0, 8, 18, 12, 23, 15, 10, 8, 6, 16, 14, 26, 4, 18, 12, 14, 22, 10,
+];
 const WING_PICKUP = [
   0.9, 1.05, 1.15, 1.25, 1.45, 1.35, 1.2, 1.4, 1.2, 1.5, 1.25, 1.5, 1.3, 1.3,
-  1.35,
+  1.35, 1.2, 1.4, 1.3,
 ];
 export function adventureAbilities(outfit: Outfit, region: number) {
   const shoe = ITEM[outfit.shoes].shape,

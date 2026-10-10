@@ -59,7 +59,24 @@ export function garmentWeights(
   p: T.Vector3,
   binding: GarmentBinding,
   sleeve = "",
+  rig?: { positions: Record<WardrobeBone, T.Vector3> },
 ): [WardrobeBone, number][] {
+  if ((sleeve === "arm-left" || sleeve === "arm-right") && rig) {
+    // A full sleeve follows the arm: the upper arm carries it to the elbow,
+    // the forearm from there to the wrist, blended across the joint.
+    const side = sleeve === "arm-left" ? "right" : "left";
+    const shoulder = rig.positions[`${side}UpperArm`];
+    const elbow = rig.positions[`${side}LowerArm`];
+    const axis = elbow.clone().sub(shoulder);
+    const t = p.clone().sub(shoulder).dot(axis) / axis.lengthSq();
+    const fore = T.MathUtils.smoothstep(t, 0.88, 1.08);
+    const torso = 1 - T.MathUtils.smoothstep(t, -0.05, 0.12);
+    return [
+      ["upperChest", torso],
+      [`${side}UpperArm` as WardrobeBone, (1 - torso) * (1 - fore)],
+      [`${side}LowerArm` as WardrobeBone, (1 - torso) * fore],
+    ];
+  }
   if (binding === "hair" || binding === "crown") return [["head", 1]];
   if (binding === "wings") return [["upperChest", 1]];
   if (binding === "wand") return [["leftHand", 1]];
@@ -68,6 +85,18 @@ export function garmentWeights(
     return [
       [p.x > 0 ? "leftFoot" : "rightFoot", 1 - leg],
       [p.x > 0 ? "leftLowerLeg" : "rightLowerLeg", leg],
+    ];
+  }
+  if (sleeve === "trouser-left" || sleeve === "trouser-right") {
+    // Trouser legs follow the thigh and shin like the skin underneath:
+    // hips at the yoke, upper leg down to the knee, lower leg below it.
+    const side = sleeve === "trouser-left" ? "left" : "right";
+    const thigh = T.MathUtils.smoothstep(p.y, 1.62, 1.82);
+    const knee = T.MathUtils.smoothstep(p.y, 0.98, 1.12);
+    return [
+      ["hips", thigh],
+      [`${side}UpperLeg` as WardrobeBone, (1 - thigh) * knee],
+      [`${side}LowerLeg` as WardrobeBone, (1 - thigh) * (1 - knee)],
     ];
   }
   if (sleeve)
@@ -111,7 +140,12 @@ export function bindGarment(
     let parent: T.Object3D | null = object;
     let sleeve = "";
     while (parent && parent !== source) {
-      if (parent.name.startsWith("sleeve-")) sleeve = parent.name;
+      if (
+        parent.name.startsWith("sleeve-") ||
+        parent.name.startsWith("trouser-") ||
+        parent.name.startsWith("arm-")
+      )
+        sleeve = parent.name;
       parent = parent.parent;
     }
     originals.add(object.geometry);
@@ -135,14 +169,14 @@ export function bindGarment(
     const p = new T.Vector3();
     for (let i = 0; i < position.count; i++) {
       p.fromBufferAttribute(position, i);
-      if (sleeve) {
+      if (sleeve.startsWith("sleeve-")) {
         const side = sleeve === "sleeve-left" ? -1 : 1;
         const anchor =
           rig.positions[side < 0 ? "rightUpperArm" : "leftUpperArm"];
         p.add(new T.Vector3(anchor.x - side * 0.34, anchor.y - 2.53, anchor.z));
         position.setXYZ(i, p.x, p.y, p.z);
       }
-      const weights = garmentWeights(p, binding, sleeve);
+      const weights = garmentWeights(p, binding, sleeve, rig);
       for (let j = 0; j < 4; j++) {
         skinIndices.push(indices[weights[j]?.[0] ?? "hips"]);
         skinWeights.push(weights[j]?.[1] ?? 0);

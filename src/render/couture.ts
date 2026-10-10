@@ -380,47 +380,76 @@ function waist(group: T.Group, material: T.Material, thickness = 0.014) {
   add(group, ring, material);
 }
 
+type Anchors = Partial<
+  Record<
+    | "leftFoot"
+    | "rightFoot"
+    | "leftUpperArm"
+    | "rightUpperArm"
+    | "leftLowerArm"
+    | "rightLowerArm"
+    | "leftHand"
+    | "rightHand",
+    T.Vector3
+  >
+>;
+// Bind-pose arm line of the VRM princess, used when no rig is supplied.
+const ARM_FALLBACK = {
+  leftUpperArm: new T.Vector3(0.221, 2.599, -0.052),
+  leftLowerArm: new T.Vector3(0.337, 2.166, -0.052),
+  leftHand: new T.Vector3(0.393, 1.955, 0.328),
+  rightUpperArm: new T.Vector3(-0.221, 2.599, -0.052),
+  rightLowerArm: new T.Vector3(-0.337, 2.166, -0.052),
+  rightHand: new T.Vector3(-0.449, 1.745, -0.007),
+};
+let sleeveAnchors: Anchors = {};
+
 function longSleeves(
   group: T.Group,
   material: T.Material,
   cuff: T.Material,
   flare = 0.05,
-  wrist = 0.33,
+  _wrist = 0.33,
 ) {
-  // Sleeves hang from the same shoulder anchors as the puff caps so the rig
-  // can swing them with the upper arm on every silhouette.
+  // Each sleeve is a tube along the character's own shoulder -> elbow ->
+  // wrist line, a little wider than the measured arm. The rig binds the
+  // upper half to the upper arm and the lower half to the forearm (the
+  // "arm-" prefix), so the forearm can bend without poking through.
   for (const side of [-1, 1]) {
+    const k = side < 0 ? "right" : "left";
+    const shoulder =
+      sleeveAnchors[`${k}UpperArm`] ?? ARM_FALLBACK[`${k}UpperArm`];
+    const elbow = sleeveAnchors[`${k}LowerArm`] ?? ARM_FALLBACK[`${k}LowerArm`];
+    const hand = sleeveAnchors[`${k}Hand`] ?? ARM_FALLBACK[`${k}Hand`];
+    // Start just outside the shoulder joint and stop short of the wrist.
+    const start = shoulder.clone().lerp(elbow, 0.12);
+    const end = elbow.clone().lerp(hand, 0.82);
+    const path = new T.CatmullRomCurve3([start, elbow.clone(), end]);
+    const split = start.distanceTo(elbow) / (start.distanceTo(elbow) + elbow.distanceTo(end));
+    // Skin radius is ~0.075 at the upper arm and ~0.05 at the wrist.
+    const radius = (t: number) =>
+      0.098 - 0.03 * t + flare * Math.pow(t, 1.6) * 0.8;
+    const frames = path.computeFrenetFrames(40, false);
+    const tube = (r: (t: number) => number, t0: number, t1: number, rows: number) =>
+      grid(
+        (u, v) => {
+          const t = t0 + (t1 - t0) * v;
+          const i = Math.min(40, Math.round(t * 40));
+          const c = path.getPointAt(t);
+          const a = u * TAU;
+          return c
+            .addScaledVector(frames.normals[i], Math.cos(a) * r(t))
+            .addScaledVector(frames.binormals[i], Math.sin(a) * r(t));
+        },
+        40,
+        rows,
+      );
     const armAttachment = new T.Group();
-    armAttachment.name = side < 0 ? "sleeve-left" : "sleeve-right";
+    armAttachment.name = side < 0 ? "arm-left" : "arm-right";
+    armAttachment.userData.split = split;
     group.add(armAttachment);
-    const arm = grid(
-      (u, t) => {
-        const a = u * TAU;
-        const radius = 0.066 + flare * Math.pow(t, 1.35);
-        return new T.Vector3(
-          side * (0.34 + t * 0.055) + Math.sin(a) * radius,
-          2.545 - t * (0.28 + wrist),
-          Math.cos(a) * radius * 0.82,
-        );
-      },
-      48,
-      26,
-    );
-    add(armAttachment, arm, material);
-    const hemRing = grid(
-      (u, t) => {
-        const a = u * TAU,
-          r = 0.066 + flare + t * 0.014;
-        return new T.Vector3(
-          side * 0.395 + Math.sin(a) * r,
-          2.265 - wrist - t * 0.05,
-          Math.cos(a) * r * 0.82,
-        );
-      },
-      48,
-      8,
-    );
-    add(armAttachment, hemRing, cuff);
+    add(armAttachment, tube(radius, 0, 1, 30), material);
+    add(armAttachment, tube((t) => radius(t) + 0.008, 0.93, 1, 4), cuff);
   }
 }
 
@@ -721,7 +750,12 @@ function embroidery(
 }
 
 /** Six deliberately different patterns, fitted to y=1.90 waist / y=2.58 shoulders. */
-export function createCouture(item: Item, color: string): T.Group {
+export function createCouture(
+  item: Item,
+  color: string,
+  anchors?: Anchors,
+): T.Group {
+  sleeveAnchors = anchors ?? {};
   const group = new T.Group();
   group.name = "couture";
   const satin = cloth(color, "satin");
@@ -1875,35 +1909,58 @@ export function createCouture(item: Item, color: string): T.Group {
       new T.Color(color).lerp(new T.Color("#2f3036"), 0.35).getStyle(),
       "cotton",
     );
-    // Two straight legs with a centre crease, joined at the hips.
+    // Two straight legs. Each one follows the character's own leg line
+    // (hip joint, knee, ankle) and is sized from the measured skin radius
+    // plus a little ease, so the cloth wraps the thigh and shin rather than
+    // passing through them. The rig binds these meshes to the leg bones.
+    const legLine = (side: number) => {
+      const foot =
+        (side < 0 ? anchors?.rightFoot : anchors?.leftFoot) ??
+        new T.Vector3(side * 0.157, 0.205, -0.066);
+      return new T.CatmullRomCurve3([
+        new T.Vector3(side * 0.13, 1.86, 0.0),
+        new T.Vector3(foot.x, 1.771, 0.0),
+        new T.Vector3(foot.x, 1.051, -0.015),
+        new T.Vector3(foot.x, foot.y + 0.03, foot.z + 0.004),
+      ]);
+    };
+    // Skin radius along the leg (thigh to ankle) plus ease for the fabric.
+    const legRadius = (t: number) =>
+      Math.max(0.155 - 0.075 * t, 0.096) + 0.03 + 0.012 * t;
     for (const side of [-1, 1]) {
+      const path = legLine(side);
       const leg: Surface = (t, a) => {
-        const radius = 0.105 + 0.022 * Math.pow(t, 0.8);
+        const c = path.getPoint(t);
+        const r = legRadius(t);
+        // Fold the inner side in at the crotch so the legs do not overlap.
+        const inner = Math.max(0, -Math.sin(a) * side);
+        const squeeze = 1 - 0.38 * inner * (1 - T.MathUtils.smoothstep(t, 0, 0.18));
         return new T.Vector3(
-          Math.sin(a) * radius,
-          1.86 - t * 1.66,
-          Math.cos(a) * radius * 0.9,
+          c.x + Math.sin(a) * r * squeeze,
+          c.y,
+          c.z + Math.cos(a) * r * 0.95,
         );
       };
-      const geometry = shell(leg, 0, TAU, 84, 30);
-      geometry.translate(side * 0.115, 0, 0);
-      add(group, geometry, trousers);
-      const legHem = hem(leg, 0.009);
-      legHem.translate(side * 0.115, 0, 0);
-      add(group, legHem, jersey);
+      const geometry = shell(leg, 0, TAU, 84, 40);
+      geometry.name = side < 0 ? "trouser-right" : "trouser-left";
+      add(group, geometry, trousers).name =
+        side < 0 ? "trouser-right" : "trouser-left";
+      add(group, hem(leg, 0.009), jersey).name =
+        side < 0 ? "trouser-right" : "trouser-left";
       add(
         group,
         line(
-          [
-            new T.Vector3(side * 0.115, 1.8, 0.1),
-            new T.Vector3(side * 0.121, 0.7, 0.105),
-            new T.Vector3(side * 0.126, 0.21, 0.1),
-          ],
+          Array.from({ length: 12 }, (_, i) => {
+            const t = 0.1 + (i / 11) * 0.88;
+            const c = path.getPoint(t);
+            return new T.Vector3(c.x, c.y, c.z + legRadius(t) * 0.95 + 0.003);
+          }),
           0.0035,
         ),
         jersey,
-      );
+      ).name = side < 0 ? "trouser-right" : "trouser-left";
     }
+    // The yoke spans both legs, so it is centred rather than anchor-placed.
     const hips = radial(
       (t) => 0.25 + 0.02 * t,
       (t, a) => 1.93 - t * 0.12,

@@ -78,7 +78,7 @@ try {
     "720 animated frames, idle and turning: hair remains below the crown",
     physics,
   );
-  for (let style = 0; style < 15; style++) {
+  for (let style = 0; style < 18; style++) {
     const materialTypes = await page.evaluate((style) => {
       const p = window.__PRINCESS_PREVIEW__;
       for (const category of [

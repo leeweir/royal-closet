@@ -37,7 +37,6 @@ const palettes = [
   ["#6f8fbf", "#ffe9a8"],
   ["#6d5a86", "#f3e4f7"],
   ["#c2565f", "#fdf6ee"],
-  ["#5f9e8f", "#f3f0e2"],
   ["#e9e2d8", "#8d8579"],
   ["#8fa78c", "#f2f3ee"],
   ["#4a4b52", "#d8cfc2"],

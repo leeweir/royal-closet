@@ -33,7 +33,7 @@ try {
         ),
       category,
     );
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 18; i++) {
       await page.evaluate(
         ({ category, i }) => {
           const p = window.__PRINCESS_PREVIEW__;
@@ -119,7 +119,7 @@ try {
   });
   const cards = [];
   for (const category of ["hair", "shoes"])
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 18; i++) {
       const path = `fit-${category}-${i}-side.png`;
       const data = (await fs.readFile(`test-results/${path}`)).toString(
         "base64",

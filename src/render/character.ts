@@ -104,6 +104,7 @@ function buildPart(rig: Rig, part: Part, s: Save) {
     const source = createCouture(
       ITEM[s.outfit.dress],
       s.dye ?? ITEM[s.outfit.dress].color,
+      rig.wardrobe.positions,
     );
     return bindGarment(source, rig.wardrobe, "dress");
   }
@@ -240,10 +241,13 @@ export function animateCharacter(
     bone("hips").rotation.y = Math.sin(t * 1.6) * 0.035;
   }
   const dress = Number(rig.keys.couture?.match(/dress-(\d+)/)?.[1] ?? 0);
-  const stride = [
-    0.32, 0.52, 0.48, 0.26, 0.52, 0.32, 0.3, 0.32, 0.44, 0.44, 0.3, 0.56, 0.36,
-    0.26, 0.36,
-  ][dress];
+  // Long skirts take shorter steps; trousers and shorts walk freely. A dress
+  // without an entry falls back to an ordinary stride rather than NaN legs.
+  const stride =
+    [
+      0.32, 0.52, 0.48, 0.26, 0.52, 0.32, 0.3, 0.32, 0.44, 0.44, 0.3, 0.56,
+      0.36, 0.26, 0.36, 0.42, 0.54, 0.48,
+    ][dress] ?? 0.4;
   for (const [i, side] of (["left", "right"] as const).entries()) {
     const foot = walkFoot(rig.walkPhase + i * 0.5, stride);
     const leg =
